@@ -27,6 +27,7 @@ for L in Long:
 
     print('L=',L,'| Pn =', round(Pn,2),'| fiPn =', round(fiPn,2))
 
+p1.section.plot_centroids()
 
 title = 'Pn_L_C_wlps'
 f = plt.figure()

@@ -64,7 +64,7 @@
 
 from math import pi
 from sec_2 import sec2_1_1
-from sec_3 import E3_4_3_e1
+from sec_3 import E3_4_3_e1, E3_3_1_2_e6, E3_4_3_e1
 from appendix_B import B_2, B_1
 from properties import c_w_lps_profile, c_profile, steel
 
@@ -168,13 +168,13 @@ class ASCE_8_02:
         steel = self.member.steel
         fi_n = 0.9 # chequear valor
         
-        FFx = E3_3_1_2_e6(E0= steel.E0, K = dP.Kx, L = dP.Lx, r = profile.rx, 1)
+        FFx = E3_3_1_2_e6(E0= steel.E0, K = dP.Kx, L = dP.Lx, r = profile.rx, eta= 1)
         Fnx = eta_iter(FFx,steel)
         Pnx = Fnx* profile.A
 
-        FFy = E3_3_1_2_e6(E0= steel.E0, K = dP.Ky, L = dP.Ly, r = profile.ry, 1)
-        Fny = eta_iter(FFx,steel)
-        Pny = Fnx* profile.A
+        FFy = E3_3_1_2_e6(E0= steel.E0, K = dP.Ky, L = dP.Ly, r = profile.ry, eta= 1)
+        Fny = eta_iter(FFy,steel)
+        Pny = Fny* profile.A
 
         return [Pnx, fi_n*Pnx], [Pny, fi_n*Pny]
 
