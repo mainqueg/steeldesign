@@ -121,7 +121,7 @@ class c_w_lps_profile():
         (c_x, c_y) = section.get_c() # centroides
         (sc_x, sc_y) = section.get_sc() # shear center
         Cw = section.get_gamma() # warping
-        (rx, ry) = section.get_rc()
+        (rx, ry) = section.get_rc() # radios de giro
         J = section.get_j()
         A = section.get_area()
 
