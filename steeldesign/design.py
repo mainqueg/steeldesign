@@ -1,4 +1,4 @@
-'''Modulo de diseño de estructuras metalicas segun ASCE - 8
+'''Modulo de diseño de estructuras metalicas segun ASCE - 8 - 02
 
     #Tests
 
@@ -64,7 +64,7 @@
 
 from math import pi
 from sec_2 import sec2_1_1
-from sec_3 import E3_4_3_e1, E3_3_1_2_e6, E3_4_3_e1
+from sec_3 import E3_4_2_e1, E3_4_3_e1, E3_3_1_2_e6, E3_4_3_e1
 from appendix_B import B_2, B_1
 from properties import c_w_lps_profile, c_profile, steel
 
@@ -117,7 +117,7 @@ class member():
             if designParameters.Lx == 0:
                 designParameters.Lx = L
             if designParameters.Ly == 0:
-                designParameters.Lz = L
+                designParameters.Ly = L
             if designParameters.Lz == 0:
                 designParameters.Lz = L
 
@@ -141,7 +141,9 @@ class ASCE_8_02:
     def s3_FTB(self):
         '''Devuelve la carga critica nominal y de diseño de pandeo flexo-torsional.
 
-
+        Basado en Ec. 3.4.3-1. Itera sobre Et(s) segun un esquema de Newton-Rapson.
+        
+        Retorna el par (Pn, fiPn)
         ''' 
         
         dP = self.member.dP
@@ -154,13 +156,18 @@ class ASCE_8_02:
                         A = profile.A, Cw = profile.Cw, J = profile.J,
                         eta = 1)
         Fn = eta_iter(FF,steel)
+        if Fn > steel.FY:
+            Fn = steel.FY
+
         Pn = Fn* profile.A
         return Pn, fi_n*Pn
 
     def s3_FB(self):
-        '''Devuelve la carga critica nominal y de diseño para pandeo a flexion.
+        '''Devuelve la carga critica nominal y de diseño para pandeo a flexion en x e y.
 
+        Basado en Ec. 3.4.3-1. Itera sobre Et(s) segun un esquema de Newton-Rapson.
 
+        Retorna el par ([Pnx, fiPnx], [Pny, fiPny])
         '''
         
         dP = self.member.dP
@@ -170,15 +177,40 @@ class ASCE_8_02:
         
         FFx = E3_3_1_2_e6(E0= steel.E0, K = dP.Kx, L = dP.Lx, r = profile.rx, eta= 1)
         Fnx = eta_iter(FFx,steel)
+        if Fnx > steel.FY:
+            Fnx = steel.FY
         Pnx = Fnx* profile.A
 
         FFy = E3_3_1_2_e6(E0= steel.E0, K = dP.Ky, L = dP.Ly, r = profile.ry, eta= 1)
         Fny = eta_iter(FFy,steel)
+        if Fny > steel.FY:
+            Fny = steel.FY
         Pny = Fny* profile.A
 
         return [Pnx, fi_n*Pnx], [Pny, fi_n*Pny]
 
+    def s3_TB(self):
+        '''Devuelve la carga critica nominal y de diseño para pandeo a flexion en x e y.
 
+        Basado en Ec. 3.4.3-1. Itera sobre Et(s) segun un esquema de Newton-Rapson.
+
+        Retorna ([Pnx, fiPnx], [Pny, fiPny])
+        '''
+        
+        dP = self.member.dP
+        profile = self.member.profile
+        steel = self.member.steel
+        fi_n = 0.9 # chequear valor
+        
+        FF = E3_4_2_e1(E0= steel.E0, Kt= dP.Kz, Lt= dP.Lz, rx= profile.rx, ry= profile.ry,
+                    c_x= profile.c_x, sc_x= profile.sc_x, A= profile.A, Cw= profile.Cw, G0= steel.G0, J= profile.J,
+                    eta= 1)
+        Fn = eta_iter(FF,steel)
+        if Fn > steel.FY:
+            Fn = steel.FY
+        Pn = Fn* profile.A
+
+        return Pn, fi_n*Pn
 
 '''
 steel(344.8,186200.0, 0.3, 4.58, 0.002, name = 'SA304_1_4Hard').eta(159.3)

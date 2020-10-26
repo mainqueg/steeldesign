@@ -21,10 +21,10 @@ def E3_3_1_2_e6(E0, K, L, r, eta):
     return s_ex
 
 def E3_4_2_e1(E0,Kt,Lt, rx, ry, eta, c_x, sc_x, A, Cw, G0, J):
-    '''Fn = s_t en Eq 3.4.2-1. Tension critica de Torsional
+    """Fn = s_t = TB en Eq 3.4.2-1. Tension critica de Torsional
     
     
-    # Parametros
+    # Parametros:
     E0: Modulo elasticidad
     Kt: Factor de longitud efectiva a torsion
     Lt: longitud del miembro a torsion
@@ -36,16 +36,18 @@ def E3_4_2_e1(E0,Kt,Lt, rx, ry, eta, c_x, sc_x, A, Cw, G0, J):
     Cw: Constante torsional de warping de la seccion
     G0: Modulo de corte inicial
     J: Constante de torsion de St. Venant  
+
+    # Retorna: Fn
 
     # Tests
     >>> round ( E3_4_2_e1(E0 = 180510, Kt = 0.5, Lt = 1800, rx = 40.272, ry = 18.2673, eta = 0.6225, c_x = 15.59, sc_x = 23.1, A = 319, Cw = 215e6, G0 = 69426.9, J = 239), 2)
     276.66
-    '''
+    """
     Fn = E3_3_1_2_e8(E0,Kt,Lt, rx, ry, eta, c_x, sc_x, A, Cw, G0, J)
     return Fn
 
 def E3_4_3_e1(E0, Kx, Lx, Kt,Lt, rx, ry, eta, c_x, sc_x, A, Cw, G0, J):
-    '''Fn = en Eq 3.4.3-1. Tension critica de pandeo Flexo-torsional
+    '''Fn de FTB en Eq 3.4.3-1. Tension critica de pandeo Flexo-torsional
 
 
     # Parametros
@@ -60,6 +62,8 @@ def E3_4_3_e1(E0, Kx, Lx, Kt,Lt, rx, ry, eta, c_x, sc_x, A, Cw, G0, J):
     Cw: Constante torsional de warping de la seccion
     G0: Modulo de corte inicial
     J: Constante de torsion de St. Venant  
+
+    # Retorna: Fn
 
     # Tests
     >>> round ( E3_4_3_e1(E0 = 180510, Kx = 0.5, Lx = 1800, Kt = 0.5, Lt = 1800, rx = 40.272, ry = 18.2673, eta = 0.6225, c_x = 15.59, sc_x = 23.1, A = 319, Cw = 215e6, G0 = 69426.9, J = 239), 2)
@@ -101,7 +105,7 @@ def E3_3_1_2_e8(E0,Kt,Lt, rx, ry, eta, c_x, sc_x, A, Cw, G0, J):
 
     Ver parametros de seccion en https://sectionproperties.readthedocs.io/en/latest/rst/post.html
 
-    # Parametros
+    # Parametros: float
     E0: Modulo elasticidad
     Kt: Factor de longitud efectiva a torsion
     Lt: longitud del miembro a torsion
@@ -130,7 +134,7 @@ def E3_3_1_2_e8(E0,Kt,Lt, rx, ry, eta, c_x, sc_x, A, Cw, G0, J):
     return s_t
 
 def E3_3_1_2_e9(rx,ry,x0):
-    '''r0 en Eq 3.3.1.2-8. Radio de giro polar
+    '''r0 en Eq 3.3.1.2-8. Radio de giro polar.
 
     # Parametros\n
     rx, ry: radios de giro\n

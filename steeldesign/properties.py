@@ -1,3 +1,12 @@
+'''Propiedades de perfiles y materiales:
+
+    steel()
+    c_w_lps_profile()
+    c_profile()
+
+'''
+
+
 import pickle
 import os
 import sectionproperties.pre.sections as sections
