@@ -29,30 +29,45 @@
     >>> (Pn, fiPn) = analysis.s3_FTB()
     >>> print('Pn =', round(Pn,2),'| fiPn =', round(fiPn,2))
     Pn = 45313.99 | fiPn = 40782.59
+
     >>> dp = designParameters(Kx= 0.5, Ky= 0.5, Kz = 0.5)
     >>> m = member(L= 3000, profile= p1, steel= s, designParameters= dp)
     >>> analysis = ASCE_8_02(m)
-    >>> (Pn, fiPn) = analysis.s3_FTB()
-    >>> print('Pn =', round(Pn,2),'| fiPn =', round(fiPn,2))
-    Pn = 50925.21 | fiPn = 45832.69
+    >>> (Pn_FTB, _) = analysis.s3_FTB()
+    >>> (Pn_TB, _) = analysis.s3_TB()
+    >>> (x_dir, y_dir) = analysis.s3_FB()
+    >>> print('L=',3000,'| FTB =', round(Pn_FTB,2),'| TB =', round(Pn_TB,2),'| FBx =', round(x_dir[0],2),'| FBy =', round(y_dir[0],2))
+    L= 3000 | FTB = 50925.21 | TB = 53988.92 | FBx = 95567.92 | FBy = 74057.88
+
     >>> dp = designParameters(Kx= 0.5, Ky= 0.5, Kz = 0.5)
     >>> m = member(L= 2000, profile= p1, steel= s, designParameters= dp)
     >>> analysis = ASCE_8_02(m)
     >>> (Pn, fiPn) = analysis.s3_FTB()
     >>> print('Pn =', round(Pn,2),'| fiPn =', round(fiPn,2))
     Pn = 80093.79 | fiPn = 72084.41
+
+    >>> dp = designParameters(Kx= 0.5, Ky= 0.5, Kz = 0.5)
+    >>> m = member(L= 1500, profile= p1, steel= s, designParameters= dp)
+    >>> analysis = ASCE_8_02(m)
+    >>> (Pn_FTB, _) = analysis.s3_FTB()
+    >>> (Pn_TB, _) = analysis.s3_TB()
+    >>> (x_dir, y_dir) = analysis.s3_FB()
+    >>> print('L=',1500,'| FTB =', round(Pn_FTB,2),'| TB =', round(Pn_TB,2),'| FBx =', round(x_dir[0],2),'| FBy =', round(y_dir[0],2))
+    L= 1500 | FTB = 87988.48 | TB = 88632.78 | FBx = 107398.91 | FBy = 93891.32
+
     >>> dp = designParameters(Kx= 0.5, Ky= 0.5, Kz = 0.5)
     >>> m = member(L= 1000, profile= p1, steel= s, designParameters= dp)
     >>> analysis = ASCE_8_02(m)
     >>> (Pn, fiPn) = analysis.s3_FTB()
     >>> print('Pn =', round(Pn,2),'| fiPn =', round(fiPn,2))
     Pn = 95874.54 | fiPn = 86287.08
+
     >>> dp = designParameters(Kx= 0.5, Ky= 0.5, Kz = 0.5)
     >>> m = member(L= 100, profile= p1, steel= s, designParameters= dp)
     >>> analysis = ASCE_8_02(m)
     >>> (Pn, fiPn) = analysis.s3_FTB()
     >>> print('Pn =', round(Pn,2),'| fiPn =', round(fiPn,2))
-    Pn = 137276.69 | fiPn = 123549.02
+    Pn = 107515.68 | fiPn = 96764.12
 
     ## sec2_1_1 aplicado a un perfil C
     >>> v_sec2_1_1 = sec2_1_1(m)

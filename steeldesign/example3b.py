@@ -26,7 +26,6 @@ for L in Long:
     (Pn_FTB, _) = analysis.s3_FTB()
     (Pn_TB, _) = analysis.s3_TB()
     (x_dir, y_dir) = analysis.s3_FB()
-    (Pn, _) = analysis.s3_FTB()
     FTB.append(Pn_FTB)
     TB.append(Pn_TB)
     FBx.append(x_dir[0])
