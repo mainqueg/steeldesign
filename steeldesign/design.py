@@ -26,48 +26,55 @@
     >>> dp = designParameters(Kx= 0.5, Ky= 0.5, Kz = 0.5)
     >>> m = member(L= 3200, profile= p1, steel= s, designParameters= dp)
     >>> analysis = ASCE_8_02(m)
-    >>> (Pn, fiPn) = analysis.s3_FTB()
-    >>> print('Pn =', round(Pn,2),'| fiPn =', round(fiPn,2))
-    Pn = 45313.99 | fiPn = 40782.59
+    >>> (Fn, Pn) = analysis.s3_FTB()
+    >>> print('Fn =', round(Fn,2),'| Pn =', round(Pn,2))
+    Fn = 142.03 | Pn = 45313.99
+
+    >>> dp = designParameters(Kx= 0.5, Ky= 0.5, Kz = 0.5)
+    >>> m = member(L= 1000, profile= p1, steel= s, designParameters= dp)
+    >>> analysis = ASCE_8_02(m)
+    >>> (Fn, Pn) = analysis.s3_FTB()
+    >>> print('Fn =', round(Fn,2),'| Pn =', round(Pn,2))
+    Fn = 300.51 | Pn = 95874.54
+
+    >>> dp = designParameters(Kx= 0.5, Ky= 0.5, Kz = 0.5)
+    >>> m = member(L= 100, profile= p1, steel= s, designParameters= dp)
+    >>> analysis = ASCE_8_02(m)
+    >>> (Fn, Pn) = analysis.s3_FTB()
+    >>> print('Fn =', round(Fn,2),'| Pn =', round(Pn,2))
+    Fn = 337 | Pn = 107515.68
 
     >>> dp = designParameters(Kx= 0.5, Ky= 0.5, Kz = 0.5)
     >>> m = member(L= 3000, profile= p1, steel= s, designParameters= dp)
     >>> analysis = ASCE_8_02(m)
-    >>> (Pn_FTB, _) = analysis.s3_FTB()
-    >>> (Pn_TB, _) = analysis.s3_TB()
+    >>> (_, Pn_FTB) = analysis.s3_FTB()
+    >>> (_, Pn_TB) = analysis.s3_TB()
     >>> (x_dir, y_dir) = analysis.s3_FB()
-    >>> print('L=',3000,'| FTB =', round(Pn_FTB,2),'| TB =', round(Pn_TB,2),'| FBx =', round(x_dir[0],2),'| FBy =', round(y_dir[0],2))
+    >>> print('L=',3000,'| FTB =', round(Pn_FTB,2),'| TB =', round(Pn_TB,2),'| FBx =', round(x_dir[1],2),'| FBy =', round(y_dir[1],2))
     L= 3000 | FTB = 50925.21 | TB = 53988.92 | FBx = 95567.92 | FBy = 74057.88
 
     >>> dp = designParameters(Kx= 0.5, Ky= 0.5, Kz = 0.5)
     >>> m = member(L= 2000, profile= p1, steel= s, designParameters= dp)
     >>> analysis = ASCE_8_02(m)
-    >>> (Pn, fiPn) = analysis.s3_FTB()
-    >>> print('Pn =', round(Pn,2),'| fiPn =', round(fiPn,2))
-    Pn = 80093.79 | fiPn = 72084.41
+    >>> (Fn, Pn) = analysis.s3_FTB()
+    >>> print('Fn =', round(Fn,2),'| Pn =', round(Pn,2))
+    Fn = 251.05 | Pn = 80093.79
 
     >>> dp = designParameters(Kx= 0.5, Ky= 0.5, Kz = 0.5)
     >>> m = member(L= 1500, profile= p1, steel= s, designParameters= dp)
     >>> analysis = ASCE_8_02(m)
-    >>> (Pn_FTB, _) = analysis.s3_FTB()
-    >>> (Pn_TB, _) = analysis.s3_TB()
+    >>> (_, Pn_FTB) = analysis.s3_FTB()
+    >>> (_, Pn_TB) = analysis.s3_TB()
     >>> (x_dir, y_dir) = analysis.s3_FB()
-    >>> print('L=',1500,'| FTB =', round(Pn_FTB,2),'| TB =', round(Pn_TB,2),'| FBx =', round(x_dir[0],2),'| FBy =', round(y_dir[0],2))
+    >>> print('L=',1500,'| FTB =', round(Pn_FTB,2),'| TB =', round(Pn_TB,2),'| FBx =', round(x_dir[1],2),'| FBy =', round(y_dir[1],2))
     L= 1500 | FTB = 87988.48 | TB = 88632.78 | FBx = 107398.91 | FBy = 93891.32
 
-    >>> dp = designParameters(Kx= 0.5, Ky= 0.5, Kz = 0.5)
-    >>> m = member(L= 1000, profile= p1, steel= s, designParameters= dp)
-    >>> analysis = ASCE_8_02(m)
-    >>> (Pn, fiPn) = analysis.s3_FTB()
-    >>> print('Pn =', round(Pn,2),'| fiPn =', round(fiPn,2))
-    Pn = 95874.54 | fiPn = 86287.08
-
-    >>> dp = designParameters(Kx= 0.5, Ky= 0.5, Kz = 0.5)
-    >>> m = member(L= 100, profile= p1, steel= s, designParameters= dp)
-    >>> analysis = ASCE_8_02(m)
-    >>> (Pn, fiPn) = analysis.s3_FTB()
-    >>> print('Pn =', round(Pn,2),'| fiPn =', round(fiPn,2))
-    Pn = 107515.68 | fiPn = 96764.12
+    ## Sec3
+    >>> (fiPn, interm) = analysis.s3_4()
+    Ae() NotImplementedError
+    >>> interm_round = [round(num, 2) for num in interm]
+    >>> print('fiPc=', round(fiPn, 2), '| Valores intermedios=', interm_round )
+    fiPc= 74790.21 | Valores intermedios= [336.63, 294.3, 277.81, 275.79, 319.04]
 
     ## sec2_1_1 aplicado a un perfil C
     >>> v_sec2_1_1 = sec2_1_1(m)
@@ -79,7 +86,7 @@
 
 from math import pi
 from sec_2 import sec2_1_1
-from sec_3 import E3_4_2_e1, E3_4_3_e1, E3_3_1_2_e6, E3_4_3_e1
+from sec_3 import E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_3_1_2_e6, E3_4_3_e1
 from appendix_B import B_2, B_1
 from properties import c_w_lps_profile, c_profile, steel
 
@@ -153,18 +160,45 @@ class ASCE_8_02:
         if not member.dP:
             print ('Advertencia: El miembro', member.name, 'no tiene asignado parametros de diseño.')
 
+    def s3_4(self):
+        '''Design axial strength. 
+        Ec 3.4-1: Tension menor de estados limites FB, TB, FTB multiplicada por factor de resistencia y area efectiva.
+
+        Retorna: (fiPn, [Fn_FB, Fn_TB, Fn_FTB, Ae])
+        fiPn: Resistencia axial de diseño
+        Fn_FB: Tension de pandeo flexional
+        Fn_FB: Tension de pandeo flexional
+        Fn_FB: Tension de pandeo flexional
+        Ae: Area efectiva calculada a Fn
+
+        '''
+        
+
+        ([Fn_FBx, _], [Fn_FBy, _]) = self.s3_FB()
+        (Fn_TB, _) = self.s3_TB()
+        (Fn_FTB, _) = self.s3_FTB()
+
+        Fn = min(Fn_FBx, Fn_FBy, Fn_TB, Fn_FTB)
+
+        Ae = self.member.profile.Ae(Fn)
+
+        fiPn = E3_4_e1(Fn, Ae)
+
+        return fiPn, [Fn_FBx, Fn_FBy, Fn_TB, Fn_FTB, Ae]
+
+
     def s3_FTB(self):
         '''Devuelve la carga critica nominal y de diseño de pandeo flexo-torsional.
 
         Basado en Ec. 3.4.3-1. Itera sobre Et(s) segun un esquema de Newton-Rapson.
         
-        Retorna el par (Pn, fiPn)
+        Retorna el par (Fn, Pn): Pn calculado con el area nominal
         ''' 
         
         dP = self.member.dP
         profile = self.member.profile
         steel = self.member.steel
-        fi_n = 0.9 # chequear valor
+
         FF = E3_4_3_e1(E0 = steel.E0, G0 = steel.G0,
                         Kx = dP.Kx, Kt = dP.Kz, Lx = dP.Lx, Lt = dP.Lz,
                         rx = profile.rx, ry = profile.ry, c_x = profile.c_x, sc_x = profile.sc_x,
@@ -175,20 +209,20 @@ class ASCE_8_02:
             Fn = steel.FY
 
         Pn = Fn* profile.A
-        return Pn, fi_n*Pn
+        return Fn, Pn
 
     def s3_FB(self):
         '''Devuelve la carga critica nominal y de diseño para pandeo a flexion en x e y.
 
         Basado en Ec. 3.4.3-1. Itera sobre Et(s) segun un esquema de Newton-Rapson.
 
-        Retorna el par ([Pnx, fiPnx], [Pny, fiPny])
+        Retorna el par ([Fnx, Pnx], [Fny, Pny]): Pni calculado con el area nominal
         '''
         
         dP = self.member.dP
         profile = self.member.profile
         steel = self.member.steel
-        fi_n = 0.9 # chequear valor
+        #fi_n = 0.9 # chequear valor
         
         FFx = E3_3_1_2_e6(E0= steel.E0, K = dP.Kx, L = dP.Lx, r = profile.rx, eta= 1)
         Fnx = eta_iter(FFx,steel)
@@ -202,20 +236,19 @@ class ASCE_8_02:
             Fny = steel.FY
         Pny = Fny* profile.A
 
-        return [Pnx, fi_n*Pnx], [Pny, fi_n*Pny]
+        return [Fnx, Pnx], [Fny, Pny]
 
     def s3_TB(self):
         '''Devuelve la carga critica nominal y de diseño para pandeo a flexion en x e y.
 
         Basado en Ec. 3.4.3-1. Itera sobre Et(s) segun un esquema de Newton-Rapson.
 
-        Retorna ([Pnx, fiPnx], [Pny, fiPny])
+        Retorna el par (Fn, Pn): Pn calculado con el area nominal
         '''
         
         dP = self.member.dP
         profile = self.member.profile
         steel = self.member.steel
-        fi_n = 0.9 # chequear valor
         
         FF = E3_4_2_e1(E0= steel.E0, Kt= dP.Kz, Lt= dP.Lz, rx= profile.rx, ry= profile.ry,
                     c_x= profile.c_x, sc_x= profile.sc_x, A= profile.A, Cw= profile.Cw, G0= steel.G0, J= profile.J,
@@ -225,7 +258,7 @@ class ASCE_8_02:
             Fn = steel.FY
         Pn = Fn* profile.A
 
-        return Pn, fi_n*Pn
+        return Fn, Pn
 
 '''
 steel(344.8,186200.0, 0.3, 4.58, 0.002, name = 'SA304_1_4Hard').eta(159.3)

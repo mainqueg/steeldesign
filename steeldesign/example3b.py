@@ -23,15 +23,15 @@ for L in Long:
     # creo el analisis
     analysis = ASCE_8_02(m)
     # calculo admisibles
-    (Pn_FTB, _) = analysis.s3_FTB()
-    (Pn_TB, _) = analysis.s3_TB()
+    (_, Pn_FTB) = analysis.s3_FTB()
+    (_, Pn_TB) = analysis.s3_TB()
     (x_dir, y_dir) = analysis.s3_FB()
     FTB.append(Pn_FTB)
     TB.append(Pn_TB)
-    FBx.append(x_dir[0])
-    FBy.append(y_dir[0])
+    FBx.append(x_dir[1])
+    FBy.append(y_dir[1])
 
-    print('L=',L,'| FTB =', round(Pn_FTB,2),'| TB =', round(Pn_TB,2),'| FBx =', round(x_dir[0],2),'| FBy =', round(y_dir[0],2))
+    print('L=',L,'| FTB =', round(Pn_FTB,2),'| TB =', round(Pn_TB,2),'| FBx =', round(x_dir[1],2),'| FBy =', round(y_dir[1],2))
 p1.section.plot_centroids()
 
 title = 'Cee'

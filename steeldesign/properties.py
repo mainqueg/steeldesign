@@ -144,8 +144,9 @@ class c_w_lps_profile():
         self.Cw = Cw
         self.J = J
 
-    def effective(self):
-        raise NotImplementedError
+    def Ae(self, Fn):
+        print('Ae() NotImplementedError')
+        return self.A
 
 class c_profile():
     '''Perfil C.
@@ -238,8 +239,9 @@ class c_profile():
         self.Cw = Cw
         self.J = J
  
-    def effective(self):
-        raise NotImplementedError
+    def Ae(self, Fn):
+        print('Ae() NotImplementedError')
+        return self.A
 
 def saveItem(item, fileName, mode = 'o'):
     '''Guarda en un archivo binario de nombre file la variable item.

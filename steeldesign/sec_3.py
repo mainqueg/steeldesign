@@ -1,6 +1,21 @@
 from math import pi
 import numpy as np
 
+def E3_4_e1(Fn, Ae):
+    ''' Design axial strength Ec 3.4-1
+
+    #Parametros
+    Fn: El menor de los valores de tension para pandel flexiona, torsional o flexo-torsional
+    Ae: Area efectiva calculada a la tension Fn
+
+    # Test
+    >>> E3_4_e1(1.5, 1.5)
+    1.9125
+    '''
+    fi_c = 0.85 # factor de resistencia a compresion
+    fiPn = fi_c*Fn*Ae
+    return fiPn
+
 def E3_3_1_2_e6(E0, K, L, r, eta):
     '''s_ex en Eq 3.3.1.2-6. Tension critica de pandeo flexional
 

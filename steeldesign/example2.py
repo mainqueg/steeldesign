@@ -10,8 +10,8 @@ p1.calculate()
 # creo un acero
 s = steel(FY= 337, E0= 180510.0, nu= 0.3, n= 13.5, offset= 0.002, name= 'SA304_1_4Hard')
 
+Fns = []
 Pns = []
-fiPns = []
 
 for L in Long:
     # defino parametros de diseño
@@ -21,11 +21,10 @@ for L in Long:
     # creo el analisis
     analysis = ASCE_8_02(m)
     # calculo admisibles
-    (Pn, fiPn) = analysis.s3_FTB()
+    (Fn, Pn) = analysis.s3_FTB()
+    Fns.append(Fn)
     Pns.append(Pn)
-    fiPns.append(fiPn)
-
-    print('L=',L,'| Pn =', round(Pn,2),'| fiPn =', round(fiPn,2))
+    print('L=', L, '| Fn =', round(Fn,2),'| Pn =', round(Pn,2))
 
 p1.section.plot_centroids()
 
