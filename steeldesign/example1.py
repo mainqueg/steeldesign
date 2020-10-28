@@ -15,7 +15,7 @@ dp = designParameters(Kx= 0.5, Ky= 0.5, Kz = 0.5)
 m = member(L= 100, profile= p1, steel= s, designParameters= dp)
 # creo el analisis
 analysis = ASCE_8_02(m)
-# calculo admisibles
+# calculo admisibles #
 (Fn, Pn) = analysis.s3_FTB()
 
 print('Fn =', round(Fn,2),'| Pn =', round(Pn,2))
