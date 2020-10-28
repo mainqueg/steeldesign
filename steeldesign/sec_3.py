@@ -18,8 +18,8 @@ def E3_4_e1(Fn, Ae):
 
         Tests
         -----
-        >>> round( E3_4_e1(1.5, 1.5), 4)
-        1.9125
+            >>> round( E3_4_e1(1.5, 1.5), 4)
+            1.9125
     '''
     fi_c = 0.85 # factor de resistencia a compresion
     fiPn = fi_c*Fn*Ae
