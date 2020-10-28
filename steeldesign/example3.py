@@ -36,7 +36,7 @@ for L in Long:
 
 p1.section.plot_centroids()
 
-title = 'Cee_wlps'
+title = 'Pn | Cee_wlps'
 
 f = plt.figure()
 plt.plot(Long, FTB, label = 'FTB')

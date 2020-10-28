@@ -1,9 +1,19 @@
-'''Propiedades de perfiles y materiales:
+'''Propiedades de perfiles y materiales.
 
-    steel()
-    c_w_lps_profile()
-    c_profile()
+    Classes and functions
+    ---------------------
+        c_profile : class
+            Crea un perfil C y calcula propiedades geometricas.
 
+        c_w_lps_profile : class
+            Crea un perfil C reforzado con labios y calcula propiedades geometricas.
+
+        steel : class
+            Acero con un modelo de Ramberg-Osgood.
+        
+        Tests
+        -----
+        En definiciones
 '''
 
 
@@ -17,24 +27,49 @@ from appendix_B import B_1, B_2
 class steel():
     ''' Creo un acero. 
 
-        Métodos:
+        Parameters
+        ----------
+        FY : float
+            Tension de fluencia obtenida a un determinado valor de offset 
+        E0 : float
+            Modulo elasticidad incial
+        nu : float
+            Coeficiente poisson. Def: 0.3
+        n : float
+            Exponente del modelo de Ramberg-Osgood. Def: 1.0
+        offset : float
+            Valor de offset al que se obtiene FY
+        name : string
+            Nombre del acero definido
+        
+        Attibutes
+        ---------
+            Mismos que los parametros y se agregan:
+        G0  : float
+            Modulo de corte inicial
+        
+        Methods
+        -------
+        Et(s) : float
+            Módulo elastico tangente a la tensión s
+        Es(s) : float
+            Módulo elastico secante a la tensión s
+        eta(s) : float
+            Factor de plasticidad a la tensión s
 
-        Et(s) = Módulo elastico tangente a la tensión s
-        Es(s) = Módulo elastico secante a la tensión s
-        eta(s) = Factor de plasticidad a la tensión s
-
-    # Tests
-    >>> mat = steel(344.8,186200.0, 0.3, 4.58, 0.002, name = 'SA304_1_4Hard')
-    >>> round(mat.E0, 2)
-    186200.0
-    >>> round(mat.Et(159.3),2)
-    141952.2
-    >>> round(mat.Es(159.3),2)
-    174334.98
-    >>> round(mat.eta(159.3),4)
-    0.7624
-    >>> mat.name
-    'SA304_1_4Hard'
+        Tests
+        ------
+            >>> mat = steel(344.8,186200.0, 0.3, 4.58, 0.002, name = 'SA304_1_4Hard')
+            >>> round(mat.E0, 2)
+            186200.0
+            >>> round(mat.Et(159.3),2)
+            141952.2
+            >>> round(mat.Es(159.3),2)
+            174334.98
+            >>> round(mat.eta(159.3),4)
+            0.7624
+            >>> mat.name
+            'SA304_1_4Hard'
 
     '''
 
@@ -44,54 +79,136 @@ class steel():
         self.n = n
         self.offset = offset
         self.E0 = E0
-        self.G0 = E0 / 2 / (1 + nu)
         self.name = name
+        self.G0 = E0 / 2 / (1 + nu)
 
     def Et(self, s):
-        ''' Modulo elastico tangente. Eq B-2
+        ''' Modulo elastico tangente a la tension s. Eq B-2
+            
+            Parameters
+            ----------
+            s : float
+                Tension para el calculo
 
-        
+            Returns
+            -------
+            Et : float
+                Modulo elastico tangente
+
+            Raises
+            ------
+            none
+
+            Tests
+            -----
+            En definicion de la clase        
         '''
         Et = B_2(self.FY, self.E0, self.offset, self.n, s)
         return Et
     
     def Es(self, s):
-        ''' Modulo elastico secante. Eq B-1
+        ''' Modulo elastico secante a la tension s. Eq B-1
 
+            Parameters
+            ----------
+            s : float
+                Tension para el calculo
+
+            Returns
+            -------
+            Es : float
+                Modulo elastico secante
+
+            Raises
+            ------
+            none
+
+            Tests
+            -----
+            En definicion de la clase 
         '''
         Es = B_1(self.FY, self.E0, self.offset, self.n, s)
         return Es
 
     def eta(self, s):
-        ''' Factor de plasticidad. Et/E0 Eq B-5
+        ''' Factor de plasticidad a la tension s. Et/E0 Eq B-5
 
+            Parameters
+            ----------
+            s : float
+                Tension para el calculo
+
+            Returns
+            -------
+            eta : float
+                Factor de plasticidad
+
+            Raises
+            ------
+            none
+
+            Tests
+            -----
+            En definicion de la clase
         '''
         return self.Et(s) / self.E0
 
 class c_w_lps_profile():
     '''Perfil C con labios de refuerzos.
 
-    # Parametros
-    H: altura
-    B: ancho
-    D: largo del labio
-    t: espesor
-    r_out: Radio externo de los plegados
-    name: Nombre para el perfil, sino se asigna uno por defecto
-    plot: Grafica el perfil, centro de corte y centroide
-    
-    # Tests
-    >>> p1 = c_w_lps_profile(H = 100, B = 50, D = 12, t = 1.5, r_out = 3.75)
-    >>> p1.calculate()
-    >>> round( p1.A, 2)
-    319.04
-    >>> round( p1.rx, 2)
-    40.27
-    >>> round( p1.c_x, 2)
-    16.33
+        Parameters
+        ----------
+        H : float
+            Altura
+        B : float
+            ancho
+        D : float
+            largo del labio
+        t : float
+            espesor
+        r_out : float
+            Radio externo de los plegados
+        name : string
+            Nombre para el perfil, sino se asigna uno por defecto
+        
+        Attibutes
+        ---------
+            Mismos que los parametros y se agregan:
+        type : string
+            'c_w_lps'
+        rx, ry : float
+            radio de giro del miembro | sqrt(I/A)
+        c_x, c_y : float
+            coordenada del centroide de la seccion
+        sc_x, sc_y : float
+            coordenada del centro de corte
+        A : float
+            Area de la seccion
+        Cw : float
+            Constante torsional de warping de la seccion
+        J : float
+            Constante de torsion de St. Venant
+        
+        Methods
+        -------
+        calculate() :
+            Ejecuta el calculo de las propiedades de la seccion
+        Ae(Fn) : float
+            Calcula el area efectiva para la tension Fn
+
+        Tests
+        -----
+            >>> p1 = c_w_lps_profile(H = 100, B = 50, D = 12, t = 1.5, r_out = 3.75)
+            >>> p1.calculate()
+            >>> round( p1.A, 2)
+            319.04
+            >>> round( p1.rx, 2)
+            40.27
+            >>> round( p1.c_x, 2)
+            16.33
     '''
 
-    def __init__(self, H, B, D, t, r_out, name = '', load = 'True'):
+    def __init__(self, H, B, D, t, r_out, name = ''):
         self.type = 'c_w_lps'
         self.B = B
         self.D = D
@@ -107,16 +224,16 @@ class c_w_lps_profile():
     def calculate(self):
         '''Se ejecuta el calculo de las propiedades de la seccion.
 
-        # Propiedades:
-        rx, ry: radio de giro del miembro | sqrt(I/A)
-        c_i: coordenada del centroide de la seccion
-        sc_i: coordenada del centro de corte
-        A: Area de la seccion
-        Cw: Constante torsional de warping de la seccion
-        J: Constante de torsion de St. Venant
+            Referencia
+            ----------
+                rx, ry : radio de giro del miembro | sqrt(I/A)
+                c_i : coordenada del centroide de la seccion
+                sc_i : coordenada del centro de corte
+                A : Area de la seccion
+                Cw : Constante torsional de warping de la seccion
+                J : Constante de torsion de St. Venant
 
         '''
-
         ## CALCULO PROPIEDADES A PARTIR DEL PAQUETE sectionproperties
         geometry = sections.CeeSection(d=self.H, b=self.B, l=self.D, t=self.t, r_out=self.r_out, n_r=8)
         # create mesh
@@ -139,7 +256,9 @@ class c_w_lps_profile():
         self.rx = rx
         self.ry = ry
         self.c_x = c_x
+        self.c_y = c_y
         self.sc_x = sc_x
+        self.sc_y = sc_y
         self.A = A
         self.Cw = Cw
         self.J = J
@@ -151,32 +270,61 @@ class c_w_lps_profile():
 class c_profile():
     '''Perfil C.
 
-    # Parametros
-    H: altura
-    B: ancho
-    t: espesor
-    r_out: Radio externo de los plegados
-    name: Nombre para el perfil, sino se asigna uno por defecto
-    plot: Grafica el perfil, centro de corte y centroide
-    load: Cargar desde un archivo la seccion. Solo si name=''
+        Parameters
+        ----------
+        H : float
+            Altura
+        B : float
+            ancho
+        t : float
+            espesor
+        r_out : float
+            Radio externo de los plegados
+        name : string
+            Nombre para el perfil, sino se asigna uno por defecto
+        
+        Attibutes
+        ---------
+            Mismos que los parametros y se agregan:
+        type : string
+            'c_w_lps'
+        rx, ry : float
+            radio de giro del miembro | sqrt(I/A)
+        c_x, c_y : float
+            coordenada del centroide de la seccion
+        sc_x, sc_y : float
+            coordenada del centro de corte
+        A : float
+            Area de la seccion
+        Cw : float
+            Constante torsional de warping de la seccion
+        J : float
+            Constante de torsion de St. Venant
+        
+        Methods
+        -------
+        calculate() :
+            Ejecuta el calculo de las propiedades de la seccion
+        Ae(Fn) : float
+            Calcula el area efectiva para la tension Fn
 
-    # Tests
-    >>> p1 = c_profile(H = 100, B = 50, t = 1.5, r_out = 6+1.5)
-    >>> p1.calculate()
-    >>> round( p1.A, 2)
-    286.54
-    >>> round( p1.rx, 2)
-    39.86
-    >>> round( p1.c_x, 2)
-    13.48
-    >>> round( p1.Cw, 2)
-    116369116.59
-    >>> round( p1.J, 2)
-    213.66
+        Tests
+        -----
+            >>> p1 = c_profile(H = 100, B = 50, t = 1.5, r_out = 6+1.5)
+            >>> p1.calculate()
+            >>> round( p1.A, 2)
+            286.54
+            >>> round( p1.rx, 2)
+            39.86
+            >>> round( p1.c_x, 2)
+            13.48
+            >>> round( p1.Cw, 2)
+            116369116.59
+            >>> round( p1.J, 2)
+            213.66
 
     '''
-
-    def __init__(self, H, B, t, r_out, name = '', load = 'True'):
+    def __init__(self, H, B, t, r_out, name = ''):
         self.type = 'cee'
         self.B = B
         self.H = H
@@ -191,16 +339,16 @@ class c_profile():
     def calculate(self):
         '''Se ejecuta el calculo de las propiedades de la seccion.
 
-        # Propiedades:
-        rx, ry: radio de giro del miembro | sqrt(I/A)
-        c_i: coordenada del centroide de la seccion
-        sc_i: coordenada del centro de corte
-        A: Area de la seccion
-        Cw: Constante torsional de warping de la seccion
-        J: Constante de torsion de St. Venant
+        Referencia
+        ----------
+            rx, ry : radio de giro del miembro | sqrt(I/A)
+            c_i : coordenada del centroide de la seccion
+            sc_i : coordenada del centro de corte
+            A : Area de la seccion
+            Cw : Constante torsional de warping de la seccion
+            J : Constante de torsion de St. Venant
 
         '''
-
         ## CALCULO PROPIEDADES A PARTIR DEL PAQUETE sectionproperties
         geometry = sections.CeeSection(d=self.H, b=self.B+self.r_out, l=self.r_out, t=self.t, r_out=self.r_out, n_r=8)
         # corto los labios y el radio
@@ -234,42 +382,51 @@ class c_profile():
         self.rx = rx
         self.ry = ry
         self.c_x = c_x
+        self.c_y = c_y
         self.sc_x = sc_x
+        self.sc_y = sc_y
         self.A = A
         self.Cw = Cw
         self.J = J
  
     def Ae(self, Fn):
         print('Ae() NotImplementedError')
+        # Ancho efectivo
+        ## Ala
+        #Beff = 1 # calculo a partir de sec_2
+        #Ae = self.A - (self.B-2*self.r_out-Beff)*self.t
+        ## Alma
+        #Heff = 1 # calculo a partir de sec_2
+        #Ae = Ae - (self.H-2*self.r_out-Heff)*self.t
         return self.A
 
 def saveItem(item, fileName, mode = 'o'):
     '''Guarda en un archivo binario de nombre file la variable item.
 
-    Por default hace un chequeo de existencia del archivo y solicita la confirmacion de sobreescritura.
-    Si se desea sobreescribir directamenete, incluir una tercera variable con el caracter 'o'
+        Por default hace un chequeo de existencia del archivo y solicita la confirmacion de sobreescritura.
+        Si se desea sobreescribir directamenete, incluir una tercera variable con el caracter 'o'
 
-    Requiere importar el paquete pickle
+        Requiere importar el paquete pickle
 
-    Ejemplos:
+        Ejemplos:
 
-    -------------------------------------------
-    import pickle
+        -------------------------------------------
+        import pickle
 
-    a = ['a','b', 'c']
-    saveItem(a, 'aList.f')
+        a = ['a','b', 'c']
+        saveItem(a, 'aList.f')
 
-    La variable -a- se puede recuperar con:
-    file = open("aList.f", "rb")
-    a = pickle.load(file)
-    file.close()
+        La variable -a- se puede recuperar con:
+        file = open("aList.f", "rb")
+        a = pickle.load(file)
+        file.close()
 
-    -------------------------------------------
+        -------------------------------------------
 
-    #Los items se pueden cargar con:
-    file = open("item_0.dict", "rb")
-    item = pickle.load(file)
-    -------------------------------------------
+        #Los items se pueden cargar con:
+        file = open("item_0.dict", "rb")
+        item = pickle.load(file)
+        -------------------------------------------
 
     '''
     # modo de confirmacion para reemplazar archivos
@@ -284,4 +441,5 @@ def saveItem(item, fileName, mode = 'o'):
 
     with open(fileName, "wb") as file:
         pickle.dump(item, file)
+
 
