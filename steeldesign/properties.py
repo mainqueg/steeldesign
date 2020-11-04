@@ -21,8 +21,67 @@ import pickle
 import os
 import sectionproperties.pre.sections as sections
 from sectionproperties.analysis.cross_section import CrossSection
+import sys
+import sectionproperties.pre.pre as pre
+import sectionproperties.post.post as post
+import matplotlib.pyplot as plt
 from appendix_B import B_1, B_2
+from copy import deepcopy
 
+class commonMethods():
+    def save(self, section):
+        '''Save class as self.name.sp., figure self.name.fig and self.name.png
+        
+        '''
+        path = os.path.join(os.getcwd(), 'sectionsDB', self.name)
+        if not os.path.isdir(path):
+            os.makedirs(path)
+        file = os.path.join(path, self.name )
+
+        # datos
+        with open(file + '.sp', 'wb') as output:
+            pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
+
+        #geometria
+        (fig, ax) = plt.subplots()
+        section.geometry.plot_geometry(pause= False, ax= ax)
+        post.setup_plot(ax, pause = False)
+        post.finish_plot(ax, pause = False, title='Cross-Section Geometry')
+        with open(file  + '_geom.fig', 'wb') as output:
+            pickle.dump(fig, output, pickle.HIGHEST_PROTOCOL)
+        fig.savefig(file + '_geom.png')
+
+        #mesh
+        (fig, ax) = plt.subplots()
+        section.plot_mesh(pause= False, ax= ax)
+        post.setup_plot(ax, pause = False)
+        post.finish_plot(ax, pause = False, title='Finite Element Mesh')
+        with open(file  + '_mesh.fig', 'wb') as output:
+            pickle.dump(fig, output, pickle.HIGHEST_PROTOCOL)
+        fig.savefig(file + '_mesh.png')
+
+        original_stdout = sys.stdout # Save a reference to the original standard output
+
+        with open(file +'.txt', 'w') as f:
+            sys.stdout = f # Change the standard output to the file we created.
+            post.print_results(section,"3.2f")
+            sys.stdout = original_stdout
+
+    def load(self):
+        path = os.path.join(os.getcwd(), 'sectionsDB', self.name)
+        file = os.path.join(path, self.name + '.sp')
+        with open(file, 'rb') as input:
+            """try load self.name.sp"""
+            p = pickle.load(input)
+            self.rx = p.rx
+            self.ry = p.ry
+            self.c_x = p.c_x
+            self.c_y = p.c_y
+            self.sc_x = p.sc_x
+            self.sc_y = p.sc_y
+            self.A = p.A
+            self.Cw = p.Cw
+            self.J = p.J
 
 class steel():
     ''' Creo un acero. 
@@ -207,6 +266,8 @@ class c_w_lps_profile():
             >>> round( p1.c_x, 2)
             16.33
     '''
+    save = commonMethods.save
+    load = commonMethods.load
 
     def __init__(self, H, B, D, t, r_out, name = ''):
         self.type = 'c_w_lps'
@@ -254,39 +315,13 @@ class c_w_lps_profile():
             self.J = section.get_j()
             self.A = section.get_area()
 
-            self.save()
+            self.save(section)
 
             self.section = section
 
     def Ae(self, Fn):
         print('Ae() NotImplementedError')
         return self.A
-
-    def save(self):
-        """save class as self.name.sp"""
-        path = os.path.join(os.getcwd(), 'sectionsDB',self.name)
-        if not os.path.isdir(path):
-            os.makedirs(path)
-
-        file = os.path.join(path, self.name + '.sp')
-        with open(file, 'wb') as output:
-            pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
-
-    def load(self):
-        path = os.path.join(os.getcwd(), 'sectionsDB', self.name)
-        file = os.path.join(path, self.name + '.sp')
-        with open(file, 'rb') as input:
-            """try load self.name.sp"""
-            p = pickle.load(input)
-            self.rx = p.rx
-            self.ry = p.ry
-            self.c_x = p.c_x
-            self.c_y = p.c_y
-            self.sc_x = p.sc_x
-            self.sc_y = p.sc_y
-            self.A = p.A
-            self.Cw = p.Cw
-            self.J = p.J
 
 class c_profile():
     '''Perfil C.
@@ -345,6 +380,9 @@ class c_profile():
             213.66
 
     '''
+    save = commonMethods.save
+    load = commonMethods.load
+
     def __init__(self, H, B, t, r_out, name = ''):
         self.type = 'cee'
         self.B = B
@@ -401,7 +439,7 @@ class c_profile():
             self.J = section.get_j()
             self.A = section.get_area()
 
-            self.save()
+            self.save(section)
 
             self.section = section
  
@@ -416,31 +454,6 @@ class c_profile():
         #Ae = Ae - (self.H-2*self.r_out-Heff)*self.t
         return self.A
 
-    def save(self):
-        """save class as self.name.sp"""
-        path = os.path.join(os.getcwd(), 'sectionsDB',self.name)
-        if not os.path.isdir(path):
-            os.makedirs(path)
-
-        file = os.path.join(path, self.name + '.sp')
-        with open(file, 'wb') as output:
-            pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
-
-    def load(self):
-        path = os.path.join(os.getcwd(), 'sectionsDB', self.name)
-        file = os.path.join(path, self.name + '.sp')
-        with open(file, 'rb') as input:
-            """try load self.name.sp"""
-            p = pickle.load(input)
-            self.rx = p.rx
-            self.ry = p.ry
-            self.c_x = p.c_x
-            self.c_y = p.c_y
-            self.sc_x = p.sc_x
-            self.sc_y = p.sc_y
-            self.A = p.A
-            self.Cw = p.Cw
-            self.J = p.J
 class I_builtup_c_w_lps_profile():
     '''Perfil C con labios de refuerzos.
 
@@ -527,6 +540,9 @@ class I_builtup_c_w_lps_profile():
             
     '''
 
+    save = commonMethods.save
+    load = commonMethods.load
+
     def __init__(self, H, B, D, t, r_out, s = 0.0, name = ''):
         self.type = 'I_builtup_cee_wlps'
         self.B = B
@@ -594,7 +610,7 @@ class I_builtup_c_w_lps_profile():
             self.A = section.get_area()
             (_, self.ri) = section_c1.get_rc() # radios de giro de c1
 
-            self.save()
+            self.save(section)
 
             self.section = section
             self.section_c1 = section_c1
@@ -602,33 +618,6 @@ class I_builtup_c_w_lps_profile():
     def Ae(self, Fn):
         print('Ae() NotImplementedError')
         return self.A
-
-    def save(self):
-        """save class as self.name.sp"""
-        path = os.path.join(os.getcwd(), 'sectionsDB',self.name)
-        if not os.path.isdir(path):
-            os.makedirs(path)
-
-        file = os.path.join(path, self.name + '.sp')
-        with open(file, 'wb') as output:
-            pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
-
-    def load(self):
-        path = os.path.join(os.getcwd(), 'sectionsDB', self.name)
-        file = os.path.join(path, self.name + '.sp')
-        with open(file, 'rb') as input:
-            """try load self.name.sp"""
-            p = pickle.load(input)
-            self.rx = p.rx
-            self.ry = p.ry
-            self.ri = p.ri
-            self.c_x = p.c_x
-            self.c_y = p.c_y
-            self.sc_x = p.sc_x
-            self.sc_y = p.sc_y
-            self.A = p.A
-            self.Cw = p.Cw
-            self.J = p.J
 
 class I_builtup_c_profile():
     '''Perfil C.
@@ -695,6 +684,9 @@ class I_builtup_c_profile():
             4295.84
 
     '''
+    save = commonMethods.save
+    load = commonMethods.load
+
     def __init__(self, H, B, t, r_out, s = 0.0, name = ''):
         self.type = 'I_builtup_cee'
         self.B = B
@@ -727,7 +719,7 @@ class I_builtup_c_profile():
         except:
             ## CALCULO PROPIEDADES A PARTIR DEL PAQUETE sectionproperties
             c1 = sections.CeeSection(d=self.H, b=self.B+self.r_out, l=self.r_out, t=self.t, r_out=self.r_out, n_r=8)
-            c2 = sections.CeeSection(d=self.H, b=self.B+self.r_out, l=self.r_out, t=self.t, r_out=self.r_out, n_r=8, shift= [0,-self.H])
+            c2 = deepcopy(c1)
         
             # corto los labios y el radio c1
             p1 = c1.add_point([self.B, 0])
@@ -741,19 +733,8 @@ class I_builtup_c_profile():
             c1.add_hole([self.B+self.r_out/10, self.H-self.t/2])  # add hole
             c1.clean_geometry()  # clean the geometry
 
-            # corto los labios y el radio c2
-            p1 = c2.add_point([self.B, 0])
-            p2 = c2.add_point([self.B, self.t])
-            p3 = c2.add_point([self.B, self.H])
-            p4 = c2.add_point([self.B, self.H-self.t])
-
-            c2.add_facet([p1, p2])
-            c2.add_facet([p3, p4])
-            c2.add_hole([self.B+self.r_out/10, self.t/2])  # add hole
-            c2.add_hole([self.B+self.r_out/10, self.H-self.t/2])  # add hole
-            c2.clean_geometry()  # clean the geometry
-
-            c2.rotate_section(angle=180, rot_point=[0, 0])
+            c2 = deepcopy(c1)
+            c2.mirror_section(axis= 'y', mirror_point=[0, 0])
 
             if self.s:
                 c1.shift = [self.s/2, 0]
@@ -785,7 +766,7 @@ class I_builtup_c_profile():
             self.A = section.get_area()
             (_, self.ri) = section_c1.get_rc() # radios de giro de c1
 
-            self.save()
+            self.save(section)
 
             self.section = section
             self.section_c1 = section_c1
@@ -800,33 +781,6 @@ class I_builtup_c_profile():
         #Heff = 1 # calculo a partir de sec_2
         #Ae = Ae - (self.H-2*self.r_out-Heff)*self.t
         return self.A
-
-    def save(self):
-        """save class as self.name.sp"""
-        path = os.path.join(os.getcwd(), 'sectionsDB',self.name)
-        if not os.path.isdir(path):
-            os.makedirs(path)
-
-        file = os.path.join(path, self.name + '.sp')
-        with open(file, 'wb') as output:
-            pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
-
-    def load(self):
-        path = os.path.join(os.getcwd(), 'sectionsDB', self.name)
-        file = os.path.join(path, self.name + '.sp')
-        with open(file, 'rb') as input:
-            """try load self.name.sp"""
-            p = pickle.load(input)
-            self.rx = p.rx
-            self.ry = p.ry
-            self.ri = p.ri
-            self.c_x = p.c_x
-            self.c_y = p.c_y
-            self.sc_x = p.sc_x
-            self.sc_y = p.sc_y
-            self.A = p.A
-            self.Cw = p.Cw
-            self.J = p.J
 
 def saveItem(item, fileName, mode = 'o'):
     '''Guarda en un archivo binario de nombre file la variable item.
