@@ -2,7 +2,7 @@ from design import ASCE_8_02, member, designParameters
 from properties import c_w_lps_profile, steel
 
 # creo un perfil c on refuerz ode labios
-p1 = c_w_lps_profile(H= 100, B= 50, D= 12, t= 1.5, r_out= 3.75)
+p1 = c_w_lps_profile(H= 200, B= 50, D= 12, t= 1.5, r_out= 3.75)
 #p2 = c_w_lps_profile(H= 200, B= 50, D= 12, t= 1.5, r_out= 3.75)
 p1.calculate()
 
