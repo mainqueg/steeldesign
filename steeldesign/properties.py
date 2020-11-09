@@ -29,6 +29,17 @@ from appendix_B import B_1, B_2
 from copy import deepcopy
 
 class commonMethods():
+    '''Metodos save() y load() para hacer un mixin en las clases de perfiles.
+
+    Methods
+    -------
+        save : 
+            guarda la clase .sp, .fig, .png y .txt con propiedades del perfil
+        load :
+            carga la clase y .fig del perfil
+
+    '''
+    name = None
     def save(self, section):
         '''Save class as self.name.sp., figure self.name.fig and self.name.png
         
@@ -65,29 +76,34 @@ class commonMethods():
         with open(file +'.txt', 'w') as f:
             sys.stdout = f # Change the standard output to the file we created.
             post.print_results(section,"3.2f")
+            print('\n####################################\n')
+            post.print_results(section,"3.2E")
             sys.stdout = original_stdout
 
     def load(self):
         path = os.path.join(os.getcwd(), 'sectionsDB', self.name)
-        file = os.path.join(path, self.name + '.sp')
-        with open(file, 'rb') as input:
+        file = os.path.join(path, self.name)
+        with open(file + '.sp', 'rb') as input:
             """try load self.name.sp"""
             p = pickle.load(input)
-            self.rx = p.rx
-            self.ry = p.ry
-            self.c_x = p.c_x
-            self.c_y = p.c_y
-            self.sc_x = p.sc_x
-            self.sc_y = p.sc_y
+            self.rx, self.ry = p.rx, p.ry
+            try:
+                self.ri = p.ri
+            except:
+                pass
+            self.c_x, self.c_y = p.c_x, p.c_y
+            self.sc_x, self.sc_y = p.sc_x, p.sc_y
             self.A = p.A
-            self.Cw = p.Cw
-            self.J = p.J
+            self.Cw, self.J = p.Cw, p.J
+        with open(file  + '_mesh.fig', 'rb') as input:
+            fig = pickle.load(input)
+        fig.show()
 
 class steel():
     ''' Creo un acero. 
 
-        Parameters
-        ----------
+    Parameters
+    ----------
         FY : float
             Tension de fluencia obtenida a un determinado valor de offset 
         E0 : float
@@ -101,14 +117,14 @@ class steel():
         name : string
             Nombre del acero definido
         
-        Attibutes
-        ---------
+    Attibutes
+    ---------
             Mismos que los parametros y se agregan:
         G0  : float
             Modulo de corte inicial
         
-        Methods
-        -------
+    Methods
+    -------
         Et(s) : float
             Módulo elastico tangente a la tensión s
         Es(s) : float
@@ -116,19 +132,19 @@ class steel():
         eta(s) : float
             Factor de plasticidad a la tensión s
 
-        Tests
-        ------
-            >>> mat = steel(344.8,186200.0, 0.3, 4.58, 0.002, name = 'SA304_1_4Hard')
-            >>> round(mat.E0, 2)
-            186200.0
-            >>> round(mat.Et(159.3),2)
-            141952.2
-            >>> round(mat.Es(159.3),2)
-            174334.98
-            >>> round(mat.eta(159.3),4)
-            0.7624
-            >>> mat.name
-            'SA304_1_4Hard'
+    Tests
+    ------
+        >>> mat = steel(344.8,186200.0, 0.3, 4.58, 0.002, name = 'SA304_1_4Hard')
+        >>> round(mat.E0, 2)
+        186200.0
+        >>> round(mat.Et(159.3),2)
+        141952.2
+        >>> round(mat.Es(159.3),2)
+        174334.98
+        >>> round(mat.eta(159.3),4)
+        0.7624
+        >>> mat.name
+        'SA304_1_4Hard'
 
     '''
 
@@ -144,22 +160,22 @@ class steel():
     def Et(self, s):
         ''' Modulo elastico tangente a la tension s. Eq B-2
             
-            Parameters
-            ----------
+        Parameters
+        ----------
             s : float
                 Tension para el calculo
 
-            Returns
-            -------
+        Returns
+        -------
             Et : float
                 Modulo elastico tangente
 
-            Raises
-            ------
+        Raises
+        ------
             none
 
-            Tests
-            -----
+        Tests
+        -----
             En definicion de la clase        
         '''
         Et = B_2(self.FY, self.E0, self.offset, self.n, s)
@@ -168,22 +184,22 @@ class steel():
     def Es(self, s):
         ''' Modulo elastico secante a la tension s. Eq B-1
 
-            Parameters
-            ----------
+        Parameters
+        ----------
             s : float
                 Tension para el calculo
 
-            Returns
-            -------
+        Returns
+        -------
             Es : float
                 Modulo elastico secante
 
-            Raises
-            ------
+        Raises
+        ------
             none
 
-            Tests
-            -----
+        Tests
+        -----
             En definicion de la clase 
         '''
         Es = B_1(self.FY, self.E0, self.offset, self.n, s)
@@ -192,22 +208,22 @@ class steel():
     def eta(self, s):
         ''' Factor de plasticidad a la tension s. Et/E0 Eq B-5
 
-            Parameters
-            ----------
+        Parameters
+        ----------
             s : float
                 Tension para el calculo
 
-            Returns
-            -------
+        Returns
+        -------
             eta : float
                 Factor de plasticidad
 
-            Raises
-            ------
+        Raises
+        ------
             none
 
-            Tests
-            -----
+        Tests
+        -----
             En definicion de la clase
         '''
         return self.Et(s) / self.E0
@@ -215,8 +231,8 @@ class steel():
 class c_w_lps_profile():
     '''Perfil C con labios de refuerzos.
 
-        Parameters
-        ----------
+    Parameters
+    ----------
         H : float
             Altura
         B : float
@@ -230,8 +246,8 @@ class c_w_lps_profile():
         name : string
             Nombre para el perfil, sino se asigna uno por defecto
         
-        Attibutes
-        ---------
+    Attibutes
+    ---------
             Mismos que los parametros y se agregan:
         type : string
             'c_w_lps'
@@ -248,23 +264,23 @@ class c_w_lps_profile():
         J : float
             Constante de torsion de St. Venant
         
-        Methods
-        -------
+    Methods
+    -------
         calculate() :
             Ejecuta el calculo de las propiedades de la seccion
         Ae(Fn) : float
             Calcula el area efectiva para la tension Fn
 
-        Tests
-        -----
-            >>> p1 = c_w_lps_profile(H = 100, B = 50, D = 12, t = 1.5, r_out = 3.75)
-            >>> p1.calculate()
-            >>> round( p1.A, 2)
-            319.04
-            >>> round( p1.rx, 2)
-            40.27
-            >>> round( p1.c_x, 2)
-            16.33
+    Tests
+    -----
+        >>> p1 = c_w_lps_profile(H = 100, B = 50, D = 12, t = 1.5, r_out = 3.75)
+        >>> p1.calculate()
+        >>> round( p1.A, 2)
+        319.04
+        >>> round( p1.rx, 2)
+        40.27
+        >>> round( p1.c_x, 2)
+        16.33
     '''
     save = commonMethods.save
     load = commonMethods.load
@@ -277,8 +293,10 @@ class c_w_lps_profile():
         self.t = t
         self.r_out= r_out
                 
-        defName = 'Cee_w_lps_H'+str(round(H,3))+'_D'+str(round(D,3))+'_B'+str(round(B,3))+'_t'+str(round(t,3))+'_r-out'+str(round(r_out,3))
-        # creo un nombre para la seccion
+        # nombre para la seccion
+        args = ['_H','D','B','t','r-out', '']
+        defName = self.type + '{:{fmt}}_'.join(args)
+        defName = defName.format(H, D, B, t, r_out, fmt='.2f')
         if not name:
             self.name = defName
 
@@ -326,8 +344,8 @@ class c_w_lps_profile():
 class c_profile():
     '''Perfil C.
 
-        Parameters
-        ----------
+    Parameters
+    ----------
         H : float
             Altura
         B : float
@@ -339,8 +357,8 @@ class c_profile():
         name : string
             Nombre para el perfil, sino se asigna uno por defecto
         
-        Attibutes
-        ---------
+    Attibutes
+    ---------
             Mismos que los parametros y se agregan:
         type : string
             'c_w_lps'
@@ -357,27 +375,27 @@ class c_profile():
         J : float
             Constante de torsion de St. Venant
         
-        Methods
-        -------
+    Methods
+    -------
         calculate() :
             Ejecuta el calculo de las propiedades de la seccion
         Ae(Fn) : float
             Calcula el area efectiva para la tension Fn
 
-        Tests
-        -----
-            >>> p1 = c_profile(H = 100, B = 50, t = 1.5, r_out = 6+1.5)
-            >>> p1.calculate()
-            >>> round( p1.A, 2)
-            286.54
-            >>> round( p1.rx, 2)
-            39.86
-            >>> round( p1.c_x, 2)
-            13.48
-            >>> round( p1.Cw, 2)
-            116369116.59
-            >>> round( p1.J, 2)
-            213.66
+    Tests
+    -----
+        >>> p1 = c_profile(H = 100, B = 50, t = 1.5, r_out = 6+1.5)
+        >>> p1.calculate()
+        >>> round( p1.A, 2)
+        286.54
+        >>> round( p1.rx, 2)
+        39.86
+        >>> round( p1.c_x, 2)
+        13.48
+        >>> round( p1.Cw, 2)
+        116369116.59
+        >>> round( p1.J, 2)
+        213.66
 
     '''
     save = commonMethods.save
@@ -390,8 +408,10 @@ class c_profile():
         self.t = t
         self.r_out= r_out
                 
-        defName = 'Cee_H'+str(round(H,3))+'_B'+str(round(B,3))+'_t'+str(round(t,3))+'_r-out'+str(round(r_out,3))
-        # creo un nombre para la seccion
+        # nombre para la seccion
+        args = ['_H','B','t','r-out', '']
+        defName = self.type + '{:{fmt}}_'.join(args)
+        defName = defName.format(H, B, t, r_out, fmt='.2f')
         if not name:
             self.name = defName
 
@@ -457,8 +477,8 @@ class c_profile():
 class I_builtup_c_w_lps_profile():
     '''Perfil C con labios de refuerzos.
 
-        Parameters
-        ----------
+    Parameters
+    ----------
         H : float
             Altura
         B : float
@@ -472,10 +492,14 @@ class I_builtup_c_w_lps_profile():
         s : float
             Gap entre almas de los perfiles
         name : string
-            Nombre para el perfil, sino se asigna uno por defecto
+            Nombre para el perfil, sino se asigna uno por defecto en base a los argumentos utilizados
+        wld_factor : float
+            Factor de escala de la base del cordon de soldadura respecto del radio de plegado
+        mesh_div : float
+            Cantidad elementos de la malla en el espesor
         
-        Attibutes
-        ---------
+    Attibutes
+    ---------
             Mismos que los parametros y se agregan:
         type : string
             'I_builtup_cee_wlps'
@@ -494,209 +518,84 @@ class I_builtup_c_w_lps_profile():
         J : float
             Constante de torsion de St. Venant
         
-        Methods
-        -------
+    Methods
+    -------
         calculate() :
             Ejecuta el calculo de las propiedades de la seccion
         Ae(Fn) : float
             Calcula el area efectiva para la tension Fn
 
-        Tests
-        -----
-            >>> p1 = I_builtup_c_w_lps_profile(H=8*25.4, B=6*25.4/2, D=0.7*25.4, t=0.075*25.4, r_out=(3/32+0.075)*25.4)
-            >>> p1.type
-            'I_builtup_cee_wlps'
-            >>> p1.calculate()
-            >>> round( p1.A, 2)
-            1438.81
-            >>> round( p1.rx, 2)
-            79.92
-            >>> round( p1.ry, 2)
-            34.83
-            >>> round( p1.ri, 2)
-            27.31
-            >>> round( p1.J, 2)
-            4404.83
-            >>> round( p1.Cw, 2)
-            18878923357.87
-            >>> p1 = I_builtup_c_w_lps_profile(H=8*25.4, B=6*25.4/2, D=0.7*25.4, t=0.075*25.4, r_out=(3/32+0.075)*25.4, s=0.1)
-            >>> p1.type
-            'I_builtup_cee_wlps'
-            >>> p1.name
-            'I_builtup_Cee_w_lps_H203.2_D17.78_B76.2_t1.905_r-out4.286_s0.1'
-            >>> p1.calculate()
-            >>> round( p1.A, 2)
-            1438.81
-            >>> round( p1.rx, 2)
-            79.92
-            >>> round( p1.ry, 2)
-            34.86
-            >>> round( p1.ri, 2)
-            27.31
-            >>> round( p1.J, 2)
-            1735.09
-            >>> round( p1.Cw, 2)
-            78155388323.49
+    Tests
+    -----
+        >>> p1 = I_builtup_c_w_lps_profile(H=8*25.4, B=6*25.4/2, D=0.7*25.4, t=0.075*25.4, r_out=(3/32+0.075)*25.4)
+        >>> p1.type
+        'I_builtup_cee_w_lps'
+        >>> p1.calculate()
+        >>> round( p1.A, 2)
+        1438.81
+        >>> round( p1.rx, 2)
+        79.92
+        >>> round( p1.ry, 2)
+        34.83
+        >>> round( p1.ri, 2)
+        27.31
+        >>> round( p1.J, 2)
+        4404.13
+        >>> round( p1.Cw, 2)
+        18878796655.83
+
+        >>> p1 = I_builtup_c_w_lps_profile(H=8*25.4, B=6*25.4/2, D=0.7*25.4, t=0.075*25.4, r_out=(3/32+0.075)*25.4, s=0.1)
+        >>> p1.type
+        'I_builtup_cee_w_lps'
+        >>> p1.name
+        'I_builtup_cee_w_lps_H203.20_D17.78_B76.20_t1.90_r-out4.29_s0.10_'
+        >>> p1.calculate()
+        >>> round( p1.A, 2)
+        1438.81
+        >>> round( p1.rx, 2)
+        79.92
+        >>> round( p1.ry, 2)
+        34.86
+        >>> round( p1.ri, 2)
+        27.31
+        >>> round( p1.J, 2)
+        1734.78
+        >>> round( p1.Cw, 2)
+        -134527534479.28
+
+        >>> p1 = I_builtup_c_w_lps_profile( H= 150, B= 40, D= 15, t= 1.16, r_out= 1.16+3, s=0.2, wld_factor = 0.85)
+        >>> p1.name   
+        'I_builtup_cee_w_lps_H150.00_D15.00_B40.00_t1.16_r-out4.16_s0.20_wld0.85'
+        >>> p1.calculate()
+        >>> round( p1.Cw, 2)
+        1157026658.16
+        >>> round( p1.J, 2)
+        953.98
             
     '''
 
     save = commonMethods.save
     load = commonMethods.load
 
-    def __init__(self, H, B, D, t, r_out, s = 0.0, name = ''):
-        self.type = 'I_builtup_cee_wlps'
+    def __init__(self, H, B, D, t, r_out, s = 0.0, name = '', wld_factor = 0.0, mesh_div = 4.0):
+        self.type = 'I_builtup_cee_w_lps'
         self.B = B
         self.D = D
         self.H = H
         self.t = t
         self.r_out= r_out
         self.s = s
-                
-        defName = 'I_builtup_Cee_w_lps_H'+str(round(H,3))+'_D'+str(round(D,3))+'_B'+str(round(B,3))+'_t'+str(round(t,3))+'_r-out'+str(round(r_out,3))+'_s'+str(round(s,3))
-        # creo un nombre para la seccion
-        if not name:
-            self.name = defName
-
-    def calculate(self):
-        '''Se ejecuta el calculo de las propiedades de la seccion.
-
-            Referencia
-            ----------
-                rx, ry : radio de giro de la seccion | sqrt(I/A)
-                ri : radio de giro en -y- de un solo perfil c
-                c_x, c_y : coordenada del centroide de la seccion
-                sc_x, sc_y : coordenada del centro de corte
-                A : Area de la seccion
-                Cw : Constante torsional de warping de la seccion
-                J : Constante de torsion de St. Venant
-
-        '''
-        try:
-            self.load()
-        except:
-            ## CALCULO PROPIEDADES A PARTIR DEL PAQUETE sectionproperties
-            c1 = sections.CeeSection(d=self.H, b=self.B, l=self.D, t=self.t, r_out=self.r_out, n_r=8)
-            c2 = sections.CeeSection(d=self.H, b=self.B, l=self.D, t=self.t, r_out=self.r_out, n_r=8, shift= [0,-self.H])
-
-            c2.rotate_section(angle=180, rot_point=[0, 0])
-
-            if self.s:
-                c1.shift = [self.s/2, 0]
-                c1.shift_section()
-
-                c2.shift = [-self.s/2, 0]
-                c2.shift_section()
-
-            geometry = sections.MergedSection([c1, c2])
-            geometry.clean_geometry()
-
-            # create mesh
-            mesh_c1 = c1.create_mesh(mesh_sizes=[self.t/2.0])
-            mesh = geometry.create_mesh(mesh_sizes=[self.t/2.0, self.t/2.0])
-            # creo la seccion
-            section_c1 = CrossSection(c1, mesh_c1)
-            section = CrossSection(geometry, mesh)
-            # calculo las propiedades
-            section_c1.calculate_geometric_properties()
-            #section_c1.calculate_warping_properties()
-            section.calculate_geometric_properties()
-            section.calculate_warping_properties()
-
-            (self.c_x, self.c_y) = section.get_c() # centroides
-            (self.sc_x, self.sc_y) = section.get_sc() # shear center
-            self.Cw = section.get_gamma() # warping
-            (self.rx, self.ry) = section.get_rc() # radios de giro
-            self.J = section.get_j()
-            self.A = section.get_area()
-            (_, self.ri) = section_c1.get_rc() # radios de giro de c1
-
-            self.save(section)
-
-            self.section = section
-            self.section_c1 = section_c1
-
-    def Ae(self, Fn):
-        print('Ae() NotImplementedError')
-        return self.A
-
-class I_builtup_c_profile():
-    '''Perfil C.
-
-        Parameters
-        ----------
-        H : float
-            Altura
-        B : float
-            ancho
-        t : float
-            espesor
-        r_out : float
-            Radio externo de los plegados
-        s : float
-            Gap entre almas de los perfiles
-        name : string
-            Nombre para el perfil, sino se asigna uno por defecto
+        self.wld = wld_factor
+        self.mesh_size = t/mesh_div
         
-        Attibutes
-        ---------
-            Mismos que los parametros y se agregan:
-        type : string
-            'I_builtup_cee'
-        rx, ry : float
-            radio de giro del miembro | sqrt(I/A)
-        ri : float
-            radio de giro de un solo perfil c respecto de -y-
-        c_x, c_y : float
-            coordenada del centroide de la seccion
-        sc_x, sc_y : float
-            coordenada del centro de corte
-        A : float
-            Area de la seccion
-        Cw : float
-            Constante torsional de warping de la seccion
-        J : float
-            Constante de torsion de St. Venant
-        
-        Methods
-        -------
-        calculate() :
-            Ejecuta el calculo de las propiedades de la seccion
-        Ae(Fn) : float
-            Calcula el area efectiva para la tension Fn
-
-        Tests
-        -----
-            >>> p1 = I_builtup_c_profile(H=8*25.4, B=6*25.4/2, t=0.075*25.4, r_out=(3/32+0.075)*25.4)
-            >>> p1.type
-            'I_builtup_cee'
-            >>> p1.name
-            'I_builtup_Cee_H203.2_B76.2_t1.905_r-out4.286_s0.0'
-            >>> p1.calculate()
-            >>> round( p1.A, 2)
-            1348.87
-            >>> round( p1.rx, 2)
-            79.29
-            >>> round( p1.ry, 2)
-            30.37
-            >>> round( p1.ri, 2)
-            23.47
-            >>> round( p1.J, 2)
-            4295.84
-
-    '''
-    save = commonMethods.save
-    load = commonMethods.load
-
-    def __init__(self, H, B, t, r_out, s = 0.0, name = ''):
-        self.type = 'I_builtup_cee'
-        self.B = B
-        self.H = H
-        self.t = t
-        self.r_out= r_out
-        self.s = s
-                
-        defName = 'I_builtup_Cee_H'+str(round(H,3))+'_B'+str(round(B,3))+'_t'+str(round(t,3))+'_r-out'+str(round(r_out,3))+'_s'+str(round(s,3))
-        # creo un nombre para la seccion
+        # nombre para la seccion
+        args = ['_H','D','B','t','r-out','s', '']
+        defName = self.type + '{:{fmt}}_'.join(args)
+        defName = defName.format(H, D, B, t, r_out, s, fmt='.2f')
+        if wld_factor:
+            defName = defName + 'wld' + str(wld_factor)
+        if mesh_div != 4:
+            defName = defName + '_msh' + str(mesh_div)
         if not name:
             self.name = defName
 
@@ -717,7 +616,205 @@ class I_builtup_c_profile():
         try:
             self.load()
         except:
-            ## CALCULO PROPIEDADES A PARTIR DEL PAQUETE sectionproperties
+            # cee individual
+            c0 = c_w_lps_profile(H= self.H, D= self.D, B= self. B, t= self.t, r_out= self.r_out)
+            c0.calculate()
+
+            c1 = sections.CeeSection(d=self.H, b=self.B, l=self.D, t=self.t, r_out=self.r_out, n_r=8)
+            c2 = sections.CeeSection(d=self.H, b=self.B, l=self.D, t=self.t, r_out=self.r_out, n_r=8, shift= [0,-self.H])
+
+            c2.rotate_section(angle=180, rot_point=[0, 0])
+
+            # huelgo entre perfiles
+            if self.s:
+                c1.shift = [self.s/2, 0]
+                c1.shift_section()
+
+                c2.shift = [-self.s/2, 0]
+                c2.shift_section()
+
+            # soldadura en los extremos del alma
+            if self.wld:
+                h = self.wld*self.r_out # weld length
+                a = self.wld*self.r_out*2 + self.s # base de la soldadura
+                weld1 = sections.CustomSection(
+                    points=[[a/2,0], [-a/2, 0], [0, h]],
+                    facets=[[0,1], [1,2], [2,0]],
+                    holes=[],
+                    control_points=[[h / 3, h / 3]]
+                )
+                weld2 = deepcopy(weld1)
+
+                weld2.mirror_section(axis= 'x', mirror_point=[0, 0])
+                weld2.shift = [0, self.H]
+                weld2.shift_section()
+
+                geometry = sections.MergedSection([c1, c2, weld1, weld2])
+                geometry.clean_geometry(verbose= False)
+
+                if self.s:    
+                    geometry.add_hole([0, self.H/2])
+                mesh = geometry.create_mesh(mesh_sizes=[self.mesh_size, self.mesh_size, self.mesh_size, self.mesh_size])
+            else:
+                geometry = sections.MergedSection([c1, c2])
+                geometry.clean_geometry()
+                mesh = geometry.create_mesh(mesh_sizes=[self.mesh_size, self.mesh_size])
+            
+            section = CrossSection(geometry, mesh)
+
+            #mesh_c1 = c1.create_mesh(mesh_sizes=[self.mesh_size])
+            #section_c1 = CrossSection(c1, mesh_c1)
+
+            #section_c1.calculate_geometric_properties()
+            #section_c1.calculate_warping_properties()
+            
+            section.calculate_geometric_properties()
+            section.calculate_warping_properties()
+
+            (self.c_x, self.c_y) = section.get_c() # centroides
+            (self.sc_x, self.sc_y) = section.get_sc() # shear center
+            self.Cw = section.get_gamma() # warping
+            (self.rx, self.ry) = section.get_rc() # radios de giro
+            self.J = section.get_j()
+            self.A = section.get_area()
+            self.ri = c0.ry # radios de giro de c1
+
+            self.save(section)
+
+            self.section = section
+            #self.section_c1 = section_c1
+
+    def Ae(self, Fn):
+        print('Ae() NotImplementedError')
+        return self.A
+
+class I_builtup_c_profile():
+    '''Perfil C.
+
+    Parameters
+    ----------
+        H : float
+            Altura
+        B : float
+            ancho
+        t : float
+            espesor
+        r_out : float
+            Radio externo de los plegados
+        s : float
+            Gap entre almas de los perfiles
+        name : string
+            Nombre para el perfil, sino se asigna uno por defecto
+        
+    Attibutes
+    ---------
+            Mismos que los parametros y se agregan:
+        type : string
+            'I_builtup_cee'
+        rx, ry : float
+            radio de giro del miembro | sqrt(I/A)
+        ri : float
+            radio de giro de un solo perfil c respecto de -y-
+        c_x, c_y : float
+            coordenada del centroide de la seccion
+        sc_x, sc_y : float
+            coordenada del centro de corte
+        A : float
+            Area de la seccion
+        Cw : float
+            Constante torsional de warping de la seccion
+        J : float
+            Constante de torsion de St. Venant
+        
+    Methods
+    -------
+        calculate() :
+            Ejecuta el calculo de las propiedades de la seccion
+        Ae(Fn) : float
+            Calcula el area efectiva para la tension Fn
+
+    Tests
+    -----
+        >>> p1 = I_builtup_c_profile(H=8*25.4, B=6*25.4/2, t=0.075*25.4, r_out=(3/32+0.075)*25.4)
+        >>> p1.type
+        'I_builtup_cee'
+        >>> p1.name
+        'I_builtup_cee_H203.20_B76.20_t1.90_r-out4.29_s0.00_'
+        >>> p1.calculate()
+        >>> round( p1.A, 2)
+        1329.08
+        >>> round( p1.rx, 2)
+        78.95
+        >>> round( p1.ry, 2)
+        29.09
+        >>> round( p1.ri, 2)
+        23.47
+        >>> round( p1.J, 2)
+        4271.46
+        
+        >>> p1 = I_builtup_c_profile(H= 150, B= 40, t= 1.16, r_out= 1.16+3, s=0.2, wld_factor = 0.85)
+        >>> p1.name   
+        'I_builtup_cee_H150.00_B40.00_t1.16_r-out4.16_s0.20_wld0.85'
+        >>> p1.calculate()
+        >>> round( p1.Cw, 2)
+        550701324.48
+        >>> round( p1.J, 2)
+        928.52
+
+        >>> p1 = I_builtup_c_profile(H= 150, B= 40, t= 1.16, r_out= 1.16+3)
+        >>> p1.name   
+        'I_builtup_cee_H150.00_B40.00_t1.16_r-out4.16_s0.00_'
+        >>> p1.calculate()
+        >>> round( p1.Cw, 2)
+        542736300.51
+        >>> round( p1.J, 2)
+        672.2
+
+    '''
+    save = commonMethods.save
+    load = commonMethods.load
+
+    def __init__(self, H, B, t, r_out, s = 0.0, name = '', wld_factor = 0.0, mesh_div = 4.0):
+        self.type = 'I_builtup_cee'
+        self.B = B
+        self.H = H
+        self.t = t
+        self.r_out= r_out
+        self.s = s
+        self.wld = wld_factor
+        self.mesh_size = t/mesh_div
+                
+        # nombre para la seccion
+        args = ['_H','B','t','r-out','s', '']
+        defName = self.type + '{:{fmt}}_'.join(args)
+        defName = defName.format(H, B, t, r_out, s, fmt='.2f')
+        if wld_factor:
+            defName = defName + 'wld' + str(wld_factor)
+        if mesh_div != 4:
+            defName = defName + '_msh' + str(mesh_div)
+        if not name:
+            self.name = defName
+
+    def calculate(self):
+        '''Se ejecuta el calculo de las propiedades de la seccion.
+
+        Referencia
+        ----------
+            rx, ry : radio de giro de la seccion | sqrt(I/A)
+            ri : radio de giro en -y- de un solo perfil c
+            c_x, c_y : coordenada del centroide de la seccion
+            sc_x, sc_y : coordenada del centro de corte
+            A : Area de la seccion
+            Cw : Constante torsional de warping de la seccion
+            J : Constante de torsion de St. Venant
+
+        '''
+        try:
+            self.load()
+        except:
+            c0 = c_profile(H= self.H, B= self. B, t= self.t, r_out= self.r_out)
+            c0.calculate()
+
             c1 = sections.CeeSection(d=self.H, b=self.B+self.r_out, l=self.r_out, t=self.t, r_out=self.r_out, n_r=8)
             c2 = deepcopy(c1)
         
@@ -742,19 +839,41 @@ class I_builtup_c_profile():
 
                 c2.shift = [-self.s/2, 0]
                 c2.shift_section()
+            # soldadura en los extremos del alma
+            if self.wld:
+                h = self.wld*self.r_out # weld length
+                a = self.wld*self.r_out*2 + self.s # base de la soldadura
+                weld1 = sections.CustomSection(
+                    points=[[a/2,0], [-a/2, 0], [0, h]],
+                    facets=[[0,1], [1,2], [2,0]],
+                    holes=[],
+                    control_points=[[h / 3, h / 3]]
+                )
+                weld2 = deepcopy(weld1)
 
-            geometry = sections.MergedSection([c1, c2])
-            geometry.clean_geometry()
-            # create mesh
-            mesh_c1 = c1.create_mesh(mesh_sizes=[self.t/2.0])
-            mesh = geometry.create_mesh(mesh_sizes=[self.t/2.0, self.t/2.0])
-            # creo la seccion
-            section_c1 = CrossSection(c1, mesh_c1)
+                weld2.mirror_section(axis= 'x', mirror_point=[0, 0])
+                weld2.shift = [0, self.H]
+                weld2.shift_section()
+
+                geometry = sections.MergedSection([c1, c2, weld1, weld2])
+                geometry.clean_geometry(verbose= False)
+
+                if self.s:    
+                    geometry.add_hole([0, self.H/2])
+                mesh = geometry.create_mesh(mesh_sizes=[self.mesh_size, self.mesh_size, self.mesh_size, self.mesh_size])
+            else:
+                geometry = sections.MergedSection([c1, c2])
+                geometry.clean_geometry()
+                mesh = geometry.create_mesh(mesh_sizes=[self.mesh_size, self.mesh_size])
+            
             section = CrossSection(geometry, mesh)
-            # calculo las propiedades
-            # calculo las propiedades
-            section_c1.calculate_geometric_properties()
+
+            #mesh_c1 = c1.create_mesh(mesh_sizes=[self.mesh_size])
+            #section_c1 = CrossSection(c1, mesh_c1)
+
+            #section_c1.calculate_geometric_properties()
             #section_c1.calculate_warping_properties()
+            
             section.calculate_geometric_properties()
             section.calculate_warping_properties()
 
@@ -764,12 +883,12 @@ class I_builtup_c_profile():
             (self.rx, self.ry) = section.get_rc() # radios de giro
             self.J = section.get_j()
             self.A = section.get_area()
-            (_, self.ri) = section_c1.get_rc() # radios de giro de c1
+            self.ri = c0.ry # radios de giro y de c1
 
             self.save(section)
 
             self.section = section
-            self.section_c1 = section_c1
+            #self.section_c1 = section_c1
  
     def Ae(self, Fn):
         print('Ae() NotImplementedError')
