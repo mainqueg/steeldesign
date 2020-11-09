@@ -12,10 +12,10 @@ s = steel(FY= 337, E0= 180510.0, nu= 0.3, n= 13.5, offset= 0.002, name= 'SA304_1
 # defino parametros de diseño
 dp = designParameters(Kx= 0.5, Ky= 0.5, Kz = 0.5)
 # creo un miembro
-m = member(L= 3200, profile= p1, steel= s, designParameters= dp)
+m = member(L= 100, profile= p1, steel= s, designParameters= dp)
 # creo el analisis
 analysis = ASCE_8_02(m)
-# calculo admisibles
-(Pn, fiPn) = analysis.s3_FTB()
+# calculo admisibles #
+(Fn, Pn) = analysis.s3_FTB()
 
-print('Pn =', round(Pn,2),'| fiPn =', round(fiPn,2))
+print('Fn =', round(Fn,2),'| Pn =', round(Pn,2))
