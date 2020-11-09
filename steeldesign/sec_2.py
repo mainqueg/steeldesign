@@ -64,7 +64,7 @@ class  sec2_1_1():
 
         # Tests
 
-        >>> TABLE1()
+        #>>> TABLE1()
         '''
         table1 = np.array(((30, 1.00),
                 (25, 0.96),
@@ -79,15 +79,40 @@ class  sec2_1_1():
         ))
         r = np.interp( table1[:,0], table1[:,1], self.L/self.wf )
         return r
-########################### USO
-'''#INPUT:
-flangeCURLING = 'False'
-shearLag = 'True'
-# VERIFICACION
-for member in members:
-    sec2_1_1 = sec2_1_1(memberProperties(member))
-    print ('Los elementos del miembro', member, 'cumplen con las dimensiones requeridas:', sec2_1_1.Cl_1())
-    if flangeCURLING:
-        sec2_1_1.Cl_2
-    if shearLag:
-        sec2_1_1.Cl_3'''
+
+def sec2_2_1(w, t , f, E0, k = 4):
+    '''Uniformly Compressed Stiffened Elements. Load Capacity Determination or Deflection Determination.
+
+    Test
+    ----
+        >>> sec2_2_1(w= 50, t= 1 , f= 20, E0 = 200e3)
+        50, 1.0
+        >>> round(sec2_2_1(w= 50, t= 1 , f= 200, E0 = 200e3), 2)
+        44.22, 0.83
+    '''
+    esbeltez = E_2_2_1_e4(w, t, k ,f, E0)
+    if esbeltez <= 0.673: 
+        b_eff_LC = w
+        rho = 1.0
+    else:
+        rho = (1-0.22/esbeltez)/esbeltez
+        b_eff_LC = w*rho
+        
+    return b_eff_LC, rho
+
+
+def sec2_3_1(w, t, f, E, k = 0.5):
+    '''Uniformly Compressed Unstiffened Elements. Load Capacity Determination or Deflection Determination.
+    '''
+    b_eff_D, rho = sec2_2_1(w, t, f, E, k)
+    return b_eff_D, rho
+    
+def E_2_2_1_e4(w, t, k, f, E):
+    '''
+    Tests
+    -----
+        >>> round(E_2_2_1_e4(w= 50, t= 1, k=4, f= 200, E= 200e3), 2)
+        0.83
+    '''
+    esbeltez = (1.052/(k**0.5)) * (w/t) * ((f/E)**0.5)
+    return esbeltez
