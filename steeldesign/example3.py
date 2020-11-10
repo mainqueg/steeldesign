@@ -34,9 +34,9 @@ for L in Long:
 
     print('L=',L,'| FTB =', round(Pn_FTB,2),'| TB =', round(Pn_TB,2),'| FBx =', round(x_dir[1],2),'| FBy =', round(y_dir[1],2))
 
-p1.section.plot_centroids()
+#p1.section.plot_centroids()
 
-title = 'Pn | Cee_wlps'
+title = 'Pn_Cee_wlps'
 
 f = plt.figure()
 plt.plot(Long, FTB, label = 'FTB')

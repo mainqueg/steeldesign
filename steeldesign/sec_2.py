@@ -5,7 +5,7 @@
 from math import pi
 import numpy as np
 
-class  sec2_1_1():
+class sec2_1_1():
     '''Section 2.1.1: Dimensional Limits and Considerations.
 
     # Parametros
@@ -80,32 +80,57 @@ class  sec2_1_1():
         r = np.interp( table1[:,0], table1[:,1], self.L/self.wf )
         return r
 
-def sec2_2_1(w, t , f, E0, k = 4):
+def sec2_2_1(w, t , f, E, k = 4):
     '''Uniformly Compressed Stiffened Elements. Load Capacity Determination or Deflection Determination.
 
     Test
     ----
-        >>> sec2_2_1(w= 50, t= 1 , f= 20, E0 = 200e3)
-        50, 1.0
-        >>> round(sec2_2_1(w= 50, t= 1 , f= 200, E0 = 200e3), 2)
-        44.22, 0.83
+        >>> b, midC = sec2_2_1(w= 50, t= 1 , f= 20, E = 200e3)
+        >>> print('b: {:{fmt}} | esbeltez: {m[esbeltez]:{fmt}} | rho: {m[rho]:{fmt}}'.format(b, m= midC, fmt = '.2f'))
+        b: 50.00 | esbeltez: 0.26 | rho: 1.00
+        >>> b, midC = sec2_2_1(w= 50, t= 1 , f= 200, E = 200e3)
+        >>> print('b: {:{fmt}} | esbeltez: {m[esbeltez]:{fmt}} | rho: {m[rho]:{fmt}}'.format(b, m= midC, fmt = '.2f'))
+        b: 44.22 | esbeltez: 0.83 | rho: 0.88
     '''
-    esbeltez = E_2_2_1_e4(w, t, k ,f, E0)
+    esbeltez = E_2_2_1_e4(w, t, k ,f, E)
+    rho = E_2_2_1_e3(esbeltez)
+    
+    b_eff = w*rho
+
+    midC = {'esbeltez': esbeltez, 'rho': rho}
+     
+    return b_eff, midC
+
+def E_2_2_1_e3(esbeltez):
+    '''Factor rho definida en ecuacion 2.2.1-3
+
+    Parameters
+    ----------
+        esbeltez : float
+            Esbeltez del elemento segun ecuacion 2.2.1-4
+    Returns
+    -------
+        rho : float
+            Factor de correccion de ancho
+    Raises
+    ------
+        none
+    Tests
+    -----
+        >>> round( E_2_2_1_e3(esbeltez= 0.83), 2)
+        0.89
+    '''
     if esbeltez <= 0.673: 
-        b_eff_LC = w
         rho = 1.0
     else:
         rho = (1-0.22/esbeltez)/esbeltez
-        b_eff_LC = w*rho
-        
-    return b_eff_LC, rho
-
+    return rho
 
 def sec2_3_1(w, t, f, E, k = 0.5):
     '''Uniformly Compressed Unstiffened Elements. Load Capacity Determination or Deflection Determination.
     '''
-    b_eff_D, rho = sec2_2_1(w, t, f, E, k)
-    return b_eff_D, rho
+    b_eff, rho = sec2_2_1(w, t, f, E, k)
+    return b_eff, rho
     
 def E_2_2_1_e4(w, t, k, f, E):
     '''

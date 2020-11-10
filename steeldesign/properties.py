@@ -93,7 +93,7 @@ class commonMethods():
                 pass
             self.c_x, self.c_y = p.c_x, p.c_y
             self.sc_x, self.sc_y = p.sc_x, p.sc_y
-            self.A = p.A
+            self.A, self.Ae = p.A, p.Ae
             self.Cw, self.J = p.Cw, p.J
         with open(file  + '_mesh.fig', 'rb') as input:
             fig = pickle.load(input)
@@ -292,6 +292,11 @@ class c_w_lps_profile():
         self.H = H
         self.t = t
         self.r_out= r_out
+        self.elements= {
+            1: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
+            2: {'name': 'flange', 'type': 'unstiffned', 'w': B-r_out},
+            3: {'name': 'lip', 'type': 'stiffned_w_slps', 'w': D-r_out},
+            }
                 
         # nombre para la seccion
         args = ['_H','D','B','t','r-out', '']
@@ -332,12 +337,13 @@ class c_w_lps_profile():
             (self.rx, self.ry) = section.get_rc() # radios de giro
             self.J = section.get_j()
             self.A = section.get_area()
+            self.Ae = section.get_area()
 
             self.save(section)
 
             self.section = section
 
-    def Ae(self, Fn):
+    def Aeff(self, Fn):
         print('Ae() NotImplementedError')
         return self.A
 
@@ -355,8 +361,7 @@ class c_profile():
         r_out : float
             Radio externo de los plegados
         name : string
-            Nombre para el perfil, sino se asigna uno por defecto
-        
+            Nombre para el perfil, sino se asigna uno por defecto 
     Attibutes
     ---------
             Mismos que los parametros y se agregan:
@@ -365,23 +370,21 @@ class c_profile():
         rx, ry : float
             radio de giro del miembro | sqrt(I/A)
         c_x, c_y : float
-            coordenada del centroide de la seccion
+            coordenadas del centroide de la seccion
         sc_x, sc_y : float
-            coordenada del centro de corte
+            coordenadas del centro de corte
         A : float
             Area de la seccion
         Cw : float
             Constante torsional de warping de la seccion
         J : float
-            Constante de torsion de St. Venant
-        
+            Constante de torsion de St. Venant 
     Methods
     -------
         calculate() :
             Ejecuta el calculo de las propiedades de la seccion
         Ae(Fn) : float
             Calcula el area efectiva para la tension Fn
-
     Tests
     -----
         >>> p1 = c_profile(H = 100, B = 50, t = 1.5, r_out = 6+1.5)
@@ -407,6 +410,10 @@ class c_profile():
         self.H = H
         self.t = t
         self.r_out= r_out
+        self.elements = {
+            1: {'name': 'web', 'type': 'stiffned', 'width': H},
+            2: {'name': 'flange', 'type': 'unstiffned', 'width': B},
+            }
                 
         # nombre para la seccion
         args = ['_H','B','t','r-out', '']
@@ -463,7 +470,7 @@ class c_profile():
 
             self.section = section
  
-    def Ae(self, Fn):
+    def Aeff(self):
         print('Ae() NotImplementedError')
         # Ancho efectivo
         ## Ala
@@ -783,6 +790,10 @@ class I_builtup_c_profile():
         self.s = s
         self.wld = wld_factor
         self.mesh_size = t/mesh_div
+        self.elements = {
+            1: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
+            2: {'name': 'flange', 'type': 'unstiffned', 'w': B-r_out},
+            }
                 
         # nombre para la seccion
         args = ['_H','B','t','r-out','s', '']
@@ -883,6 +894,7 @@ class I_builtup_c_profile():
             (self.rx, self.ry) = section.get_rc() # radios de giro
             self.J = section.get_j()
             self.A = section.get_area()
+            self.Ae = self.A
             self.ri = c0.ry # radios de giro y de c1
 
             self.save(section)
@@ -890,7 +902,7 @@ class I_builtup_c_profile():
             self.section = section
             #self.section_c1 = section_c1
  
-    def Ae(self, Fn):
+    def Aeff(self, Fn):
         print('Ae() NotImplementedError')
         # Ancho efectivo
         ## Ala
