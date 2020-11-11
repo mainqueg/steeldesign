@@ -5,9 +5,9 @@
 Perfiles implementados:
 
 c_profile : 
-    Crea un perfil C, con sistema de coordenadas en el centroide de la sección
+    Crea un perfil C, con sistema de coordenadas en el centroide de la seccion
 c_profile_w_lps : 
-    Crea un perfil C con refuerzo de labios, con sistema de coordenadas en el centroide de la sección
+    Crea un perfil C con refuerzo de labios, con sistema de coordenadas en el centroide de la seccion
 
 Se debe indicar el archivo *.pf desde donde se crean los perfiles. Tiene que estar en el cwd donde se corre el script.
 
