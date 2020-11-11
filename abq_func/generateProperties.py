@@ -160,5 +160,5 @@ for section in sections.items():
     section = section[1]  
     mdb.models[model].BeamSection(name=str(section['name']), 
         integration=DURING_ANALYSIS, poissonRatio=0.0, profile=str(section['profile']), 
-        material=str(section['material  ']), temperatureVar=LINEAR, 
+        material=str(section['material']), temperatureVar=LINEAR, 
         consistentMassMatrix=False)
