@@ -312,6 +312,7 @@ class ASCE_8_02:
         midC = {'Fn_FBx': Fn_FBx, 'Fn_FBy': Fn_FBy, 'Fn_TB': Fn_TB, 'Fn_FTB':Fn_FTB, 'Ae': Ae} # convertir en diccionario
 
         return fiPn, midC
+        
     def s2_Ae_compMemb(self, f):
         '''Area efectiva para miembros a compresion, segun 2.2.1 (stiffned), 2.3.1 (unstiffned) y 2.4.2 (stiffned_w_slps)
         

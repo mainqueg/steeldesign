@@ -128,9 +128,29 @@ def E_2_2_1_e3(esbeltez):
 
 def sec2_3_1(w, t, f, E, k = 0.5):
     '''Uniformly Compressed Unstiffened Elements. Load Capacity Determination or Deflection Determination.
+
+    Parameters
+    ----------
+        esbeltez : float
+            Esbeltez del elemento segun ecuacion 2.2.1-4
+    Returns
+    -------
+        rho : float
+            Factor de correccion de ancho
+    Raises
+    ------
+        none
+    Test
+    ----
+        >>> b, midC = sec2_3_1(w= 50, t= 1 , f= 5, E = 200e3)
+        >>> print('b: {:{fmt}} | esbeltez: {m[esbeltez]:{fmt}} | rho: {m[rho]:{fmt}}'.format(b, m= midC, fmt = '.2f'))
+        b: 50.00 | esbeltez: 0.37 | rho: 1.00
+        >>> b, midC = sec2_3_1(w= 50, t= 1 , f= 200, E = 200e3)
+        >>> print('b: {:{fmt}} | esbeltez: {m[esbeltez]:{fmt}} | rho: {m[rho]:{fmt}}'.format(b, m= midC, fmt = '.2f'))
+        b: 19.27 | esbeltez: 2.35 | rho: 0.39
     '''
-    b_eff, rho = sec2_2_1(w, t, f, E, k)
-    return b_eff, rho
+    b_eff, midC = sec2_2_1(w, t, f, E, k)
+    return b_eff, midC
     
 def E_2_2_1_e4(w, t, k, f, E):
     '''

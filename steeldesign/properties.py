@@ -16,7 +16,6 @@
         En definiciones
 '''
 
-
 import pickle
 import os
 import sectionproperties.pre.sections as sections
@@ -294,8 +293,8 @@ class c_w_lps_profile():
         self.r_out= r_out
         self.elements= {
             1: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
-            2: {'name': 'flange', 'type': 'unstiffned', 'w': B-r_out},
-            3: {'name': 'lip', 'type': 'stiffned_w_slps', 'w': D-r_out},
+            2: {'name': 'flange', 'type': 'stiffned_w_slps', 'w': B-r_out},
+            3: {'name': 'lip', 'type': 'unstiffned', 'w': D-r_out},
             }
                 
         # nombre para la seccion
@@ -594,6 +593,11 @@ class I_builtup_c_w_lps_profile():
         self.s = s
         self.wld = wld_factor
         self.mesh_size = t/mesh_div
+        self.elements= {
+            1: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
+            2: {'name': 'flange', 'type': 'stiffned_w_slps', 'w': B-r_out},
+            3: {'name': 'lip', 'type': 'unstiffned', 'w': D-r_out},
+            }
         
         # nombre para la seccion
         args = ['_H','D','B','t','r-out','s', '']
@@ -684,6 +688,7 @@ class I_builtup_c_w_lps_profile():
             (self.rx, self.ry) = section.get_rc() # radios de giro
             self.J = section.get_j()
             self.A = section.get_area()
+            self.Ae = section.get_area()
             self.ri = c0.ry # radios de giro de c1
 
             self.save(section)
@@ -691,7 +696,7 @@ class I_builtup_c_w_lps_profile():
             self.section = section
             #self.section_c1 = section_c1
 
-    def Ae(self, Fn):
+    def Aeff(self, Fn):
         print('Ae() NotImplementedError')
         return self.A
 

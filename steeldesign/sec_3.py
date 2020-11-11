@@ -4,22 +4,20 @@ import numpy as np
 def E3_4_e1(Fn, Ae):
     ''' Design axial strength Ec 3.4-1
 
-        Parameters
-        ----------
+    Parameters
+    ----------
         Fn : float
             El menor de los valores de tension para pandel flexiona, torsional o flexo-torsional
         Ae : float
             Area efectiva calculada a la tension Fn
-
-        Returns
-        -------
+    Returns
+    -------
         fiPn : float
             Resistencia axial de diseño
-
-        Tests
-        -----
-            >>> round( E3_4_e1(1.5, 1.5), 4)
-            1.9125
+    Tests
+    -----
+        >>> round( E3_4_e1(1.5, 1.5), 4)
+        1.9125
     '''
     fi_c = 0.85 # factor de resistencia a compresion
     fiPn = fi_c*Fn*Ae
