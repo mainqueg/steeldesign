@@ -1,27 +1,59 @@
 {
-    "1": {
-        "B": 50, 
-        "name": "Cee100", 
-        "H": 100, 
-        "r_out": 7.5, 
-        "t": 1.5, 
-        "type": "c_profile"
-    }, 
-    "2": {
-        "B": 50, 
-        "name": "Cee70", 
-        "H": 70, 
-        "r_out": 7.5, 
-        "t": 1.5, 
-        "type": "c_profile"
-    }, 
-    "3": {
-        "B": 50, 
-        "name": "Cee70_w_lps", 
-        "H": 70, 
-        "r_out": 3.75, 
-        "t": 1.5, 
-        "type": "c_profile_w_lps", 
-        "D": 12
+    "profiles": {
+        "1": {
+            "B": 50, 
+            "name": "Cee100", 
+            "H": 100, 
+            "r_out": 7.5, 
+            "t": 1.5, 
+            "type": "c_profile"
+        }, 
+        "2": {
+            "B": 50, 
+            "name": "Cee70", 
+            "H": 70, 
+            "r_out": 7.5, 
+            "t": 1.5, 
+            "type": "c_profile"
+        }, 
+        "3": {
+            "B": 50, 
+            "name": "Cee70_w_lps", 
+            "H": 70, 
+            "r_out": 3.75, 
+            "t": 1.5, 
+            "type": "c_profile_w_lps", 
+            "D": 12
+        }
+    },
+    "materials": {
+        "1": {
+            "name": "SA409",
+            "E0": 200000,
+            "FY": 244,
+            "n": 9.7,
+            "offset": 0.002,
+            "nu": 0.3
+        },
+        "2": {
+            "name": "SA304_1_4_hard",
+            "E0": 186000,
+            "FY": 244,
+            "n": 13.5,
+            "offset": 0.002,
+            "nu": 0.3
+        }
+    },
+    "sections": {
+        "1":{
+            "name": "Cee100_cols",
+            "profile": "Cee100",
+            "material": "SA409"
+            },
+        "2":{
+            "name": "Cee70_beams",
+            "profile": "Cee70",
+            "material": "SA409"
+            }
     }
 }

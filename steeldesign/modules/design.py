@@ -119,10 +119,10 @@
 '''
 
 from math import pi
-from sec_2 import sec2_1_1, sec2_2_1, sec2_3_1
-from sec_3 import E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_3_1_2_e6, E3_4_3_e1
-from appendix_B import B_2, B_1
-from properties import c_w_lps_profile, c_profile, steel, I_builtup_c_profile
+from .sec_2 import sec2_1_1, sec2_2_1, sec2_3_1
+from .sec_3 import E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_3_1_2_e6, E3_4_3_e1
+from .appendix_B import B_2, B_1
+from .properties import c_w_lps_profile, c_profile, steel, I_builtup_c_profile
 
 
 class designParameters:
