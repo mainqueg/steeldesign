@@ -263,7 +263,8 @@ def sec2_2_2(w, t, f1, f2, E, k):
     if psi <= -0.236: b_eff_2 = b_e/2
     else: b_eff_2 = b_e - b_eff_1
 
-
+    midC = {'b1_eff': b_eff_1, 'b2_eff': b_eff_2, 'k': k, 'psi': psi}
+    return b_e, midC
 
 
 # EFFECTIVE WIDTH OF UNSTIFFENED ELEMENTS
