@@ -223,7 +223,7 @@ def E_2_2_1_e4(w, t, f, E, k):
     return esbeltez
 
 
-def sec2_2_2(w, t, f1, f2, E, k):
+def sec2_2_2(w, t, f1, f2, E0, k=4):
     '''Effective Widths of Webs and Stiffened Elements with Stress Gradient. Load Capacity Determination or Deflection Determination.
     Parameters
     ----------
@@ -235,8 +235,8 @@ def sec2_2_2(w, t, f1, f2, E, k):
             tension sobre el alma o elemento (ver figura 2 - ASCE 8).
         f2: float,
             tension sobre el alma o elemento.
-        E: float,
-            modulo de elasticidad.
+        E0: float,
+            modulo de elasticidad inicial.
         k: float,
             coeficiente de pandeo en placas para el elemento en consideracion.
 
@@ -251,20 +251,26 @@ def sec2_2_2(w, t, f1, f2, E, k):
         none
     Test
     ----
-        >>>
+        Example 2.1 - C-section 
+        >>> b_eff_1, b_eff_2, midC = sec2_2_2(w=5.692, t=0.060, f1=47.48, f2=-45.77, E0=27000, k=4)
+        >>> print('b1_eff: {:{fmt}} | b2_eff: {:{fmt}} | b_e: {m[b_e]:{fmt}} | k: {m[k]:{fmt}} | psi: {m[psi]:{fmt}}'.format(b_eff_1, b_eff_2, m = midC, fmt = '.3f'))
+        b1_eff: 1.232 | b2_eff: 2.442 | b_e: 4.884 | k: 23.079 | psi: -0.964
+
     '''
+
+    
 
     psi = f2/f1
     k = 4 + 2*(1-psi)**3 + 2*(1-psi)
-    b_e = sec2_2_1(w=w, t=t, f=f1, E=E0, k=k)
+    b_e, _ = sec2_2_1(w=w, t=t, f=f1, E=E0, k=k)
 
     b_eff_1 = b_e/(3-psi)
 
     if psi <= -0.236: b_eff_2 = b_e/2
     else: b_eff_2 = b_e - b_eff_1
 
-    midC = {'b1_eff': b_eff_1, 'b2_eff': b_eff_2, 'k': k, 'psi': psi}
-    return b_e, midC
+    midC = {'b_e': b_e, 'k': k, 'psi': psi}
+    return b_eff_1, b_eff_2, midC
 
 
 # EFFECTIVE WIDTH OF UNSTIFFENED ELEMENTS
@@ -391,7 +397,7 @@ def sec2_4_2(E0, f, w, t = 0, d = 0, r = 0, theta = 90,  stiff = 'SL'):
         # Ejemplo 16.1 - C-section with wide flanges - FALLA POR REDONDEO Ia_original=0.000842
         >>> b, midC = sec2_4_2(E0=27000, f=19.92, w=2.914, t=0.105, d=0.607, r=3/16, theta=90, stiff='SL')
         >>> print('b: {:{fmt2}} | Is: {m[Is]:{fmt5}} | Ia: {m[Ia]:{fmt5}} | As: {m[As]:{fmt5}} | As_prima: {m[As_prima]:{fmt5}} | ds: {m[ds]:{fmt2}} | ds_prima: {m[ds_prima]:{fmt2}} | k: {m[k]:{fmt2}}'.format(b, m = midC, fmt2 = '.2f', fmt5 = '.5f'))
-        b: 2.91 | Is: 0.00196 | Ia: 0.00086 | As: 0.06374 | As_prima: 0.06374 | ds: 0.61 | ds_prima: 0.61 | k: 3.71
+        b: 2.91 | Is: 0.00196 | Ia: 0.00086 | As: 0.06373 | As_prima: 0.06373 | ds: 0.61 | ds_prima: 0.61 | k: 3.71
 
         # Ejemplo CASE III
         >>> b, midC = sec2_4_2(E0=27000, f=150.0, w=3.0, t=0.135, d=0.498, r=3/16, theta=90, stiff='SL')
@@ -401,7 +407,7 @@ def sec2_4_2(E0, f, w, t = 0, d = 0, r = 0, theta = 90,  stiff = 'SL'):
 
     S = E_2_4_e1(E=E0, f=f)
     Is = E_2_4_e2(d=d, t=t, theta=theta)
-    ds_prima, trash = sec2_3_1(w=d, t=t, f=f, E=E0)
+    ds_prima, _ = sec2_3_1(w=d, t=t, f=f, E=E0)
     As_prima = E_2_4_e3(ds_prima=ds_prima, t=t)
 
     # a partir del radio de curvatura del rigidizador y del angulo calculo D
@@ -416,6 +422,7 @@ def sec2_4_2(E0, f, w, t = 0, d = 0, r = 0, theta = 90,  stiff = 'SL'):
     else:
         b, midC = sec2_4_2_CASEIII(E0=E0, f=f, t=t, w=w, theta=theta, D=D, ds_prima=ds_prima, stiff=stiff, S=S, Is=Is, As_prima=As_prima)
     
+    midC['S'] = S
     return b, midC
 
 def E_2_4_e1(E, f):
@@ -668,7 +675,7 @@ def E_2_4_2_CASES(E0, f, t, w, theta, D, ds_prima, stiff, Is, As_prima, n, Ia, k
         ds = As/t
 
     k = C2**n*(k_a - k_u) + k_u # Ec 2.4.2-9
-    b, trash = sec2_2_1(w=w, t=t, f=f, E=E0, k=k)
+    b, _ = sec2_2_1(w=w, t=t, f=f, E=E0, k=k)
     
     midC = {'Is': Is, 'Ia': Ia, 'As': As, 'As_prima': As_prima, 'ds': ds, 'ds_prima': ds_prima, 'k': k}
 
