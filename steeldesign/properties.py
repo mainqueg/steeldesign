@@ -233,17 +233,17 @@ class c_w_lps_profile():
     Parameters
     ----------
         H : float
-            Altura
+            Altura total del perfil.
         B : float
-            ancho
+            ancho total del perfil.
         D : float
-            largo del labio
+            largo del labio sin tener en cuenta la curvatura.
         t : float
-            espesor
+            espesor.
         r_out : float
-            Radio externo de los plegados
+            Radio externo de los plegados.
         name : string
-            Nombre para el perfil, sino se asigna uno por defecto
+            Nombre para el perfil, sino se asigna uno por defecto.
         
     Attibutes
     ---------
@@ -292,8 +292,8 @@ class c_w_lps_profile():
         self.t = t
         self.r_out= r_out
         self.elements= {
-            1: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
-            2: {'name': 'flange', 'type': 'stiffned_w_slps', 'w': B-r_out},
+            1: {'name': 'flange', 'type': 'stiffned_w_slps', 'w': B-r_out},
+            2: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
             3: {'name': 'lip', 'type': 'unstiffned', 'w': D-r_out},
             }
                 
@@ -352,15 +352,15 @@ class c_profile():
     Parameters
     ----------
         H : float
-            Altura
+            Altura total del perfil.
         B : float
-            ancho
+            ancho total del perfil.
         t : float
-            espesor
+            espesor.
         r_out : float
-            Radio externo de los plegados
+            Radio externo de los plegados.
         name : string
-            Nombre para el perfil, sino se asigna uno por defecto 
+            Nombre para el perfil, sino se asigna uno por defecto.
     Attibutes
     ---------
             Mismos que los parametros y se agregan:
@@ -410,8 +410,8 @@ class c_profile():
         self.t = t
         self.r_out= r_out
         self.elements = {
-            1: {'name': 'web', 'type': 'stiffned', 'width': H},
-            2: {'name': 'flange', 'type': 'unstiffned', 'width': B},
+            1: {'name': 'flange', 'type': 'unstiffned', 'width': B},
+            2: {'name': 'web', 'type': 'stiffned', 'width': H},
             }
                 
         # nombre para la seccion
@@ -486,23 +486,23 @@ class I_builtup_c_w_lps_profile():
     Parameters
     ----------
         H : float
-            Altura
+            Altura total del perfil.
         B : float
-            ancho
+            ancho total del perfil.
         D : float
-            largo del labio
+            largo del labio sin tener en cuenta la curvatura.
         t : float
-            espesor
+            espesor.
         r_out : float
-            Radio externo de los plegados
+            Radio externo de los plegados.
         s : float
-            Gap entre almas de los perfiles
+            Gap entre almas de los perfiles.
         name : string
-            Nombre para el perfil, sino se asigna uno por defecto en base a los argumentos utilizados
+            Nombre para el perfil, sino se asigna uno por defecto en base a los argumentos utilizados.
         wld_factor : float
-            Factor de escala de la base del cordon de soldadura respecto del radio de plegado
+            Factor de escala de la base del cordon de soldadura respecto del radio de plegado.
         mesh_div : float
-            Cantidad elementos de la malla en el espesor
+            Cantidad elementos de la malla en el espesor.
         
     Attibutes
     ---------
@@ -594,8 +594,8 @@ class I_builtup_c_w_lps_profile():
         self.wld = wld_factor
         self.mesh_size = t/mesh_div
         self.elements= {
-            1: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
-            2: {'name': 'flange', 'type': 'stiffned_w_slps', 'w': B-r_out},
+            1: {'name': 'flange', 'type': 'stiffned_w_slps', 'w': B-r_out},
+            2: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
             3: {'name': 'lip', 'type': 'unstiffned', 'w': D-r_out},
             }
         
@@ -706,17 +706,17 @@ class I_builtup_c_profile():
     Parameters
     ----------
         H : float
-            Altura
+            Altura total del perfil.
         B : float
-            ancho
+            ancho total del perfil.
         t : float
-            espesor
+            espesor.
         r_out : float
-            Radio externo de los plegados
+            Radio externo de los plegados.
         s : float
-            Gap entre almas de los perfiles
+            Gap entre almas de los perfiles.
         name : string
-            Nombre para el perfil, sino se asigna uno por defecto
+            Nombre para el perfil, sino se asigna uno por defecto.
         
     Attibutes
     ---------
@@ -796,8 +796,8 @@ class I_builtup_c_profile():
         self.wld = wld_factor
         self.mesh_size = t/mesh_div
         self.elements = {
-            1: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
-            2: {'name': 'flange', 'type': 'unstiffned', 'w': B-r_out},
+            1: {'name': 'flange', 'type': 'unstiffned', 'w': B-r_out},
+            2: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
             }
                 
         # nombre para la seccion

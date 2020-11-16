@@ -261,4 +261,185 @@ def E3_3_1_2_e9(rx,ry,x0):
     return r0
 
 
+## 3.2 Tension Members
+def sec3_2(A, Fy):
+    '''Tension Members.
+    Parameters
+    ----------
+        An: float,
+            net area de la seccion.
+        Fy: float,
+            tension de fluencia segun Tabla A1 - ASCE 8.
+    Returns
+    -------
+        fiTn: float,
+            resistencia de diseno a la tension.
+        midC: diccionario,
+            valores de fi y Tn.
+    Raises
+    ------
+        none
+    Tests
+    -----
+        >>> 
+    '''
+    fi = 0.85
+    Tn = An*Fy
 
+    midC = {'Tn': Tn, 'fi': fi}
+
+    return Tn*fi, midC
+
+## 3.3 Flexural Memebers
+def sec3_3_1():
+    '''Strength for Bending Only.
+    Parameters
+    ----------
+        An: float,
+            net area de la seccion.
+        Fy: float,
+            tension de fluencia segun Tabla A1 - ASCE 8.
+    Returns
+    -------
+        fiTn: float,
+            resistencia de diseno a la tension.
+        midC: diccionario,
+            valores de fi y Tn.
+    Raises
+    ------
+        none
+    Tests
+    -----
+        >>> 
+    '''
+    Mn_nominal = sec3_3_1_1()
+    Mn_LTB = sec3_3_1_2()
+
+def sec3_3_1_1(FY, procedure = 'PI', comp_flange = 'UNSTIFF'):
+    '''Strength for Bending Only. Nominal Section Strength.
+    Parameters
+    ----------
+        Fy: float,
+            tension de fluencia segun Tabla A1 - ASCE 8.
+        procedure: string,
+            especifica el procedimiento a implementar (Opciones: PI - PII - LD).
+        comp_flange: string;
+            determina si las alas en compresion estan rigidizadas o no.
+    Returns
+    -------
+        Mn: float,
+            resistencia de diseno a la flexion nominal de la seccion.
+        midC: diccionario,
+            calculos intermedios.
+    Raises
+    ------
+        none
+    Tests
+    -----
+        >>> 
+    '''
+    if comp_flange == 'UNSTIFF':    # Unstiffened compresion flanges
+        fi = 0.85
+    elif comp_flange == 'STIFF':    # Stiffened or partially stiffened flanges
+        fi = 0.90
+
+    # hay que calcular de alguna forma Se y pasarlo
+    Se = 
+
+    if procedure == 'PI':    # Procedimiento I - basado en fluencia
+        Mn = Procedure_I(Se=Se, FY=FY)
+
+    elif procedure == 'PII':    # Procedimiento II - basado en endurecimiento
+        Mn, midC = Procedure_II()
+
+    elif procedure == 'LD':     # Local Distorsion Considerations
+        Mn, midC = LocalDistorsion()
+
+    midC['Mn'] = Mn
+    midC['fi'] = fi
+    fiMn = fi*Mn
+
+    return fiMn, midC
+
+def Procedure_I(Se, FY):
+    '''Nominal Section Strength. Procedure I. Based on Initiation of Yielding.
+    Parameters
+    ----------
+        Se: float,
+            modulo de seccion elastico efectivo, calculado con la fibra extrema en compresion con f=Fyc o f=Fyc, la que plastifique primero.
+        FY: float,
+            tension de fluencia segun Tabla A1 - ASCE 8.
+    Returns
+    -------
+        Mn: float,
+            resistencia de diseno a la flexion.
+    Raises
+    ------
+        none
+    Tests
+    -----
+        >>> 
+    '''
+    Mn = Se*FY
+    return Mn
+
+def Procedure_II():
+    '''Nominal Section Strength. Procedure II. Based on Inelastic Reserve Capacity.
+    Parameters
+    ----------
+    
+    Returns
+    -------
+        
+    Raises
+    ------
+        none
+    Tests
+    -----
+        >>> 
+    '''
+    raise 'NotImplemented'
+
+def LocalDistorsion():
+    '''Nominal Section Strength. Local Distorsion Consideration.
+    Parameters
+    ----------
+    
+    Returns
+    -------
+        
+    Raises
+    ------
+        none
+    Tests
+    -----
+        >>> 
+    '''
+    raise 'NotImplemented'
+
+def sec3_3_1_2():
+    '''Strength for Bending Only. Lateral Buckling Strength.
+    Parameters
+    ----------
+        An: float,
+            net area de la seccion.
+        Fy: float,
+            tension de fluencia segun Tabla A1 - ASCE 8.
+    Returns
+    -------
+        fiTn: float,
+            resistencia de diseno a la tension.
+        midC: diccionario,
+            valores de fi y Tn.
+    Raises
+    ------
+        none
+    Tests
+    -----
+        >>> 
+    '''
+
+
+def sec3_3_2():
+    '''
+    '''

@@ -349,10 +349,8 @@ class ASCE_8_02:
                 element['rho']= midC['rho']
                 element['esbeltez']= midC['esbeltez']
             elif element['type'] == 'stiffned_w_slps':
-                flag = False
-                if elements[2]['name']=='lips':
-                    b_lip = elements[2]['b']
-                raise NotImplementedError
+                b, midC = sec2_4_2(E0, f, w, t = 0, d = 0, r = 0, theta = 90,  stiff = 'SL')
+                element['b']= b
             else:
                 print('El elemento:',element['name'], 'del perfil:',profile.name, 'no tiene asignada una clasificacion reconocida:', element['type'])
                 flag = False

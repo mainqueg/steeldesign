@@ -6,7 +6,7 @@ import numpy as np
 from math import pi, sin, cos
 
 
-# DIMENSIONAL LIMITS AND CONSIDERATIONS
+# 2.1 DIMENSIONAL LIMITS AND CONSIDERATIONS
 def sec2_1_1(condition, L, w, t, stiff_type = 'SL'):
     '''Flange Flat-Width-to-Thickness Considerations.
     Parameters
@@ -24,7 +24,7 @@ def sec2_1_1(condition, L, w, t, stiff_type = 'SL'):
         ratio_1: float,
             maximo ratio ancho-plano/espesor segun seccion 2.1.1-1.
         ratio_3: float,
-            maximo ratio permitido ancho-diseno/ancho-real segun seccion 2.1.1-3.
+            maximo ratio permitido ancho-diseno/ancho-real segun seccion 2.1.1-3 (Shear Lag Effect).
         midC: diccionario,
             calculos intermedios.
     Raises
@@ -127,7 +127,7 @@ def sec2_1_2(h, t, reinforced = 'NO', condition = 'i'):
     return ratio_adm, midC
 
 
-# EFFECTIVE WIDTH OF STIFFENED ELEMENTS 
+# 2.2 EFFECTIVE WIDTH OF STIFFENED ELEMENTS 
 def sec2_2_1(w, t, f, E, k = 4):
     '''Uniformly Compressed Stiffened Elements. Load Capacity Determination or Deflection Determination.
     Parameters
@@ -258,8 +258,6 @@ def sec2_2_2(w, t, f1, f2, E0, k=4):
 
     '''
 
-    
-
     psi = f2/f1
     k = 4 + 2*(1-psi)**3 + 2*(1-psi)
     b_e, _ = sec2_2_1(w=w, t=t, f=f1, E=E0, k=k)
@@ -273,7 +271,7 @@ def sec2_2_2(w, t, f1, f2, E0, k=4):
     return b_eff_1, b_eff_2, midC
 
 
-# EFFECTIVE WIDTH OF UNSTIFFENED ELEMENTS
+# 2.3 EFFECTIVE WIDTH OF UNSTIFFENED ELEMENTS
 def sec2_3_1(w, t, f, E, k = 0.5):
     '''Uniformly Compressed Unstiffened Elements. Load Capacity Determination or Deflection Determination.
     Parameters
@@ -346,7 +344,7 @@ def sec2_3_2(w, t, f3, E, k = 0.5):
     return b, midC
 
 
-# EFFECTIVE WIDTGHS OF ELEMENTS WITH EDGE STIFFENERS OR ONE INTERMEDIATE STIFFENERS
+# 2.4 EFFECTIVE WIDTGHS OF ELEMENTS WITH EDGE STIFFENERS OR ONE INTERMEDIATE STIFFENERS
 def sec2_4_1():
     raise 'Seccion 2.4.1 No Aplica.'
 
