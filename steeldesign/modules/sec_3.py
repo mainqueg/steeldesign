@@ -1,6 +1,6 @@
 from math import pi
 import numpy as np
-from appendix_B import B_5, TableA12
+from .appendix_B import B_5, TableA12
 
 def E3_4_e1(Fn, Ae):
     ''' Design axial strength Ec 3.4-1
@@ -354,7 +354,7 @@ def sec3_3_1_1(FY, procedure = 'PI', comp_flange = 'UNSTIFF'):
         fi = 0.90
 
     # hay que calcular de alguna forma Se y pasarlo
-    Se = 
+    # Se = 
 
     if procedure == 'PI':    # Procedimiento I - basado en fluencia
         Mn = Procedure_I(Se=Se, FY=FY)
@@ -473,7 +473,7 @@ def sec3_3_1_2(case):
     return fiMn, midC
 
 
-def E_3_3_1_2_e2(E0, plast_factor, Cb, d, Iyc, L)
+def E_3_3_1_2_e2(E0, plast_factor, Cb, d, Iyc, L):
     '''Lateral Buckling Strength. CASE 1: doubly symmetric I-sections bent about their minor axis.
     Parameters
     ----------
