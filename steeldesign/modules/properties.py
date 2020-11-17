@@ -293,7 +293,7 @@ class c_w_lps_profile():
         self.r_out= r_out
         self.elements= {
             1: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
-            2: {'name': 'flange', 'type': 'stiffned_w_slps', 'w': B-r_out},
+            2: {'name': 'flange', 'type': 'stiffned_w_slps', 'w': B-2*r_out},
             3: {'name': 'lip', 'type': 'unstiffned', 'w': D-r_out},
             }
                 

@@ -1,3 +1,12 @@
+'''Combined Distortional and Overall Flexural-Torsional Buckling of Cold-Formed Stainless Steel Sections: Design
+Barbara Rossi; Jean-Pierre Jaspart; and Kim J. R. Rasmussen
+JOURNAL OF STRUCTURAL ENGINEERING © ASCE / APRIL 2010
+DOI: 10.1061/ASCEST.1943-541X.0000147
+
+Fig. 1, Curva Al*fn,Et y A*fn,Et
+
+'''
+
 import steeldesign as sd
 import matplotlib.pyplot as plt
 
@@ -9,8 +18,8 @@ p1.calculate()
 # creo un acero
 s = sd.steel(FY= 337, E0= 180510.0, nu= 0.3, n= 13.5, offset= 0.002, name= 'SA304_1_4Hard')
 
-Fns = []
-Pns = []
+Pn_As = []
+Pn_Aes = []
 
 for L in Long:
     # defino parametros de diseño
@@ -20,21 +29,25 @@ for L in Long:
     # creo el analisis
     analysis = sd.ASCE_8_02(m)
     # calculo admisibles
-    (Fn, Pn) = analysis.s3_FTB()
-    Fns.append(Fn)
-    Pns.append(Pn)
-    print('L=', L, '| Fn =', round(Fn,2),'| Pn =', round(Pn,2))
+    #(Fn, Pn_A) = analysis.s3_FTB()
+    fiPn, midC = analysis.s3_4()
+    Pn_As.append(midC['Fn']*p1.A)
+    Pn_Aes.append(midC['Fn']*p1.Ae)
+    Pn_A = midC['Fn']*p1.A
+    print('L=', L, '| Fn =', round(midC['Fn'],2),'| Pn_A =', round(Pn_A,2), '| Ae =', round(midC['Ae'],2), '| Pn_Ae =', round(midC['Fn']*midC['Ae'],2) )
 
 #p1.section.plot_centroids()
 
-title = 'Pn_L_C_wlps'
+title = 'Fn_A y Fn_Ae'
 
 f = plt.figure()
-plt.plot(Long, Pns)
-plt.scatter(Long, Pns)
+plt.plot(Long, Pn_As, label = 'Fn*A')
+plt.scatter(Long, Pn_As)
+plt.plot(Long, Pn_Aes, label = 'Fn*Ae')
+plt.scatter(Long, Pn_Aes)
 plt.title(title)
 plt.xlabel('L [mm]')
 plt.ylabel('Pn [N]')
-#plt.legend()
+plt.legend()
 f.savefig(title+'.png')
 plt.show()
