@@ -6,7 +6,7 @@ import numpy as np
 from math import pi, sin, cos
 
 
-# DIMENSIONAL LIMITS AND CONSIDERATIONS
+# 2.1 DIMENSIONAL LIMITS AND CONSIDERATIONS
 def sec2_1_1(condition, L, w, t, stiff_type = 'SL'):
     '''Flange Flat-Width-to-Thickness Considerations.
     Parameters
@@ -24,7 +24,7 @@ def sec2_1_1(condition, L, w, t, stiff_type = 'SL'):
         ratio_1: float,
             maximo ratio ancho-plano/espesor segun seccion 2.1.1-1.
         ratio_3: float,
-            maximo ratio permitido ancho-diseno/ancho-real segun seccion 2.1.1-3.
+            maximo ratio permitido ancho-diseno/ancho-real segun seccion 2.1.1-3 (Shear Lag Effect).
         midC: diccionario,
             calculos intermedios.
     Raises
@@ -127,7 +127,7 @@ def sec2_1_2(h, t, reinforced = 'NO', condition = 'i'):
     return ratio_adm, midC
 
 
-# EFFECTIVE WIDTH OF STIFFENED ELEMENTS 
+# 2.2 EFFECTIVE WIDTH OF STIFFENED ELEMENTS 
 def sec2_2_1(w, t, f, E, k = 4):
     '''Uniformly Compressed Stiffened Elements. Load Capacity Determination or Deflection Determination.
     Parameters
@@ -223,7 +223,7 @@ def E_2_2_1_e4(w, t, f, E, k):
     return esbeltez
 
 
-def sec2_2_2(w, t, f1, f2, E, k):
+def sec2_2_2(w, t, f1, f2, E0, k=4):
     '''Effective Widths of Webs and Stiffened Elements with Stress Gradient. Load Capacity Determination or Deflection Determination.
     Parameters
     ----------
@@ -235,8 +235,8 @@ def sec2_2_2(w, t, f1, f2, E, k):
             tension sobre el alma o elemento (ver figura 2 - ASCE 8).
         f2: float,
             tension sobre el alma o elemento.
-        E: float,
-            modulo de elasticidad.
+        E0: float,
+            modulo de elasticidad inicial.
         k: float,
             coeficiente de pandeo en placas para el elemento en consideracion.
 
@@ -251,23 +251,27 @@ def sec2_2_2(w, t, f1, f2, E, k):
         none
     Test
     ----
-        >>>
+        Example 2.1 - C-section 
+        >>> b_eff_1, b_eff_2, midC = sec2_2_2(w=5.692, t=0.060, f1=47.48, f2=-45.77, E0=27000, k=4)
+        >>> print('b1_eff: {:{fmt}} | b2_eff: {:{fmt}} | b_e: {m[b_e]:{fmt}} | k: {m[k]:{fmt}} | psi: {m[psi]:{fmt}}'.format(b_eff_1, b_eff_2, m = midC, fmt = '.3f'))
+        b1_eff: 1.232 | b2_eff: 2.442 | b_e: 4.884 | k: 23.079 | psi: -0.964
+
     '''
 
     psi = f2/f1
     k = 4 + 2*(1-psi)**3 + 2*(1-psi)
-    b_e = sec2_2_1(w=w, t=t, f=f1, E=E, k=k)
+    b_e, _ = sec2_2_1(w=w, t=t, f=f1, E=E0, k=k)
 
     b_eff_1 = b_e/(3-psi)
 
     if psi <= -0.236: b_eff_2 = b_e/2
     else: b_eff_2 = b_e - b_eff_1
 
-    midC = {'b1_eff': b_eff_1, 'b2_eff': b_eff_2, 'k': k, 'psi': psi}
-    return b_e, midC
+    midC = {'b_e': b_e, 'k': k, 'psi': psi}
+    return b_eff_1, b_eff_2, midC
 
 
-# EFFECTIVE WIDTH OF UNSTIFFENED ELEMENTS
+# 2.3 EFFECTIVE WIDTH OF UNSTIFFENED ELEMENTS
 def sec2_3_1(w, t, f, E, k = 0.5):
     '''Uniformly Compressed Unstiffened Elements. Load Capacity Determination or Deflection Determination.
     Parameters
@@ -340,7 +344,7 @@ def sec2_3_2(w, t, f3, E, k = 0.5):
     return b, midC
 
 
-# EFFECTIVE WIDTGHS OF ELEMENTS WITH EDGE STIFFENERS OR ONE INTERMEDIATE STIFFENERS
+# 2.4 EFFECTIVE WIDTHS OF ELEMENTS WITH EDGE STIFFENERS OR ONE INTERMEDIATE STIFFENERS
 def sec2_4_1():
     print('Seccion 2.4.1 No implementada.')
     raise NotImplementedError
@@ -414,8 +418,7 @@ def sec2_4_2(E0, f, w, t, d, r_out, theta = 90,  stiff = 'SL'):
     else:
         b, midC = sec2_4_2_CASEIII(E0=E0, f=f, t=t, w=w, theta=theta, D=D, ds_prima=ds_prima, stiff=stiff, S=S, Is=Is, As_prima=As_prima)
     
-    midC['S']= S
-
+    midC['S'] = S
     return b, midC
 
 def E_2_4_e1(E, f):
