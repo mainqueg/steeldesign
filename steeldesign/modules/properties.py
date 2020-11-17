@@ -597,7 +597,7 @@ class I_builtup_c_w_lps_profile():
         self.wld = wld_factor
         self.mesh_size = t/mesh_div
         self.elements= {
-            1: {'name': 'flange', 'type': 'stiffned_w_slps', 'w': B-r_out},
+            1: {'name': 'flange', 'type': 'stiffned_w_slps', 'w': B-2*r_out},
             2: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
             3: {'name': 'lip', 'type': 'unstiffned', 'w': D-r_out},
             }
