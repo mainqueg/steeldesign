@@ -3,7 +3,7 @@ Genera un reporte segun configuracion en archivo de input.
 
 '''
 
-from design import ASCE_8_02
+from .design import ASCE_8_02
 
 '''
 member = member(dfajlf)
