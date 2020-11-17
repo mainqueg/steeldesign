@@ -1,5 +1,6 @@
 from math import pi
 import numpy as np
+from appendix_B import B_5, TableA12
 
 def E3_4_e1(Fn, Ae):
     ''' Design axial strength Ec 3.4-1
@@ -291,7 +292,7 @@ def sec3_2(A, Fy):
     return Tn*fi, midC
 
 ## 3.3 Flexural Memebers
-def sec3_3_1():
+def sec3_3_1(FY, procedure, comp_flange):
     '''Strength for Bending Only.
     Parameters
     ----------
@@ -312,8 +313,17 @@ def sec3_3_1():
     -----
         >>> 
     '''
-    Mn_nominal = sec3_3_1_1()
-    Mn_LTB = sec3_3_1_2()
+    fiMn_nominal, midC1 = sec3_3_1_1(FY=FY, procedure=procedure, comp_flange=comp_flange)
+    fiMn_LTB, midC2 = sec3_3_1_2()
+
+    if Mn_LTB < Mn_nominal:
+        fiMn = fiMn_LTB
+        midC = midC2
+    else:
+        fiMn = fiMn_nominal
+        midC = midC1
+
+    return fiMn, midC
 
 def sec3_3_1_1(FY, procedure = 'PI', comp_flange = 'UNSTIFF'):
     '''Strength for Bending Only. Nominal Section Strength.
@@ -330,7 +340,7 @@ def sec3_3_1_1(FY, procedure = 'PI', comp_flange = 'UNSTIFF'):
         Mn: float,
             resistencia de diseno a la flexion nominal de la seccion.
         midC: diccionario,
-            calculos intermedios.
+            calculos intermedios y parametros.
     Raises
     ------
         none
@@ -380,7 +390,7 @@ def Procedure_I(Se, FY):
     -----
         >>> 
     '''
-    Mn = Se*FY
+    Mn = Se*FY  # Ec 3.3.1.1-1
     return Mn
 
 def Procedure_II():
@@ -417,8 +427,196 @@ def LocalDistorsion():
     '''
     raise 'NotImplemented'
 
-def sec3_3_1_2():
+def sec3_3_1_2(case):
     '''Strength for Bending Only. Lateral Buckling Strength.
+    Parameters
+    ----------
+        An: float,
+            net area.
+        Fy: float,
+            tension de fluencia segun Tabla A1 - ASCE 8.
+    Returns
+    -------
+        fiTn: float,
+            resistencia de diseno a la flexion segun LTB.
+        midC: diccionario,
+            calculos intermedios y parametros.
+    Raises
+    ------
+        none
+    Tests
+    -----
+        >>> 
+    '''
+    fi = 0.85
+    # plast_factor = B_5(sigma, FY, E0, offset, n)
+    # Cb = 
+
+    if case == 'CASE I':
+        Mc = E_3_3_1_2_e2(E0, plast_factor, Cb, d, Iyc, L)
+        # midC = 
+
+    elif case == 'CASE II':
+        r0 = E_3_3_1_2_e9(rx=rx, ry=ry, x0=x0)
+        sigma_ey = E_3_3_1_2_e6(E0=E0, plast_factor=plast_factor, K=Ky, L=Ly, r=ry)
+        sigma_t = E_3_3_1_2_e8(E0=E0, plast_factor=plast_factor, Kt=Kt, Lt=Lt, r0=r0, A=A, G0=G0, J=J, Cw=Cw)
+        Mc = E_3_3_1_2_e4(Cb=Cb, r0=r0, A=A, sigma_ey=sigma_ey, sigma_t=sigma_t)
+        # midC = 
+
+    elif case == 'CASE II':
+        raise 'NotImplemented'
+
+    Mn = Sc*Mc/Sf   # Ec 3.3.1.2-1
+
+    fiMn = Mn*fi
+
+    return fiMn, midC
+
+
+def E_3_3_1_2_e2(E0, plast_factor, Cb, d, Iyc, L)
+    '''Lateral Buckling Strength. CASE 1: doubly symmetric I-sections bent about their minor axis.
+    Parameters
+    ----------
+        E0: float,
+            odulo de elasticidad inicial.
+        plast_factor: float,
+            factor de reduccion por plasticidad. 
+        Cb: float,
+            coeficiente de flexion.
+        d: float,
+            altura de la seccion.
+        Iyc: float,
+            momento de inercia de la porcion de la seccion en compresion con respecto al eje vertical.
+        L: float,
+            longitud del miembro sin soporte.
+    Returns
+    -------
+        fiTn: float,
+            resistencia de diseno a la tension.
+        midC: diccionario,
+            valores de fi y Tn.
+    Raises
+    ------
+        none
+    Tests
+    -----
+        >>> 
+    '''
+    Mn = pi**2*E0*Cb*plast_factor*(d*Iyc/L**2)
+    return Mn
+
+def E_3_3_1_2_e4(Cb, r0, A, sigma_ey, sigma_t):
+    '''Lateral Buckling Strength. CASE 1: doubly symmetric I-sections bent about their minor axis.
+    Parameters
+    ----------
+        Cb: float,
+            coeficiente de flexion.
+        r0: float,
+            radio polar de la seccion con respecto al centro de corte.
+        A: float,
+            full area.
+        sigma_ey: float,
+            tension critica de pandeo con respecto al eje y (eje mayor).
+        sigma_t: float,
+            tension critica de pandeo torsional.
+    Returns
+    -------
+        fiTn: float,
+            resistencia de diseno a la tension.
+        midC: diccionario,
+            valores de fi y Tn.
+    Raises
+    ------
+        none
+    Tests
+    -----
+        >>> 
+    '''
+
+def E_3_3_1_2_e6(E0, plast_factor, K, L, r):
+    '''Lateral Buckling Strength. Tension critica de pandeo con respecto al eje y (eje mayor).
+    Parameters
+    ----------
+        E0: float,
+            modulo de elasticidad inicial.
+        plast_factor: float,
+            factor de reduccion por plasticidad.
+        K*L: float,
+            longitud efectiva.
+        r: float,
+            radio de giro.
+    Returns
+    -------
+        sigma: float,
+            tension critica de pandeo.
+    Raises
+    ------
+        none
+    Tests
+    -----
+        >>> 
+    '''
+    sigma = pi**2*E0/(K*L/r)*plast_factor
+    return sigma
+
+def E_3_3_1_2_e8(E0, plast_factor, Kt, Lt, r0, A, G0, J, Cw):
+    '''Lateral Buckling Strength. Tension critica de pandeo con respecto al eje y (eje mayor).
+    Parameters
+    ----------
+        E0: float,
+            modulo de elasticidad inicial.
+        plast_factor: float,
+            factor de reduccion por plasticidad.
+        Kt*Lt: float,
+            longitud efectiva.
+        r0: float,
+            radio polar.
+        A: float,
+            full area.
+        G0: float,
+            modulo de corte inicial.
+        J: float,
+            constante de torsion de St Venant.
+        Cw: float,
+            constante de warping.
+    Returns
+    -------
+        sigma: float,
+            tension critica de pandeo torsional.
+    Raises
+    ------
+        none
+    Tests
+    -----
+        >>> 
+    '''
+    sigma = (1/A/r0**2)*(G0*J + pi**2*E0*Cw/(Kt*Lt)**2)*plast_factor
+    return sigma
+
+def E_3_3_1_2_e9(rx, ry, x0):
+    '''Lateral Buckling Strength. Radio polar de la seccion.
+    ----------
+        rx: float,
+            radio de giro con respecto al eje x (eje menor).
+        ry: float,
+            radio de giro con respecto al eje y (eje mayor).
+    Returns
+    -------
+        r0: float,
+            radio polar de la seccion con respecto al centro de corte.
+    Raises
+    ------
+        none
+    Tests
+    -----
+        >>> 
+    '''
+    r0 = (rx**2 + ry**2 + x0**2)**0.5
+    return r0
+
+
+def sec3_3_2():
+    '''Strength for Shear Only.
     Parameters
     ----------
         An: float,
@@ -438,8 +636,31 @@ def sec3_3_1_2():
     -----
         >>> 
     '''
+    fi = 0.85
+    Vn = E_3_3_2_e1()
 
+def E_3_3_2_e1(E0, t, plast_factor_shear, h):
+    '''Strength for Shear Only. Resistencia nominal al corte.
+    Parameters
+    ----------
+        E0: float,
+            modulo de elasticidad inicial.
+        t: float,
+            espesor de la seccion.
+        plast_factor_shear: float,
+            coeficiente de reduccion por plasticidad de corte.
+        h: float,
+            altura de la seccion.
+    Returns
+    -------
+        Vn: float,
+            resistencia de diseno a la tension.
+    Raises
+    ------
+        none
+    Tests
+    -----
+        >>> 
+    '''
 
-def sec3_3_2():
-    '''
-    '''
+    Vn = 4.84*E0*t**3*(Gs/G0)/h

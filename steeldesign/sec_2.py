@@ -382,11 +382,6 @@ def sec2_4_2(E0, f, w, t = 0, d = 0, r = 0, theta = 90,  stiff = 'SL'):
         none
     Tests
     -----
-        # Ejemplo 17.1 - I-section
-        >>> b, midC = sec2_4_2(E0=27000, f=10, w=1.178, t=0.135)
-        >>> print('b: {:{fmt}} | Is: {m[Is]:{fmt}} | Ia: {m[Ia]:{fmt}} | As: {m[As]:{fmt}} | As_prima: {m[As_prima]:{fmt}} | ds: {m[ds]:{fmt}} | ds_prima: {m[ds_prima]:{fmt}} | k: {m[k]:{fmt}}'.format(b, m = midC, fmt = '.2f'))
-        b: 1.18 | Is: 0.00 | Ia: 0.00 | As: 0.00 | As_prima: 0.00 | ds: 0.00 | ds_prima: 0.00 | k: 0.50
-
         # Ejemplo 18.1 - I-section
         >>> b, midC = sec2_4_2(E0=27000, f=23.52, w=1.855, t=0.135, d=0.498, r=3/16, theta=90, stiff='SL')
         >>> print('b: {:{fmt}} | Is: {m[Is]:{fmt}} | Ia: {m[Ia]:{fmt}} | As: {m[As]:{fmt}} | As_prima: {m[As_prima]:{fmt}} | ds: {m[ds]:{fmt}} | ds_prima: {m[ds_prima]:{fmt}} | k: {m[k]:{fmt}}'.format(b, m = midC, fmt = '.5f'))
