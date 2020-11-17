@@ -520,7 +520,7 @@ def sec2_4_2_CASEI(Is, As_prima, w, ds_prima, t, k = 0.5):
     As = As_prima
 
     midC = {'Is': Is, 'Ia': Ia, 'As': As, 'As_prima': As_prima, 'ds': ds, 'ds_prima': ds_prima, 'k': k,'esbeltez': 'N/A', 'rho': 'N/A'}
-    midC['CASE'] = 'CASEII'
+    midC['CASE'] = 'CASEI'
 
     return b, midC #devolver todas las propiedades efectivas + midC
  

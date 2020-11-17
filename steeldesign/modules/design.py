@@ -365,7 +365,6 @@ class ASCE_8_02:
 
             profile.Ae =  profile.Ae - (element['w']-element['b'])*t
 
-
     def s3_FTB(self):
         '''Tensión y carga critica nominal de pandeo flexo-torsional.
 
