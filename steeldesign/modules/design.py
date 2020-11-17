@@ -353,8 +353,7 @@ class ASCE_8_02:
                     d = elements[3]['w']
                 else:
                     print('El elemento',3, 'no corresponde al tipo <lip>. Redefinir los elemenentos en el perfil',profile.type)
-                    print('>> Analisis abortado <<')
-                    raise SystemExit
+                    raise Exception('>> Analisis abortado <<')
                 b, midC = sec2_4_2(E0=E0, f = f, w= element['w'], t= t, d=d, r_out= profile.r_out)
                 element['b']= b
                 element['rho']= midC['rho']
@@ -362,7 +361,7 @@ class ASCE_8_02:
                 element['CASE'] = midC['CASE']
             else:
                 print('El elemento:',element['name'], 'del perfil:',profile.name, 'no tiene asignada una clasificacion reconocida:', element['type'])
-                raise SystemExit
+                raise Exception('>> Analisis abortado <<')
 
             profile.Ae =  profile.Ae - (element['w']-element['b'])*t
 

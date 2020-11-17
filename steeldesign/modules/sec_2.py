@@ -342,7 +342,8 @@ def sec2_3_2(w, t, f3, E, k = 0.5):
 
 # EFFECTIVE WIDTGHS OF ELEMENTS WITH EDGE STIFFENERS OR ONE INTERMEDIATE STIFFENERS
 def sec2_4_1():
-    raise 'Seccion 2.4.1 No Aplica.'
+    print('Seccion 2.4.1 No implementada.')
+    raise NotImplementedError
 
 
 def sec2_4_2(E0, f, w, t, d, r_out, theta = 90,  stiff = 'SL'):
@@ -403,7 +404,8 @@ def sec2_4_2(E0, f, w, t, d, r_out, theta = 90,  stiff = 'SL'):
     # a partir del radio de curvatura del rigidizador y del angulo calculo D
     D = d + r_out*(1 - cos(theta*pi/180))/sin(theta*pi/180)
     if D/w > 0.8:
-        raise 'No se cumple la condicion D/w < 0.8'
+        print('No se cumple la condicion D/w < 0.8')
+        raise Exception('>> Analisis abortado <<')
 
     if w/t <= S/3:  # Ec 2.4.2-1
         b, midC = sec2_4_2_CASEI(Is=Is, As_prima=As_prima, w=w, ds_prima=ds_prima, t=t)
@@ -656,8 +658,7 @@ def E_2_4_2_CASES(E0, f, t, w, theta, D, ds_prima, stiff, Is, As_prima, n, Ia, k
 
         if theta > 140 or theta < 40 or D/w > 0.8:
             print('Rigidizador de labio simple no cumple las condiciones para aplicar Ec 2.4.2-10 y Ec 2.4.2-11')
-            print('>> Analisis abortado <<')
-            raise SystemExit
+            raise Exception('>> Analisis abortado <<')
         
         else:
             k_a = 5.25 - 5.0*(D/w)  # Ec 2.4.2-10
