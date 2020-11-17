@@ -344,12 +344,13 @@ def sec2_3_2(w, t, f3, E, k = 0.5):
     return b, midC
 
 
-# 2.4 EFFECTIVE WIDTGHS OF ELEMENTS WITH EDGE STIFFENERS OR ONE INTERMEDIATE STIFFENERS
+# 2.4 EFFECTIVE WIDTHS OF ELEMENTS WITH EDGE STIFFENERS OR ONE INTERMEDIATE STIFFENERS
 def sec2_4_1():
-    raise 'Seccion 2.4.1 No Aplica.'
+    print('Seccion 2.4.1 No implementada.')
+    raise NotImplementedError
 
 
-def sec2_4_2(E0, f, w, t = 0, d = 0, r = 0, theta = 90,  stiff = 'SL'):
+def sec2_4_2(E0, f, w, t, d, r_out, theta = 90,  stiff = 'SL'):
     '''Uniformly Compressed Elements with Edge Stiffener. Load Capacity or Deflection Determiation.
     Parameters
     ----------
@@ -365,8 +366,8 @@ def sec2_4_2(E0, f, w, t = 0, d = 0, r = 0, theta = 90,  stiff = 'SL'):
             ancho del rigidizador sin tener en cuenta la curvatura (ver figura 5 - ASCE 8).
         ds_prima: float,
             ancho efectivo del rigidizador calculado segun seccion 2.3.1 (ver figura 5 - ASCE 8).
-        r: float,
-            radio de la curvatura del rigidizador.
+        r_out: float,
+            radio externo de la curvatura del rigidizador.
         theta: float,
             angulo de inclinacion del rigidizador de labio simple.
         stiff: string,
@@ -382,18 +383,19 @@ def sec2_4_2(E0, f, w, t = 0, d = 0, r = 0, theta = 90,  stiff = 'SL'):
         none
     Tests
     -----
-        # Ejemplo 18.1 - I-section
-        >>> b, midC = sec2_4_2(E0=27000, f=23.52, w=1.855, t=0.135, d=0.498, r=3/16, theta=90, stiff='SL')
-        >>> print('b: {:{fmt}} | Is: {m[Is]:{fmt}} | Ia: {m[Ia]:{fmt}} | As: {m[As]:{fmt}} | As_prima: {m[As_prima]:{fmt}} | ds: {m[ds]:{fmt}} | ds_prima: {m[ds_prima]:{fmt}} | k: {m[k]:{fmt}}'.format(b, m = midC, fmt = '.5f'))
-        b: 1.85500 | Is: 0.00139 | Ia: 0.00000 | As: 0.06723 | As_prima: 0.06723 | ds: 0.49800 | ds_prima: 0.49800 | k: 0.50000
 
-        # Ejemplo 16.1 - C-section with wide flanges - FALLA POR REDONDEO Ia_original=0.000842
-        >>> b, midC = sec2_4_2(E0=27000, f=19.92, w=2.914, t=0.105, d=0.607, r=3/16, theta=90, stiff='SL')
-        >>> print('b: {:{fmt2}} | Is: {m[Is]:{fmt5}} | Ia: {m[Ia]:{fmt5}} | As: {m[As]:{fmt5}} | As_prima: {m[As_prima]:{fmt5}} | ds: {m[ds]:{fmt2}} | ds_prima: {m[ds_prima]:{fmt2}} | k: {m[k]:{fmt2}}'.format(b, m = midC, fmt2 = '.2f', fmt5 = '.5f'))
-        b: 2.91 | Is: 0.00196 | Ia: 0.00086 | As: 0.06373 | As_prima: 0.06373 | ds: 0.61 | ds_prima: 0.61 | k: 3.71
+        # Ejemplo 18.1 - I-section
+        >>> b, midC = sec2_4_2(E0=27000, f=23.52, w=1.855, t=0.135, d=0.498, r_out=3/16+0.135, theta=90, stiff='SL')
+        >>> print('b: {:{fmt}} | S: {m[S]:{fmt}} | Is: {m[Is]:{fmt}} | Ia: {m[Ia]:{fmt}} | As: {m[As]:{fmt}} | As_prima: {m[As_prima]:{fmt}} | ds: {m[ds]:{fmt}} | ds_prima: {m[ds_prima]:{fmt}} | k: {m[k]:{fmt}}'.format(b, m = midC, fmt = '.5f'))
+        b: 1.85500 | S: 43.36838 | Is: 0.00139 | Ia: 0.00000 | As: 0.06723 | As_prima: 0.06723 | ds: 0.49800 | ds_prima: 0.49800 | k: 0.50000
+
+        # Ejemplo 16.1 - C-section with wide flanges - Diferencia en resultado de Ia por rendondeo: Ia_referencia=0.000842
+        >>> b, midC = sec2_4_2(E0=27000, f=19.92, w=2.914, t=0.105, d=0.607, r_out=3/16+0.105, theta=90, stiff='SL')
+        >>> print('b: {:{fmt2}} | S: {m[S]:{fmt2}} | Is: {m[Is]:{fmt5}} | Ia: {m[Ia]:{fmt5}} | As: {m[As]:{fmt5}} | As_prima: {m[As_prima]:{fmt5}} | ds: {m[ds]:{fmt2}} | ds_prima: {m[ds_prima]:{fmt2}} | k: {m[k]:{fmt2}}'.format(b, m = midC, fmt2 = '.2f', fmt5 = '.6f'))
+        b: 2.91 | S: 47.12 | Is: 0.001957 | Ia: 0.000863 | As: 0.063735 | As_prima: 0.063735 | ds: 0.61 | ds_prima: 0.61 | k: 3.71
 
         # Ejemplo CASE III
-        >>> b, midC = sec2_4_2(E0=27000, f=150.0, w=3.0, t=0.135, d=0.498, r=3/16, theta=90, stiff='SL')
+        >>> b, midC = sec2_4_2(E0=27000, f=150.0, w=3.0, t=0.135, d=0.498, r_out=3/16+0.135, theta=90, stiff='SL')
         >>> print('b: {:{fmt}} | Is: {m[Is]:{fmt}} | Ia: {m[Ia]:{fmt}} | As: {m[As]:{fmt}} | As_prima: {m[As_prima]:{fmt}} | ds: {m[ds]:{fmt}} | ds_prima: {m[ds_prima]:{fmt}} | k: {m[k]:{fmt}}'.format(b, m = midC, fmt = '.5f'))
         b: 1.76703 | Is: 0.00139 | Ia: 0.05109 | As: 0.00183 | As_prima: 0.06723 | ds: 0.01354 | ds_prima: 0.49800 | k: 1.46826
     '''
@@ -404,9 +406,10 @@ def sec2_4_2(E0, f, w, t = 0, d = 0, r = 0, theta = 90,  stiff = 'SL'):
     As_prima = E_2_4_e3(ds_prima=ds_prima, t=t)
 
     # a partir del radio de curvatura del rigidizador y del angulo calculo D
-    D = d + (r + t)*(1 - cos(theta*pi/180))/sin(theta*pi/180)
+    D = d + r_out*(1 - cos(theta*pi/180))/sin(theta*pi/180)
     if D/w > 0.8:
-        raise 'No se cumple la condicion D/w < 0.8'
+        print('No se cumple la condicion D/w < 0.8')
+        raise Exception('>> Analisis abortado <<')
 
     if w/t <= S/3:  # Ec 2.4.2-1
         b, midC = sec2_4_2_CASEI(Is=Is, As_prima=As_prima, w=w, ds_prima=ds_prima, t=t)
@@ -516,7 +519,8 @@ def sec2_4_2_CASEI(Is, As_prima, w, ds_prima, t, k = 0.5):
     ds = ds_prima
     As = As_prima
 
-    midC = {'Is': Is, 'Ia': Ia, 'As': As, 'As_prima': As_prima, 'ds': ds, 'ds_prima': ds_prima, 'k': k}
+    midC = {'Is': Is, 'Ia': Ia, 'As': As, 'As_prima': As_prima, 'ds': ds, 'ds_prima': ds_prima, 'k': k,'esbeltez': 'N/A', 'rho': 'N/A'}
+    midC['CASE'] = 'CASEII'
 
     return b, midC #devolver todas las propiedades efectivas + midC
  
@@ -563,6 +567,8 @@ def sec2_4_2_CASEII(E0, f, t, w, theta, D, ds_prima, stiff, S, Is, As_prima):
 
     b, midC = E_2_4_2_CASES(E0=E0, f=f, t=t, w=w, theta=theta, D=D, ds_prima=ds_prima, stiff=stiff, Is=Is, As_prima=As_prima, n=n, Ia=Ia, k_u=k_u)
 
+    midC['CASE'] = 'CASEII'
+
     return b, midC
 
 def sec2_4_2_CASEIII(E0, f, t, w, theta, D, ds_prima, stiff, S, Is, As_prima):
@@ -607,7 +613,7 @@ def sec2_4_2_CASEIII(E0, f, t, w, theta, D, ds_prima, stiff, S, Is, As_prima):
     Ia = t**4*(115*w/t/S + 5) # Ec 2.4.2-13
 
     b, midC = E_2_4_2_CASES(E0=E0, f=f, t=t, w=w, theta=theta, D=D, ds_prima=ds_prima, stiff=stiff, Is=Is, As_prima=As_prima, n=n, Ia=Ia, k_u=k_u)
-
+    midC['CASE'] = 'CASEIII'
     return b, midC
     
 def E_2_4_2_CASES(E0, f, t, w, theta, D, ds_prima, stiff, Is, As_prima, n, Ia, k_u = 0.43):
@@ -649,12 +655,13 @@ def E_2_4_2_CASES(E0, f, t, w, theta, D, ds_prima, stiff, Is, As_prima, n, Ia, k
 
     C2 = Is/Ia  # Ec 2.4.2-7
     if C2 > 1: C2 = 1
-    C1 = 2 - C2 # Ec 2.4.2-8
+    #C1 = 2 - C2 # Ec 2.4.2-8
 
     if stiff == 'SL':
 
         if theta > 140 or theta < 40 or D/w > 0.8:
-            raise 'Rigidizador de labio simple no cumple las condiciones para aplicar Ec 2.4.2-10 y Ec 2.4.2-11'
+            print('Rigidizador de labio simple no cumple las condiciones para aplicar Ec 2.4.2-10 y Ec 2.4.2-11')
+            raise Exception('>> Analisis abortado <<')
         
         else:
             k_a = 5.25 - 5.0*(D/w)  # Ec 2.4.2-10
@@ -668,9 +675,9 @@ def E_2_4_2_CASES(E0, f, t, w, theta, D, ds_prima, stiff, Is, As_prima, n, Ia, k
         ds = As/t
 
     k = C2**n*(k_a - k_u) + k_u # Ec 2.4.2-9
-    b, _ = sec2_2_1(w=w, t=t, f=f, E=E0, k=k)
+    b, midC = sec2_2_1(w=w, t=t, f=f, E=E0, k=k)
     
-    midC = {'Is': Is, 'Ia': Ia, 'As': As, 'As_prima': As_prima, 'ds': ds, 'ds_prima': ds_prima, 'k': k}
+    midC = {'Is': Is, 'Ia': Ia, 'As': As, 'As_prima': As_prima, 'ds': ds, 'ds_prima': ds_prima, 'k': k, 'esbeltez': midC['esbeltez'], 'rho': midC['rho']}
 
     return b, midC #devolver todas las propiedades efectivas + midC
 

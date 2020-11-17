@@ -86,15 +86,14 @@
 
         ## Sec3
         >>> (fiPn, _) = analysis.s3_4()
-        Ae() NotImplementedError
         >>> print('fiPc=', round(fiPn, 2) )
-        fiPc= 74790.21
+        fiPc= 61907.6
 
         ## sec2_1_1 aplicado a un perfil C
-        >>> v_sec2_1_1 = sec2_1_1(m)
-        >>> v_sec2_1_1.Cl_1('UNSTIFFNED')
-        Esbeltez = 33.33 < Esbeltez admisible = 50.0
-        True
+        #>>> v_sec2_1_1 = sec2_1_1(m)
+        #>>> v_sec2_1_1.Cl_1('UNSTIFFNED')
+        #Esbeltez = 33.33 < Esbeltez admisible = 50.0
+        #True
 
         ## Example 17.1 I-Section (LRFD) (Ver example4.py)
         >>> p1 = I_builtup_c_profile(H= 6, B= 1.5, t= 0.135, r_out= (0.135+3/16) )
@@ -119,10 +118,10 @@
 '''
 
 from math import pi
-from sec_2 import sec2_1_1, sec2_2_1, sec2_3_1
-from sec_3 import E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_3_1_2_e6, E3_4_3_e1
-from appendix_B import B_2, B_1
-from properties import c_w_lps_profile, c_profile, steel, I_builtup_c_profile
+from .sec_2 import sec2_1_1, sec2_2_1, sec2_3_1, sec2_4_2
+from .sec_3 import E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_3_1_2_e6, E3_4_3_e1
+from .appendix_B import B_2, B_1
+from .properties import c_w_lps_profile, c_profile, steel, I_builtup_c_profile
 
 
 class designParameters:
@@ -309,7 +308,7 @@ class ASCE_8_02:
 
         fiPn = E3_4_e1(Fn, Ae)
 
-        midC = {'Fn_FBx': Fn_FBx, 'Fn_FBy': Fn_FBy, 'Fn_TB': Fn_TB, 'Fn_FTB':Fn_FTB, 'Ae': Ae} # convertir en diccionario
+        midC = {'Fn_FBx': Fn_FBx, 'Fn_FBy': Fn_FBy, 'Fn_TB': Fn_TB, 'Fn_FTB':Fn_FTB, 'Fn': Fn, 'Ae': Ae} # convertir en diccionario
 
         return fiPn, midC
         
@@ -331,13 +330,14 @@ class ASCE_8_02:
             En archivo
         '''
         profile= self.member.profile
+        # inicio con el area neta
+        profile.Ae = profile.A
         elements = profile.elements
         t= profile.t
         E0= self.member.steel.E0
 
         for key in elements.keys():
             element = elements[key]
-            flag = True
             if element['type'] == 'stiffned':
                 b, midC = sec2_2_1(w= element['w'], t= t, f= f, E= E0)
                 element['b']= b
@@ -349,13 +349,21 @@ class ASCE_8_02:
                 element['rho']= midC['rho']
                 element['esbeltez']= midC['esbeltez']
             elif element['type'] == 'stiffned_w_slps':
-                b, midC = sec2_4_2(E0, f, w, t = 0, d = 0, r = 0, theta = 90,  stiff = 'SL')
+                if elements[3]['name'] == 'lip':
+                    d = elements[3]['w']
+                else:
+                    print('El elemento',3, 'no corresponde al tipo <lip>. Redefinir los elemenentos en el perfil',profile.type)
+                    raise Exception('>> Analisis abortado <<')
+                b, midC = sec2_4_2(E0=E0, f = f, w= element['w'], t= t, d=d, r_out= profile.r_out)
                 element['b']= b
+                element['rho']= midC['rho']
+                element['esbeltez']= midC['esbeltez']
+                element['CASE'] = midC['CASE']
             else:
                 print('El elemento:',element['name'], 'del perfil:',profile.name, 'no tiene asignada una clasificacion reconocida:', element['type'])
-                flag = False
-            if flag:
-                profile.Ae =  profile.Ae - (element['w']-element['b'])*t
+                raise Exception('>> Analisis abortado <<')
+
+            profile.Ae =  profile.Ae - (element['w']-element['b'])*t
 
 
     def s3_FTB(self):

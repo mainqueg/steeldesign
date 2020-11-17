@@ -6,26 +6,25 @@ for Cold-Formed Steel Structures Library. 174
 
 '''
 
-from design import ASCE_8_02, member, designParameters
-from properties import I_builtup_c_profile, steel, c_profile
+import steeldesign as sd
 
-# creo un perfil sin refuerzo de labios
-p1 = I_builtup_c_profile(H= 6, B= 1.5, t= 0.135, r_out= (0.135+3/16) )
-p2 = c_profile(H= 6, B= 1.5, t= 0.135, r_out= (0.135+3/16) )
+# creo un perfil c on refuerz ode labios
+p1 = sd.I_builtup_c_profile(H= 6, B= 1.5, t= 0.135, r_out= (0.135+3/16) )
+p2 = sd.c_profile(H= 6, B= 1.5, t= 0.135, r_out= (0.135+3/16) )
 
 p1.calculate()
 p2.calculate()
 p1.J = 2*p2.J 
 
 # creo un acero
-s = steel(FY= 30, E0= 27000, nu= 0.3, n= 9.7, offset= 0.002, name= 'SA409_long')
+s = sd.steel(FY= 30, E0= 27000, nu= 0.3, n= 9.7, offset= 0.002, name= 'SA409_long')
 
 # defino parametros de diseño
-dp = designParameters(Lx= 14*12, Ly= 7*12, Lz= 7*12)
+dp = sd.designParameters(Lx= 14*12, Ly= 7*12, Lz= 7*12)
 # creo un miembro
-m = member(L= 14*12, profile= p1, steel= s, designParameters= dp)
+m = sd.member(L= 14*12, profile= p1, steel= s, designParameters= dp)
 # creo el analisis
-analysis = ASCE_8_02(m)
+analysis = sd.ASCE_8_02(m)
 # calculo admisibles #
 fiPn, midC = analysis.s3_4()
 
