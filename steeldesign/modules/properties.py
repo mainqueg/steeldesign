@@ -337,6 +337,7 @@ class c_w_lps_profile():
             self.J = section.get_j()    # St Venant
             self.A = section.get_area()
             self.Ae = section.get_area()
+            (self.Ix, self.Iy, _) = section.get_ic()
             (self.Sx, _, _, _) = section.get_z()    # modulo elastico
 
             self.save(section)
@@ -468,6 +469,8 @@ class c_profile():
             self.J = section.get_j()
             self.A = section.get_area()
             self.Ae = section.get_area()
+            (self.Ix, self.Iy, _) = section.get_ic()
+            (self.Sx, _, _, _) = section.get_z()    # modulo elastico
 
             self.save(section)
 
@@ -694,6 +697,8 @@ class I_builtup_c_w_lps_profile():
             self.A = section.get_area()
             self.Ae = section.get_area()
             self.ri = c0.ry # radios de giro de c1
+            (self.Ix, self.Iy, _) = section.get_ic()
+            (self.Sx, _, _, _) = section.get_z()    # modulo elastico
 
             self.save(section)
 
@@ -905,6 +910,8 @@ class I_builtup_c_profile():
             self.A = section.get_area()
             self.Ae = self.A
             self.ri = c0.ry # radios de giro y de c1
+            (self.Ix, self.Iy, _) = section.get_ic()
+            (self.Sx, _, _, _) = section.get_z()    # modulo elastico
 
             self.save(section)
 
