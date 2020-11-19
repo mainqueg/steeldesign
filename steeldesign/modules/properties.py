@@ -334,9 +334,10 @@ class c_w_lps_profile():
             (self.sc_x, self.sc_y) = section.get_sc() # shear center
             self.Cw = section.get_gamma() # warping
             (self.rx, self.ry) = section.get_rc() # radios de giro
-            self.J = section.get_j()
+            self.J = section.get_j()    # St Venant
             self.A = section.get_area()
             self.Ae = section.get_area()
+            (self.Sx, _, _, _) = section.get_z()    # modulo elastico
 
             self.save(section)
 
