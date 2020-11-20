@@ -119,7 +119,9 @@
 
 from math import pi
 from .sec_2 import sec2_1_1, sec2_2_1, sec2_3_1, sec2_4_2
-from .sec_3 import sec3_2, E_3_3_1_1_e1, E_3_3_1_2_e2, E_3_3_1_2_e6, E_3_3_1_2_e8, E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_4_3_e1
+from .sec_3 import sec3_2, sec3_3_2, E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_4_3_e1
+from .sec_3 import sec3_3_1_1, E_3_3_1_1_e1, LocalDistorsion
+from .sec_3 import sec3_3_1_2, E_3_3_1_2_e1, E_3_3_1_2_e2, sec3_3_1_2_3_i, E_3_3_1_2_e4, E_3_3_1_2_e6, E_3_3_1_2_e8, E_3_3_1_2_e9
 from .appendix_B import B_2, B_1
 from .properties import c_w_lps_profile, c_profile, steel, I_builtup_c_profile
 
@@ -271,23 +273,17 @@ class ASCE_8_02:
 
 
     def s3_2(self):
-        '''Design axial strength. 
-            
-            Ec 3.4-1: Tension menor de estados limites FB, TB, FTB multiplicada por factor de resistencia y area efectiva.
-        
-        Parameters
+        '''Design Tensile Strength. Eq 3.2-1.
         ----------
             none
-
         Returns
         -------
-            fiPn : float
-                Resistencia axial de diseño
-            [Fn_FB, Fn_TB, Fn_FTB, Ae] : list of float
-                Fn_FB: Tension de pandeo flexional
-                Fn_TB: Tension de pandeo torsional
-                Fn_FTB: Tension de pandeo flexo-torsional
-                Ae: Area efectiva calculada a Fn
+            fiTn : float
+                Resistencia a la tension de diseño.
+            [Tension_fi, Tension_Tn, An] : list of float
+                Tension_fi: coeficiente de diseno en tension.
+                Tension_Tn: resistencia nominal a la tension.
+                An: area neta de la seccion.
 
         Raises
         ------
@@ -303,19 +299,24 @@ class ASCE_8_02:
         An = profile.A    
         FY = steel.FY
         fiTn, midC = sec3_2(An=An, FY=FY)
+        midC['An'] = An
 
         return fiTn, midC
 
 
-    def s3_3_1(self, LD = 'NO'):
-        '''Design flexural strength.
+    def s3_3_1_Nominal(self, LD = 'NO'):
+        '''Design Nominal Section Strength. Section 3.3.1.1.
         Parameters
         ----------
             LD: string,
                 determina si se consideran distorsiones locales para la resistencia a la flexion nominal (3.3.1.1-CASE III).
         Returns
         -------
-            
+            fiMn_Nominal: float,
+                resistencia nominal de diseno a la flexion.
+            [Nominal_fi, Nominal_Mn]: list of float,
+                Nominal_fi: factor de diseno.
+                Nominal_Mn: resistencia nominal de la seccion a flexion. 
         Raises
         ------
             none
@@ -326,8 +327,6 @@ class ASCE_8_02:
         steel = self.member.steel
         profile = self.member.profile
         elements = self.member.profile.elements
-
-        # Sec 3.3.1.1
 
         FY = steel.FY
         # en realidad es el Sx de la seccion efectiva con tension Fyc o Fyt, pero por ahora va Sx full
@@ -344,151 +343,38 @@ class ASCE_8_02:
                 if element['type'] == 'stiffned_w_slps':
                     comp_flange = 'UNSTIFF'
 
-        if  LD == 'YES' # determino el procedimiento para 3.3.1.1
+        if  LD == 'YES': # determino el procedimiento para 3.3.1.1
             procedure = 'LD'
 
         else:
             procedure = 'PI'
 
-        fiMn_Nominal, midC1 = sec3_3_1_1(FY=FY, Se=Se, procedure=procedure, comp_flange=comp_flange)
-    
-        # Sec 3.3.1.2
-        fiMn_LTB, midC2 = sec3_3_1_2()
+        fiMn_Nominal, midC = sec3_3_1_1(FY=FY, Se=Se, procedure=procedure, comp_flange=comp_flange)
+        return fiMn_Nominal, midC
 
-        fiMn = min(fiMn_Nominal, fiMn_LTB)
-
-
-
-
-    def sec3_3_1_1(self, FY, Se, procedure = 'PI', comp_flange = 'UNSTIFF'):
-        '''Strength for Bending Only. Nominal Section Strength.
-        Parameters
-        ----------
-            Fy: float,
-                tension de fluencia segun Tabla A1 - ASCE 8.
-            Se: float,
-                modulo de seccion elastico efectivo, calculado con la fibra extrema en compresion con f=Fyc o f=Fyc, la que plastifique primero.
-            procedure: string,
-                especifica el procedimiento a implementar (Opciones: PI - PII - LD).
-            comp_flange: string;
-                determina si las alas en compresion estan rigidizadas o no.
-        Returns
-        -------
-            Mn: float,
-                resistencia de diseno a la flexion nominal de la seccion.
-            midC: diccionario,
-                calculos intermedios y parametros.
-        Raises
-        ------
-            none
-        Tests
-        -----
-            >>> 
-        '''
-        if comp_flange == 'UNSTIFF':    # Unstiffened compresion flanges
-            fi = 0.85
-        elif comp_flange == 'STIFF':    # Stiffened or partially stiffened flanges
-            fi = 0.90
-
-        if procedure == 'PI':    # Procedimiento I - basado en fluencia
-            Mn = E_3_3_1_1_e1(Se=Se, FY=FY)
-
-        elif procedure == 'PII':    # Procedimiento II - basado en endurecimiento
-            print('Seccion 3.3.1.1 - Procedimiento II No implementada.')
-            raise NotImplementedError
-
-        elif procedure == 'LD':     # Local Distorsion Considerations
-            Mn, midC = LocalDistorsion()
-
-        midC['Mn'] = Mn
-        midC['fi'] = fi
-        fiMn = fi*Mn
-
-        return fiMn, midC
-
-    def LocalDistorsion(self):
-        '''Nominal Section Strength. Local Distorsion Consideration.
+    def s3_3_1_LB(self):
+        '''Design Lateral Buckling Strength. Section 3.3.1.2.
         Parameters
         ----------
             none
         Returns
         -------
-            none
+            fiMn_LB: float,
+                resistencia de diseno al Lateral Buckling.
+            [LB_fi, Nominal_Mn, Mc, eta]: list of float,
+                LB_fi: factor de diseno.
+                Lb_Mn: resistencia nominal al Lateral Buckling.
+                Mc: momento critico.
+                eta: factor plastico de reduccion.
         Raises
         ------
             none
         Tests
         -----
-            >>> 
+            En archivo
         '''
-        raise NotImplementedError
-
-    def sec3_3_1_2(self):
-        '''Strength for Bending Only. Lateral Buckling Strength.
-        Parameters
-        ----------
-            none
-        Returns
-        -------
-            fiMn: float,
-                resistencia de diseno al LTB de la seccion.
-            midC: diccionario,
-                calculos intermedios y parametros.
-        Raises
-        ------
-            none
-        Tests
-        -----
-            >>> 
-        '''
-        steel = self.member.steel
-        profile = self.member.profile
-
-        Sf = profile.Sx
-        # en realidad es el Sc de la seccion efectiva con tension Mc/Sf, pero por ahora va Sx full
-        Sc = profile.Sx
-
-        # habria que implementar la formula de calculo (1 es conservativo)
-        Cb = 1
-
-        if profile.type == 'cee' or profile.type == 'c_w_lps':  # perfil C - aplica CASE III
-            
-            E0 = steel.E0
-            d = profile.H
-            Iyc = profile.Iy/2
-            L = member.L
-
-            Mc_aux = E_3_3_1_2_e2(E0=E0, Cb=Cb, d=d, Iyc=Iyc, L=L)
-            FF = Mc_aux/Sf
-            f = eta_iter(FF=-FF, mat=steel)
-
-            Mn = f*Sc
-        
-        elif profile.type == 'I_builtup_cee' or profile.type == 'I_builtup_cee_w_lps':  # perfil I - aplica CASE I
-            
-            # implemento solo flexion alrededor del eje de simetria (tambien hay que ver como va disernir entre un caso y otro)
-            rx = profile.rx
-            ry = profile.ry
-            c_x = profile.c_x
-            sc_x = profile.sc_x
-            x0 = -abs(c_x-sc_x)
-            r0 = E_3_3_1_2_e9(rx=rx, ry=ry, x0=x0)
-            A = profile.A
-
-            E_3_3_1_2_e6
-            E_3_3_1_2_e8
-
-
-        fi = 0.85
-        fiMn = fi*Mn
-        midC['fi'] = fi
-        midC['Mn'] = Mn
-        midC['Sc'] = Sc
-        midC['Sf'] = Sf
-
-        return fiMn, midC
-
-
+        fiMn_LB, midC = sec3_3_1_2(self.member)
+        return fiMn_LB, midC
 
     def s3_4(self):
         '''Design axial strength. 
