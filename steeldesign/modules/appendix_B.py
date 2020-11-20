@@ -105,38 +105,6 @@ def B_1(FY, E0, offset, n, s):
     Es = E0 / (1 + offset*E0* ( s**(n-1)/(FY**n)) )
     return Es
 
-def B_5(sigma, FY, E0, offset, n):
-    '''Coeficiente de plasticidad para pandeo de columnas o LTB de vigas, segun Eq B-5.
-
-    Parameters
-    ----------
-    sigma: float,
-        tension normal.
-    FY : float
-        Tension de fluencia con una deformacion permanente de offset
-    E0 : float
-        Modulo elasticidad inicial
-    offset : float
-        Valor de deformacion permanente a la que se obtuvo FY
-    n : float
-        Exponente de Ramberg-Osgood
-
-    Returns
-    ----------
-    eta: float
-        Coeficiente de plasticidad.
-
-    Raises
-    ------
-    none
-
-    Tests
-    -----
-    >>> round( B_5(), 2)
-    '''
-    eta = FY/(FY + offset*n*E0*(sigma/FY)**(n-1))
-    return eta
-
 def TableA12(tau):
     '''Coeficiente de plasticidad para pandeo de columnas o LTB de vigas, segun Eq B-5.
 
