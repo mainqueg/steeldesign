@@ -119,7 +119,7 @@
 
 from math import pi
 from .sec_2 import sec2_1_1, sec2_2_1, sec2_3_1, sec2_4_2
-from .sec_3 import E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_3_1_2_e6, E3_4_3_e1
+from .sec_3 import sec3_2, E_3_3_1_1_e1, E_3_3_1_2_e2, E_3_3_1_2_e6, E_3_3_1_2_e8, E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_4_3_e1
 from .appendix_B import B_2, B_1
 from .properties import c_w_lps_profile, c_profile, steel, I_builtup_c_profile
 
@@ -269,6 +269,227 @@ class ASCE_8_02:
         if not member.dP:
             print ('Advertencia: El miembro', member.name, 'no tiene asignado parametros de diseño.')
 
+
+    def s3_2(self):
+        '''Design axial strength. 
+            
+            Ec 3.4-1: Tension menor de estados limites FB, TB, FTB multiplicada por factor de resistencia y area efectiva.
+        
+        Parameters
+        ----------
+            none
+
+        Returns
+        -------
+            fiPn : float
+                Resistencia axial de diseño
+            [Fn_FB, Fn_TB, Fn_FTB, Ae] : list of float
+                Fn_FB: Tension de pandeo flexional
+                Fn_TB: Tension de pandeo torsional
+                Fn_FTB: Tension de pandeo flexo-torsional
+                Ae: Area efectiva calculada a Fn
+
+        Raises
+        ------
+            none
+
+        Tests
+        -----
+            En archivo
+        '''
+        profile = member.profile
+        steel = member.steel
+        # An = A ??
+        An = profile.A    
+        FY = steel.FY
+        fiTn, midC = sec3_2(An=An, FY=FY)
+
+        return fiTn, midC
+
+
+    def s3_3_1(self, LD = 'NO'):
+        '''Design flexural strength.
+        Parameters
+        ----------
+            LD: string,
+                determina si se consideran distorsiones locales para la resistencia a la flexion nominal (3.3.1.1-CASE III).
+        Returns
+        -------
+            
+        Raises
+        ------
+            none
+        Tests
+        -----
+            En archivo
+        '''
+        steel = self.member.steel
+        profile = self.member.profile
+        elements = self.member.profile.elements
+
+        # Sec 3.3.1.1
+
+        FY = steel.FY
+        # en realidad es el Sx de la seccion efectiva con tension Fyc o Fyt, pero por ahora va Sx full
+        Se = profile.Sx
+
+        for key in elements.keys(): # determino si el ala esta rigidizada o no
+            element = elements[key]
+            
+            if element['name'] == 'flange':
+                
+                if element['type'] == 'stiffned_w_slps':
+                    comp_flange = 'STIFF'
+                
+                if element['type'] == 'stiffned_w_slps':
+                    comp_flange = 'UNSTIFF'
+
+        if  LD == 'YES' # determino el procedimiento para 3.3.1.1
+            procedure = 'LD'
+
+        else:
+            procedure = 'PI'
+
+        fiMn_Nominal, midC1 = sec3_3_1_1(FY=FY, Se=Se, procedure=procedure, comp_flange=comp_flange)
+    
+        # Sec 3.3.1.2
+        fiMn_LTB, midC2 = sec3_3_1_2()
+
+        fiMn = min(fiMn_Nominal, fiMn_LTB)
+
+
+
+
+    def sec3_3_1_1(self, FY, Se, procedure = 'PI', comp_flange = 'UNSTIFF'):
+        '''Strength for Bending Only. Nominal Section Strength.
+        Parameters
+        ----------
+            Fy: float,
+                tension de fluencia segun Tabla A1 - ASCE 8.
+            Se: float,
+                modulo de seccion elastico efectivo, calculado con la fibra extrema en compresion con f=Fyc o f=Fyc, la que plastifique primero.
+            procedure: string,
+                especifica el procedimiento a implementar (Opciones: PI - PII - LD).
+            comp_flange: string;
+                determina si las alas en compresion estan rigidizadas o no.
+        Returns
+        -------
+            Mn: float,
+                resistencia de diseno a la flexion nominal de la seccion.
+            midC: diccionario,
+                calculos intermedios y parametros.
+        Raises
+        ------
+            none
+        Tests
+        -----
+            >>> 
+        '''
+        if comp_flange == 'UNSTIFF':    # Unstiffened compresion flanges
+            fi = 0.85
+        elif comp_flange == 'STIFF':    # Stiffened or partially stiffened flanges
+            fi = 0.90
+
+        if procedure == 'PI':    # Procedimiento I - basado en fluencia
+            Mn = E_3_3_1_1_e1(Se=Se, FY=FY)
+
+        elif procedure == 'PII':    # Procedimiento II - basado en endurecimiento
+            print('Seccion 3.3.1.1 - Procedimiento II No implementada.')
+            raise NotImplementedError
+
+        elif procedure == 'LD':     # Local Distorsion Considerations
+            Mn, midC = LocalDistorsion()
+
+        midC['Mn'] = Mn
+        midC['fi'] = fi
+        fiMn = fi*Mn
+
+        return fiMn, midC
+
+    def LocalDistorsion(self):
+        '''Nominal Section Strength. Local Distorsion Consideration.
+        Parameters
+        ----------
+            none
+        Returns
+        -------
+            none
+        Raises
+        ------
+            none
+        Tests
+        -----
+            >>> 
+        '''
+        raise NotImplementedError
+
+    def sec3_3_1_2(self):
+        '''Strength for Bending Only. Lateral Buckling Strength.
+        Parameters
+        ----------
+            none
+        Returns
+        -------
+            fiMn: float,
+                resistencia de diseno al LTB de la seccion.
+            midC: diccionario,
+                calculos intermedios y parametros.
+        Raises
+        ------
+            none
+        Tests
+        -----
+            >>> 
+        '''
+        steel = self.member.steel
+        profile = self.member.profile
+
+        Sf = profile.Sx
+        # en realidad es el Sc de la seccion efectiva con tension Mc/Sf, pero por ahora va Sx full
+        Sc = profile.Sx
+
+        # habria que implementar la formula de calculo (1 es conservativo)
+        Cb = 1
+
+        if profile.type == 'cee' or profile.type == 'c_w_lps':  # perfil C - aplica CASE III
+            
+            E0 = steel.E0
+            d = profile.H
+            Iyc = profile.Iy/2
+            L = member.L
+
+            Mc_aux = E_3_3_1_2_e2(E0=E0, Cb=Cb, d=d, Iyc=Iyc, L=L)
+            FF = Mc_aux/Sf
+            f = eta_iter(FF=-FF, mat=steel)
+
+            Mn = f*Sc
+        
+        elif profile.type == 'I_builtup_cee' or profile.type == 'I_builtup_cee_w_lps':  # perfil I - aplica CASE I
+            
+            # implemento solo flexion alrededor del eje de simetria (tambien hay que ver como va disernir entre un caso y otro)
+            rx = profile.rx
+            ry = profile.ry
+            c_x = profile.c_x
+            sc_x = profile.sc_x
+            x0 = -abs(c_x-sc_x)
+            r0 = E_3_3_1_2_e9(rx=rx, ry=ry, x0=x0)
+            A = profile.A
+
+            E_3_3_1_2_e6
+            E_3_3_1_2_e8
+
+
+        fi = 0.85
+        fiMn = fi*Mn
+        midC['fi'] = fi
+        midC['Mn'] = Mn
+        midC['Sc'] = Sc
+        midC['Sf'] = Sf
+
+        return fiMn, midC
+
+
+
     def s3_4(self):
         '''Design axial strength. 
             
@@ -311,7 +532,8 @@ class ASCE_8_02:
         midC = {'Fn_FBx': Fn_FBx, 'Fn_FBy': Fn_FBy, 'Fn_TB': Fn_TB, 'Fn_FTB':Fn_FTB, 'Fn': Fn, 'Ae': Ae} # convertir en diccionario
 
         return fiPn, midC
-        
+
+
     def s2_Ae_compMemb(self, f):
         '''Area efectiva para miembros a compresion, segun 2.2.1 (stiffned), 2.3.1 (unstiffned) y 2.4.2 (stiffned_w_slps)
         
@@ -364,6 +586,7 @@ class ASCE_8_02:
                 raise Exception('>> Analisis abortado <<')
 
             profile.Ae =  profile.Ae - (element['w']-element['b'])*t
+
 
     def s3_FTB(self):
         '''Tensión y carga critica nominal de pandeo flexo-torsional.
@@ -438,13 +661,13 @@ class ASCE_8_02:
         steel = self.member.steel
         #fi_n = 0.9 # chequear valor
         
-        FFx = E3_3_1_2_e6(E0= steel.E0, K = dP.Kx, L = dP.Lx, r = profile.rx, eta= 1)
+        FFx = E_3_3_1_2_e6(E0= steel.E0, K = dP.Kx, L = dP.Lx, r = profile.rx, eta= 1)
         Fnx = eta_iter(FFx,steel)
         if Fnx > steel.FY:
             Fnx = steel.FY
         Pnx = Fnx* profile.A
 
-        FFy = E3_3_1_2_e6(E0= steel.E0, K = dP.Ky, L = dP.Ly, r = profile.ry, eta= 1)
+        FFy = E_3_3_1_2_e6(E0= steel.E0, K = dP.Ky, L = dP.Ly, r = profile.ry, eta= 1)
         Fny = eta_iter(FFy,steel)
         if Fny > steel.FY:
             Fny = steel.FY
