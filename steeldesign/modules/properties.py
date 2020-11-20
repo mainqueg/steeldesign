@@ -94,6 +94,8 @@ class commonMethods():
             self.sc_x, self.sc_y = p.sc_x, p.sc_y
             self.A, self.Ae = p.A, p.Ae
             self.Cw, self.J = p.Cw, p.J
+            self.Ix, self.Iy = p.Ix, p.Iy
+            self.Sx = p.Sx  # modulo elastico
         with open(file  + '_mesh.fig', 'rb') as input:
             fig = pickle.load(input)
         fig.show()
