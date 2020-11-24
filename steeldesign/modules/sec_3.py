@@ -3,7 +3,7 @@ import numpy as np
 
 ## 3.2 Tension Members
 def sec3_2(An, FY):
-    '''Tension Members.
+    '''Design Tensile Strength. Eq 3.2-1.
     Parameters
     ----------
         An: float,
@@ -21,7 +21,9 @@ def sec3_2(An, FY):
         none
     Tests
     -----
-        >>> 
+        >>> fiTn, _ = sec3_2(An=1.551, FY=50)
+        >>> round(fiTn, 2)
+        65.92
     '''
     fi = 0.85
     Tn = An*FY
@@ -33,6 +35,79 @@ def sec3_2(An, FY):
 ## 3.3 Flexural Memebers
 
 ## 3.3.1 Strength for Bending Only
+def s3_3_1_Nominal(member, LD = 'NO'):
+    '''Design Nominal Section Strength. Section 3.3.1.1.
+    Parameters
+    ----------
+        LD: string,
+            determina si se consideran distorsiones locales para la resistencia a la flexion nominal (3.3.1.1-CASE III).
+    Returns
+    -------
+        fiMn_Nominal: float,
+            resistencia nominal de diseno a la flexion.
+        [Nominal_fi, Nominal_Mn]: list of float,
+            Nominal_fi: factor de diseno.
+            Nominal_Mn: resistencia nominal de la seccion a flexion. 
+    Raises
+    ------
+        none
+    Tests
+    -----
+        En archivo
+    '''
+    steel = member.steel
+    profile = member.profile
+    elements = member.profile.elements
+
+    FY = steel.FY
+    # en realidad es el Sx de la seccion efectiva con tension Fyc o Fyt, pero por ahora va Sx full
+    Se = profile.Sx
+
+    for key in elements.keys(): # determino si el ala esta rigidizada o no
+        element = elements[key]
+        
+        if element['name'] == 'flange':
+            
+            if element['type'] == 'stiffned_w_slps':
+                comp_flange = 'STIFF'
+            
+            if element['type'] == 'stiffned_w_slps':
+                comp_flange = 'UNSTIFF'
+
+    if  LD == 'YES': # determino el procedimiento para 3.3.1.1
+        procedure = 'LD'
+
+    else:
+        procedure = 'PI'
+
+    fiMn_Nominal, midC = sec3_3_1_1(FY=FY, Se=Se, procedure=procedure, comp_flange=comp_flange)
+    return fiMn_Nominal, midC
+
+def s3_3_1_LB(member):
+    '''Design Lateral Buckling Strength. Section 3.3.1.2.
+    Parameters
+    ----------
+        none
+    Returns
+    -------
+        fiMn_LB: float,
+            resistencia de diseno al Lateral Buckling.
+        [LB_fi, Nominal_Mn, Mc, eta]: list of float,
+            LB_fi: factor de diseno.
+            Lb_Mn: resistencia nominal al Lateral Buckling.
+            Mc: momento critico.
+            eta: factor plastico de reduccion.
+    Raises
+    ------
+        none
+    Tests
+    -----
+        En archivo
+    '''
+    fiMn_LB, midC = sec3_3_1_2(member)
+    return fiMn_LB, midC
+
+
 def sec3_3_1_1(FY, Se, procedure = 'PI', comp_flange = 'UNSTIFF'):
     '''Strength for Bending Only. Nominal Section Strength.
     Parameters
@@ -493,57 +568,86 @@ def E_3_3_1_2_e9(rx, ry, x0):
 
 
 ## 3.3.2 Strength for Shear Only
-def sec3_3_2():
-    '''Strength for Shear Only.
-    Parameters
-    ----------
-        An: float,
-            net area de la seccion.
-        Fy: float,
-            tension de fluencia segun Tabla A1 - ASCE 8.
-    Returns
-    -------
-        fiTn: float,
-            resistencia de diseno a la tension.
-        midC: diccionario,
-            valores de fi y Tn.
-    Raises
-    ------
-        none
-    Tests
-    -----
-        >>> 
-    '''
-    fi = 0.85
-    Vn = E_3_3_2_e1()
-
-    midC['Shear_fi']
-
-def E_3_3_2_e1(E0, t, eta_shear, h):
-    '''Strength for Shear Only. Resistencia nominal al corte.
+def E_3_3_2_e1(E0, t, h):
+    '''Strength for Shear Only. Resistencia nominal al corte dividida por eta_shear.
     Parameters
     ----------
         E0: float,
             modulo de elasticidad inicial.
         t: float,
             espesor de la seccion.
-        eta_shear: float,
-            coeficiente de reduccion por plasticidad de corte.
         h: float,
             altura de la seccion.
     Returns
     -------
-        Vn: float,
-            resistencia de diseno a la tension.
+        Vn_eta: float,
+            resistencia nominal al corte dividida por eta_shear (para iterar).
     Raises
     ------
         none
     Tests
     -----
-        >>> 
+        >>> round(E_3_3_2_e1(E0=27e3, t=0.06, h=6.0), 2)
+        4.7
     '''
+    Vn_eta = 4.84*E0*t**3/h
+    return Vn_eta
 
-    Vn = 4.84*E0*t**3*(Gs/G0)/h
+
+## 3.3.3 Strength for Combined Bending and Shear
+def E_3_3_3_e1(fiMn, fiVn, Mu, Vu):
+    '''Ecuacion de interaccion flexion-corte. Ecuacion 3.3.3-1.
+    Parameters
+    ----------
+        fiMn: float,
+            resistencia de diseno a la flexion.
+        fiVn: float,
+            resistencia de diseno al corte.
+        Mu: float,
+            resistencia requerida a la flexion. 
+        Vu: float,
+            resistencia requerida al corte.
+    Returns
+    -------
+        bool
+    Tests
+    -----
+        none        
+    '''
+    comb = (Mu/fiMn)**2 + (Vu/fiVn)**2
+    if comb <= 1: 
+        return True
+    else:
+        return False
+
+def E_3_3_3_e2(fiMn, fiVn, Mu, Vu):
+    '''Ecuacion de interaccion flexion-corte. Ecuacion 3.3.3-2.
+    Parameters
+    ----------
+        fiMn: float,
+            resistencia de diseno a la flexion.
+        fiVn: float,
+            resistencia de diseno al corte.
+        Mu: float,
+            resistencia requerida a la flexion. 
+        Vu: float,
+            resistencia requerida al corte.
+    Returns
+    -------
+        bool
+    Tests
+    -----
+        none        
+    '''
+    comb = (Mu/fiMn)*0.6 + (Vu/fiVn)
+    if comb <= 1.3: 
+        return True
+    else:
+        return False
+
+## 3.3.4 Web Crippling Strength
+def sec3_3_4():
+
 
 
 ## 3.4 Compression Members

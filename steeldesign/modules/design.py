@@ -119,9 +119,15 @@
 
 from math import pi
 from .sec_2 import sec2_1_1, sec2_2_1, sec2_3_1, sec2_4_2
-from .sec_3 import sec3_2, sec3_3_2, E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_4_3_e1
-from .sec_3 import sec3_3_1_1, E_3_3_1_1_e1, LocalDistorsion
-from .sec_3 import sec3_3_1_2, E_3_3_1_2_e1, E_3_3_1_2_e2, sec3_3_1_2_3_i, E_3_3_1_2_e4, E_3_3_1_2_e6, E_3_3_1_2_e8, E_3_3_1_2_e9
+from .sec_3 import sec3_2, E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_4_3_e1
+# Imports for Section 3.3.1.1
+from .sec_3 import s3_3_1_Nominal, sec3_3_1_1, E_3_3_1_1_e1, LocalDistorsion
+# Imports for Section 3.3.1.2
+from .sec_3 import s3_3_1_LB, sec3_3_1_2_3_i, E_3_3_1_2_e1, E_3_3_1_2_e2, E_3_3_1_2_e4, E_3_3_1_2_e6, E_3_3_1_2_e8, E_3_3_1_2_e9
+# Imports for Section 3.3.2
+from .sec_3 import sec3_3_2, E_3_3_2_e1
+# Imports for Section 3.3.3
+from .sec_3 import E_3_3_3_e1
 from .appendix_B import B_2, B_1
 from .properties import c_w_lps_profile, c_profile, steel, I_builtup_c_profile
 
@@ -274,6 +280,7 @@ class ASCE_8_02:
 
     def s3_2(self):
         '''Design Tensile Strength. Eq 3.2-1.
+        Parameters
         ----------
             none
         Returns
@@ -284,18 +291,16 @@ class ASCE_8_02:
                 Tension_fi: coeficiente de diseno en tension.
                 Tension_Tn: resistencia nominal a la tension.
                 An: area neta de la seccion.
-
         Raises
         ------
             none
-
         Tests
         -----
             En archivo
         '''
         profile = member.profile
         steel = member.steel
-        # An = A ??
+        # Area neta igual a Area total ??
         An = profile.A    
         FY = steel.FY
         fiTn, midC = sec3_2(An=An, FY=FY)
@@ -303,65 +308,20 @@ class ASCE_8_02:
 
         return fiTn, midC
 
-
-    def s3_3_1_Nominal(self, LD = 'NO'):
-        '''Design Nominal Section Strength. Section 3.3.1.1.
+    
+    def s3_3_1(self, LD = 'NO'):
+        '''Design Flexural Strength. Bending Only. Smaller of Sections 3.3.1.1 and 3.3.1.2.
         Parameters
         ----------
             LD: string,
                 determina si se consideran distorsiones locales para la resistencia a la flexion nominal (3.3.1.1-CASE III).
         Returns
         -------
-            fiMn_Nominal: float,
-                resistencia nominal de diseno a la flexion.
-            [Nominal_fi, Nominal_Mn]: list of float,
+            fiMn: float,
+                resistencia de diseno a la flexion.
+            [Nominal_fi, Nominal_Mn, LB_fi, LB_Mn, Mc, eta]: list of float,
                 Nominal_fi: factor de diseno.
-                Nominal_Mn: resistencia nominal de la seccion a flexion. 
-        Raises
-        ------
-            none
-        Tests
-        -----
-            En archivo
-        '''
-        steel = self.member.steel
-        profile = self.member.profile
-        elements = self.member.profile.elements
-
-        FY = steel.FY
-        # en realidad es el Sx de la seccion efectiva con tension Fyc o Fyt, pero por ahora va Sx full
-        Se = profile.Sx
-
-        for key in elements.keys(): # determino si el ala esta rigidizada o no
-            element = elements[key]
-            
-            if element['name'] == 'flange':
-                
-                if element['type'] == 'stiffned_w_slps':
-                    comp_flange = 'STIFF'
-                
-                if element['type'] == 'stiffned_w_slps':
-                    comp_flange = 'UNSTIFF'
-
-        if  LD == 'YES': # determino el procedimiento para 3.3.1.1
-            procedure = 'LD'
-
-        else:
-            procedure = 'PI'
-
-        fiMn_Nominal, midC = sec3_3_1_1(FY=FY, Se=Se, procedure=procedure, comp_flange=comp_flange)
-        return fiMn_Nominal, midC
-
-    def s3_3_1_LB(self):
-        '''Design Lateral Buckling Strength. Section 3.3.1.2.
-        Parameters
-        ----------
-            none
-        Returns
-        -------
-            fiMn_LB: float,
-                resistencia de diseno al Lateral Buckling.
-            [LB_fi, Nominal_Mn, Mc, eta]: list of float,
+                Nominal_Mn: resistencia nominal de la seccion a flexion.
                 LB_fi: factor de diseno.
                 Lb_Mn: resistencia nominal al Lateral Buckling.
                 Mc: momento critico.
@@ -373,8 +333,64 @@ class ASCE_8_02:
         -----
             En archivo
         '''
-        fiMn_LB, midC = sec3_3_1_2(self.member)
-        return fiMn_LB, midC
+        fiMn_Nominal, midC = s3_3_1_Nominal(member=self.member, LD=LD)
+        fiMn_LB, midC2 = s3_3_1_LB(member=self.member)
+
+        fiMn = min(fiMn_Nominal, fiMn_LB)
+        midC.update(midC2)  # merge entre los diccionarios
+
+        return fiMn, midC
+
+
+    def s3_3_2(self, FY_v = 0):
+        '''Design Strength for Shear Only. Shear Buckling.
+        Parameters
+        ----------
+            FY_v: float,
+                tension de fluencia de corte. Ver tabla A1 -  ASCE 8.
+        Returns
+        -------
+            fiVn: float,
+                resistencia de diseno al corte.
+            [Shear_fi, Vn, Av]: list of float,
+                Shear_fi: factor de diseno.
+                Vn: resistencia nominal de la seccion a corte.
+                Av: area para el calculo de resistencia a corte.
+        Raises
+        ------
+            none
+        Tests
+        -----
+            >>> 
+        '''
+        steel = self.member.steel
+        profile = self.member.profile
+
+        E0 = steel.E0
+        FY = steel.FY
+        t = profile.t
+        h = profile.H - 2*(profile.r_out)
+        Av = h*t    # Area del alma
+
+        if FY_v == 0:
+            FY_v = 0.8*FY
+
+        # asumo Vn = tau*Area
+        # construyo ecuacion: tau - FF*eta(tau) = 0
+        #                     FF = 4.84*E0*t**3/h/Area
+        Vn_eta = E_3_3_2_e1(E0=E0, t=t, h=h)
+        FF = Vn_eta/Av
+        tau = eta_iter(FF=FF, mat=steel)
+        Vn = tau*Av
+
+        fi = 0.85
+        fiVn = fi*Vn
+        limit = 0.95*FYV*h*t
+        if fiVn > limit: fiVn = limit   # no puede superar fluencia del alma
+
+        midC['Shear_fi': fi, 'Vn': Vn, 'Av': Av]
+        return fi*Vn, midC
+
 
     def s3_4(self):
         '''Design axial strength. 
