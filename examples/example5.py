@@ -29,10 +29,20 @@ m = sd.member(L= 6*12, profile= p1, steel= s, designParameters= dp)
 analysis = sd.ASCE_8_02(m)
 # calculo admisibles #
 fiPn, midC = analysis.s3_4()
+analysis.s2_1()
 
 print('fiPn =', round(fiPn,2),'| Pn =', round(midC['Fn']*midC['Ae'],2))
 print('Esbeltez de', m.profile.elements[1]['name'],'=', m.profile.elements[1]['esbeltez'])
 print('Esbeltez de', m.profile.elements[2]['name'],'=', round(m.profile.elements[2]['esbeltez'],3))
 print('Esbeltez de', m.profile.elements[3]['name'],'=', round(m.profile.elements[3]['esbeltez'],3))
+
+elements = m.profile.elements
+print('\nSeccion 2.1:')
+for key in elements.keys():
+    element = elements[key]
+    
+    print('> {m[name]}, Clausula 2.1.1-1 ({m[condition]}): {m[ratio_1]:{fmt}} < {m[ratioAdm_1]:{fmt}}'.format(m = element, fmt = '.2f'))
+    if element['name'] == 'flange':
+        print('\t Clausula 2.1.1-3, Ratio de ancho efectivo: {m[ratio_3]:{fmt}}'.format(m= element, fmt = '.2f'))
 
 #NOTA: La referencia da Pn 74.04 contra los 73.53 de steeldesign.
