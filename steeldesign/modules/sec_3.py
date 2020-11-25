@@ -33,7 +33,6 @@ def sec3_2(An, FY):
     return Tn*fi, midC
 
 ## 3.3 Flexural Memebers
-
 ## 3.3.1 Strength for Bending Only
 def s3_3_1_Nominal(member, LD = 'NO'):
     '''Design Nominal Section Strength. Section 3.3.1.1.
@@ -646,9 +645,408 @@ def E_3_3_3_e2(fiMn, fiVn, Mu, Vu):
         return False
 
 ## 3.3.4 Web Crippling Strength
-def sec3_3_4():
+def sec3_3_4(member):
+    '''Web Crippling Strength.
+    Parameters
+    ----------
+        
+    Returns
+    -------
+        
+    Raises
+    ------
+        none
+    Tests
+    -----
+        >>> 
+    '''
+    steel = member.steel
+    profile = member.profile
+
+    # Parametros
+
+    FY = steel.FY
+    h = profile.H - 2*profile.r_out
+    t = profile.t
+
+    Ct = Ct(units='US')
+    k = FY/33/Ct
+    m = E_3_3_4_e22(units='US')
+
+    # N = 
+    R = profile.r_out - t
+    # theta = 
+
+    # Calculo de coeficientes
+    C1 = E_3_3_4_e10(FY=FY, Ct=Ct, k=k)
+    C2 = E_3_3_4_e11(R=R, t=t)
+    C3 = E_3_3_4_e12(FY=FY, Ct=Ct, k=k)
+    C4 = E_3_3_4_e13(R=R, t=t)
+    C5 = E_3_3_4_e14(k=k)
+    C6 = E_3_3_4_e15(h=h, t=t)
+    C7 = E_3_3_4_e17(h=h, t=t, k=k)
+    C8 = E_3_3_4_e19(h=h, t=t, k=k)
+    C_theta = E_3_3_4_e20(theta=theta)
 
 
+
+
+def E_3_3_4_e1(t, C3, C4, Ctheta, h, N, Ct):
+    '''Ecuacion 3.3.4-1.
+    Parameters
+    ----------
+        
+    Returns
+    -------
+        
+    Tests
+    -----
+        none        
+    '''
+    f1 = t**2*C3*C4*Ctheta
+    f2 = 331 - 0.61*h/t
+    f3 = 1 + 0.01*N/t
+
+    return f1*f2*f3*Ct
+
+def E_3_3_4_e2(t, C3, C4, Ctheta, h, N, Ct):
+    '''Ecuacion 3.3.4-2.
+    Parameters
+    ----------
+        
+    Returns
+    -------
+        
+    Tests
+    -----
+        none        
+    '''
+    f1 = t**2*C3*C4*Ctheta
+    f2 = 217 - 0.28*h/t
+    f3 = 1 + 0.01*N/t
+
+    return f1*f2*f3*Ct
+
+def E_3_3_4_e3(N, t, FY, C6):
+    '''Ecuacion 3.3.4-3.
+    Parameters
+    ----------
+        
+    Returns
+    -------
+        
+    Tests
+    -----
+        none        
+    '''
+    f1 = 0.71 + 0.015*N/t
+    f2 = t**2*FY*C6
+    f3 = 10 + 1.25*(N/t)**0.5
+
+    return f1*f2*f3
+
+def E_3_3_4_e4(t, C1, C2, Ctheta, h, N, Ct):
+    '''Ecuacion 3.3.4-4.
+    Parameters
+    ----------
+        
+    Returns
+    -------
+        
+    Tests
+    -----
+        none        
+    '''
+    f1 = t**2*C1*C2*Ctheta
+    f2 = 538 - 0.74*h/t
+    f3 = 1 + 0.007*N/t
+
+    return f1*f2*f3*Ct
+
+def E_3_3_4_e5(N, t, FY, C5, m):
+    '''Ecuacion 3.3.4-5.
+    Parameters
+    ----------
+        
+    Returns
+    -------
+        
+    Tests
+    -----
+        none        
+    '''
+    f1 = 0.75 + 0.011*N/t
+    f2 = t**2*FY*C5
+    f3 = 0.88 + 0.12*m
+    f4 = 15 + 3.25*(N/t)**0.5
+
+    return f1*f2*f3*f4
+
+def E_3_3_4_e6(t, C3, C4, Ctheta, h, N, Ct):
+    '''Ecuacion 3.3.4-6.
+    Parameters
+    ----------
+        
+    Returns
+    -------
+        
+    Tests
+    -----
+        none        
+    '''
+    f1 = t**2*C3*C4*Ctheta
+    f2 = 244 - 0.57*h/t
+    f3 = 1 + 0.01*N/t
+
+    return f1*f2*f3*Ct
+
+def E_3_3_4_e7(t, C3, C4, Ctheta, h, N, Ct):
+    '''Ecuacion 3.3.4-7.
+    Parameters
+    ----------
+        
+    Returns
+    -------
+        
+    Tests
+    -----
+        none        
+    '''
+    f1 = t**2*FY*C8
+    f2 = 0.64 + 0.31*m
+    f3 = 10 + 1.25*(N/t)**0.5
+
+    return f1*f2*f3
+
+def E_3_3_4_e8(t, C1, C2, Ctheta, h, N, Ct):
+    '''Ecuacion 3.3.4-8.
+    Parameters
+    ----------
+        
+    Returns
+    -------
+        
+    Tests
+    -----
+        none        
+    '''
+    f1 = t**2*C1*C2*Ctheta
+    f2 = 771 - 2.26*h/t
+    f3 = 1 + 0.0013*N/t
+
+    return f1*f2*f3*Ct
+
+def E_3_3_4_e9(t, C3, C4, Ctheta, h, N, Ct):
+    '''Ecuacion 3.3.4-9.
+    Parameters
+    ----------
+        
+    Returns
+    -------
+        
+    Tests
+    -----
+        none        
+    '''
+    f1 = t**2*FY*C7
+    f2 = 0.82 - 0.15*m
+    f3 = 15 + 3.25*(N/t)**0.5
+
+    return f1*f2*f3
+
+def Ct(units = 'SI'):
+    '''Ct.
+    Parameters
+    ----------
+        
+    Returns
+    -------
+        
+    Tests
+    -----
+        none        
+    '''
+    if units == 'SI':
+        return 6.9
+    if units == 'US'
+        return 1.0
+
+def E_3_3_4_e10(FY, Ct, k):
+    '''C1. Ecuacion 3.3.4-10.
+    Parameters
+    ----------
+        
+    Returns
+    -------
+        
+    Tests
+    -----
+        none        
+    '''
+    limit = FY/91.5/Ct
+    if limit <= 1:
+        return (1.22 - 0.22*k)*k
+    else:
+        return 1.69
+
+def E_3_3_4_e11(R, t):
+    '''C2. Ecuacion 3.3.4-11.
+    Parameters
+    ----------
+        
+    Returns
+    -------
+        
+    Tests
+    -----
+        none        
+    '''
+    C2 = (1.06 - 0.06*R/t)
+    if C2 > 1: C2 = 1.0
+    return C2
+
+def E_3_3_4_e12(FY, Ct, k):
+    '''C3. Ecuacion 3.3.4-12.
+    Parameters
+    ----------
+        
+    Returns
+    -------
+        
+    Tests
+    -----
+        none        
+    '''
+    limit = FY/66.5/Ct
+    if limit <= 1:
+        return (1.33 - 0.33*k)*k
+    else:
+        return 1.34
+
+def E_3_3_4_e13(R, t):
+    '''C4. Ecuacion 3.3.4-13.
+    Parameters
+    ----------
+        
+    Returns
+    -------
+        
+    Tests
+    -----
+        none        
+    '''
+    C4 = (1.15 - 0.15*R/t)
+    if C4 < 0.5: C4 = 0.5
+    return C4
+
+def E_3_3_4_e14(k):
+    '''C5. Ecuacion 3.3.4-14.
+    Parameters
+    ----------
+        
+    Returns
+    -------
+        
+    Tests
+    -----
+        none        
+    '''
+    C5 = (1.49 - 0.53*k)
+    if C5 < 0.6: C5 = 0.6
+    return C5
+
+def E_3_3_4_e15(h, t):
+    '''C6. Ecuacion 3.3.4-15.
+    Parameters
+    ----------
+        
+    Returns
+    -------
+        
+    Tests
+    -----
+        none        
+    '''
+    if h/t <= 150:
+        C6 = 1.0 + h/t/750
+    else: C6 = 1.20
+    return C6
+
+def E_3_3_4_e17(h, t, k):
+    '''C7. Ecuacion 3.3.4-17.
+    Parameters
+    ----------
+        
+    Returns
+    -------
+        
+    Tests
+    -----
+        none        
+    '''
+    if h/t <= 66.5
+        C7 = 1/k
+    else: C7 = (1.10 - h/t/660)/k
+    return C7
+
+def E_3_3_4_e19(h, t, k):
+    '''C8. Ecuacion 3.3.4-19.
+    Parameters
+    ----------
+        
+    Returns
+    -------
+        
+    Tests
+    -----
+        none        
+    '''
+    return (0.98 - h/t/665)/k
+
+def E_3_3_4_e20(theta):
+    '''C_theta. Ecuacion 3.3.4-20.
+    Parameters
+    ----------
+        
+    Returns
+    -------
+        
+    Tests
+    -----
+        none        
+    '''
+    return 0.7 + 0.3*(theta/90)**2
+
+def E_3_3_4_e21(FY, Ct):
+    '''k. Ecuacion 3.3.4-21.
+    Parameters
+    ----------
+        
+    Returns
+    -------
+        
+    Tests
+    -----
+        none        
+    '''
+    return FY/33/Ct
+
+def E_3_3_4_e22(t, units='SI'):
+    '''m. Ecuacion 3.3.4-22.
+    Parameters
+    ----------
+        
+    Returns
+    -------
+        
+    Tests
+    -----
+        none        
+    '''
+    if units == 'SI':
+        return t/1.91
+    if units == 'US':
+        return t/0.075
 
 ## 3.4 Compression Members
 def E3_4_e1(Fn, Ae):

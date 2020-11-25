@@ -369,7 +369,7 @@ class ASCE_8_02:
         E0 = steel.E0
         FY = steel.FY
         t = profile.t
-        h = profile.H - 2*(profile.r_out)
+        h = profile.H - 2*profile.r_out
         Av = h*t    # Area del alma
 
         if FY_v == 0:
