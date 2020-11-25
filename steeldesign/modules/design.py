@@ -162,6 +162,7 @@ class designParameters:
         self.Lx = Lx
         self.Ly = Ly
         self.Lz = Lz
+        self.cLoadFlag = cLoadFlag
 
 class member():
     '''Miembro estructural.
@@ -303,7 +304,7 @@ class ASCE_8_02:
                     print('El elemento:',key , element['name'],'del perfil:',profile.name, 'excede los limites la clausula 2.2.1-1')
                     raise Exception('>> Analisis abortado <<')
                 # 2.1.1-3 Shear Lag Effects - Flanges
-                if element['name'] == 'flange':
+                if element['name'] == 'flange' and self.member.dP.cLoadFlag:
                     ratio_3, _ = sec2_1_1_c3(L = self.member.L*2, wf= element['wf'])
                     element['ratio_3'] = ratio_3
                     if ratio_3 < 1.0:
@@ -327,7 +328,7 @@ class ASCE_8_02:
                     print('El elemento:',key , element['name'],'del perfil:',profile.name, 'excede los limites la clausula 2.2.1-1')
                     raise Exception('>> Analisis abortado <<')
                 # 2.1.1-3 Shear Lag Effects - Flanges
-                if element['name'] == 'flange':
+                if element['name'] == 'flange' and self.member.dP.cLoadFlag:
                     ratio_3, _ = sec2_1_1_c3(L = self.member.L*2, wf= element['wf'])
                     element['ratio_3'] = ratio_3
                     if ratio_3 < 1.0:
