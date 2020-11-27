@@ -119,9 +119,20 @@
 
 from math import pi
 from .sec_2 import sec2_1_1_c1,sec2_1_1_c3, sec2_2_1, sec2_3_1, sec2_4_2
-from .sec_3 import E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_3_1_2_e6, E3_4_3_e1
+from .sec_3 import E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_4_3_e1
+#from .sec_2 import sec2_1_1, sec2_2_1, sec2_3_1, sec2_4_2
+from .sec_3 import sec3_2, E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_4_3_e1
+# Imports for Section 3.3.1.1
+from .sec_3 import sec3_3_1_1, E_3_3_1_1_e1, LocalDistorsion
+# Imports for Section 3.3.1.2
+from .sec_3 import sec3_3_1_2_eta, sec3_3_1_2_3_i, E_3_3_1_2_e1, E_3_3_1_2_e2, E_3_3_1_2_e4, E_3_3_1_2_e6, E_3_3_1_2_e8, E_3_3_1_2_e9
+# Imports for Section 3.3.2
+from .sec_3 import E_3_3_2_e1
+# Imports for Section 3.3.3
+from .sec_3 import E_3_3_3_e1
 from .appendix_B import B_2, B_1
 from .properties import c_w_lps_profile, c_profile, steel, I_builtup_c_profile
+from .functions import eta_iter
 
 
 class designParameters:
@@ -337,6 +348,187 @@ class ASCE_8_02:
                 print('El elemento:',element['name'], 'del perfil:', profile.name, 'no tiene asignada una clasificacion reconocida:', element['type'])
                 raise Exception('>> Analisis abortado <<')
 
+
+    def s3_2(self):
+        '''Design Tensile Strength. Eq 3.2-1.
+        Parameters
+        ----------
+            none
+        Returns
+        -------
+            fiTn : float
+                Resistencia a la tension de diseño.
+            [Tension_fi, Tension_Tn, An] : list of float
+                Tension_fi: coeficiente de diseno en tension.
+                Tension_Tn: resistencia nominal a la tension.
+                An: area neta de la seccion.
+        Raises
+        ------
+            none
+        Tests
+        -----
+            En archivo
+        '''
+        profile = self.member.profile
+        steel = self.member.steel
+        # Area neta igual a Area total ??
+        An = profile.A    
+        FY = steel.FY
+        fiTn, midC = sec3_2(An=An, FY=FY)
+        midC['An'] = An
+
+        return fiTn, midC
+
+    
+    def s3_3_1(self, LD = 'NO'):
+        '''Design Flexural Strength. Bending Only. Smaller of Sections 3.3.1.1 and 3.3.1.2.
+        Parameters
+        ----------
+            LD: string,
+                determina si se consideran distorsiones locales para la resistencia a la flexion nominal (3.3.1.1-CASE III).
+        Returns
+        -------
+            fiMn: float,
+                resistencia de diseno a la flexion.
+            [Nominal_fi, Nominal_Mn, LB_fi, LB_Mn, Mc, eta]: list of float,
+                Nominal_fi: factor de diseno.
+                Nominal_Mn: resistencia nominal de la seccion a flexion.
+                LB_fi: factor de diseno.
+                Lb_Mn: resistencia nominal al Lateral Buckling.
+                Mc: momento critico.
+                eta: factor plastico de reduccion.
+        Raises
+        ------
+            none
+        Tests
+        -----
+            En archivo
+        '''
+        steel = self.member.steel
+        profile = self.member.profile
+        elements = self.member.profile.elements
+        dpar = self.member.dP
+        member = self.member
+
+        # Section 3.3.1.1 - Nominal Strength
+        for key in elements.keys(): # determino si el ala esta rigidizada o no
+            element = elements[key]
+            if element['name'] == 'flange':
+                if element['type'] == 'stiffned_w_slps':
+                    comp_flange = 'STIFF'
+                if element['type'] == 'unstiffned':
+                    comp_flange = 'UNSTIFF'
+
+        if  LD == 'YES': # determino el procedimiento para 3.3.1.1
+            procedure = 'LD'
+        else:
+            procedure = 'PI'
+
+        FY = steel.FY
+        # Valor corresponfiente al example 8.1
+        # Falta implementar el calculo de Se
+        Se = 1.422
+
+        fiMn_Nominal, midC = sec3_3_1_1(FY=FY, Se=Se, procedure=procedure, comp_flange=comp_flange)
+
+
+        # Section 3.3.1.2 - Lateral Buckling Strength
+        prof_type = profile.type
+        E0 = steel.E0
+        d = profile.H
+        Iyc = profile.Iy/2
+        L = member.L
+        rx = profile.rx
+        ry = profile.ry
+        c_x = profile.c_x
+        sc_x = profile.sc_x
+        A = profile.A
+        Lx = dpar.Lx
+        Kx = dpar.Kx
+        Ly = dpar.Ly
+        Ky = dpar.Ky
+        Lz = dpar.Lz
+        Kz = dpar.Kz
+        Cw = profile.Cw
+        G0 = steel.G0
+        J = profile.J
+        beta = 0
+        # Valor corresponfiente al example 8.1
+        # Falta implementar el calculo de Cb
+        Cb = 1.75
+
+        Sf = profile.Sx
+        # Valor corresponfiente al example 8.1
+        # Falta implementar el calculo de Sc
+        Sc = 1.470
+
+        Mc_eta_LB = sec3_3_1_2_eta(prof_type=prof_type, Cb=Cb, E0=E0, d=d, Iyc=Iyc, L=L, rx=rx, ry=ry, c_x=c_x, sc_x=sc_x, A=A, Lx=Lx, Kx=Kx, Ly=Ly, Ky=Ky, Lz=Lz, Kz=Kz, Cw=Cw, G0=G0, J=J, beta=beta)
+        # construyo ecuacion: f - Mc/Sf = 0
+        #                     f - (Mc_eta_LB/Sf)*eta(f) = 0
+        #                     f - FF*eta(f) = 0 (itero con eta_iter)
+        FF = Mc_eta_LB/Sf
+        f = eta_iter(FF=FF, mat=steel)
+        eta = f/FF
+
+        fiMn_LB, midC2 = E_3_3_1_2_e1(Sc=Sc, Mc=Mc_eta_LB*eta, Sf=Sf)
+
+        # Defino que resistencia controla
+        fiMn = min(fiMn_Nominal, fiMn_LB)
+        midC.update(midC2)  # merge entre los diccionarios
+
+        return fiMn, midC
+
+
+    def s3_3_2(self, FY_v = 0):
+        '''Design Strength for Shear Only. Shear Buckling.
+        Parameters
+        ----------
+            FY_v: float,
+                tension de fluencia de corte. Ver tabla A1 -  ASCE 8.
+        Returns
+        -------
+            fiVn: float,
+                resistencia de diseno al corte.
+            [Shear_fi, Vn, Av]: list of float,
+                Shear_fi: factor de diseno.
+                Vn: resistencia nominal de la seccion a corte.
+                Av: area para el calculo de resistencia a corte.
+        Raises
+        ------
+            none
+        Tests
+        -----
+            >>> 
+        '''
+        steel = self.member.steel
+        profile = self.member.profile
+
+        E0 = steel.E0
+        FY = steel.FY
+        t = profile.t
+        h = profile.H - 2*profile.r_out
+        Av = h*t    # Area del alma
+
+        if FY_v == 0:
+            FY_v = 0.8*FY
+
+        # asumo Vn = tau*Area
+        # construyo ecuacion: tau - FF*eta(tau) = 0
+        #                     FF = 4.84*E0*t**3/h/Area
+        Vn_eta = E_3_3_2_e1(E0=E0, t=t, h=h)
+        FF = Vn_eta/Av
+        tau = eta_iter(FF=FF, mat=steel)
+        Vn = tau*Av
+
+        fi = 0.85
+        fiVn = fi*Vn
+        limit = 0.95*FY_v*h*t
+        if fiVn > limit: fiVn = limit   # no puede superar fluencia del alma
+
+        midC= {'Shear_fi': fi, 'Vn': Vn, 'Av': Av}
+        return fi*Vn, midC
+
+
     def s3_4(self):
         '''Design axial strength. 
             
@@ -376,7 +568,8 @@ class ASCE_8_02:
         midC = {'Fn_FBx': Fn_FBx, 'Fn_FBy': Fn_FBy, 'Fn_TB': Fn_TB, 'Fn_FTB':Fn_FTB, 'Fn': Fn, 'Ae': Ae} # convertir en diccionario
 
         return fiPn, midC
-        
+
+
     def s2_Ae_compMemb(self, f):
         '''Area efectiva para miembros a compresion, segun 2.2.1 (stiffned), 2.3.1 (unstiffned) y 2.4.2 (stiffned_w_slps)
         
@@ -431,6 +624,7 @@ class ASCE_8_02:
                 raise Exception('>> Analisis abortado <<')
 
             profile.Ae =  profile.Ae - (element['w']-element['b'])*t
+
 
     def s3_FTB(self):
         '''Tensión y carga critica nominal de pandeo flexo-torsional.
@@ -505,13 +699,13 @@ class ASCE_8_02:
         steel = self.member.steel
         #fi_n = 0.9 # chequear valor
         
-        FFx = E3_3_1_2_e6(E0= steel.E0, K = dP.Kx, L = dP.Lx, r = profile.rx, eta= 1)
+        FFx = E_3_3_1_2_e6(E0= steel.E0, K = dP.Kx, L = dP.Lx, r = profile.rx)
         Fnx = eta_iter(FFx,steel)
         if Fnx > steel.FY:
             Fnx = steel.FY
         Pnx = Fnx* profile.A
 
-        FFy = E3_3_1_2_e6(E0= steel.E0, K = dP.Ky, L = dP.Ly, r = profile.ry, eta= 1)
+        FFy = E_3_3_1_2_e6(E0= steel.E0, K = dP.Ky, L = dP.Ly, r = profile.ry)
         Fny = eta_iter(FFy,steel)
         if Fny > steel.FY:
             Fny = steel.FY
@@ -557,59 +751,3 @@ class ASCE_8_02:
         Pn = Fn* profile.A
 
         return Fn, Pn
-
-def eta_iter(FF, mat, s = 0):
-    ''' A partir de la constante FF, se itera con un esquema de newton-rapson para 
-    satisfacer la ecuacion f(s): s- FF*eta(s) = 0
-
-    Parameters
-    ----------
-        FF : float
-            Valor de la ecuacion para eta = 1
-        mat : <class steel>
-            Material del miembro
-        s : float
-            Tension incial de la iteracion. Por default s = 0.75*FY
-
-    Tests
-    -----
-        incluido en test generales
-    '''
-
-    # tension inicial para iterar
-    if not s:
-        s = mat.FY*0.75
-    ds = 0.1
-    # error tolerado porcentual
-    err = 1
-    #inicializo el contador de iteraciones
-    iterr = 0
-    #inicializo eta
-    eta = mat.eta(s)
-    F = FF*eta
-
-    # funcion para encontrar raices
-    fn = s - F
-    
-    # newton-rapson para encontrar raiz de fn
-    while abs((F-s)/s*100) > err and iterr < 100:
-        # diferencial de eta
-        eta_2 = mat.eta(s+ds)
-        # diferencial de F
-        F_2 = FF*eta_2
-        # diferencial de fn
-        fn_2 = s+ds - F_2
-        # derivada  dfn/ds
-        dfn = (fn_2 - fn)/ds
-        # nuevo valor de s
-        s = s - fn/dfn
-
-        # actualizo valores, itero
-        eta = mat.eta(s)
-        F = FF*eta
-        fn = s - F
-        iterr += 1
-        #print(iterr, s, F, 100-(F-s)/s*100)
-    if abs((F-s)/s*100) > err:
-        print('Se excedieron las 100 iteraciones')
-    return F

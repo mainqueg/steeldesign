@@ -1,6 +1,5 @@
 import steeldesign as sd
 
-
 # creo un perfil c on refuerz ode labios
 p1 = sd.c_w_lps_profile(H= 100, B= 50, D= 12, t= 1.5, r_out= 3.75)
 #p2 = c_w_lps_profile(H= 200, B= 50, D= 12, t= 1.5, r_out= 3.75)

@@ -94,6 +94,8 @@ class commonMethods():
             self.sc_x, self.sc_y = p.sc_x, p.sc_y
             self.A, self.Ae = p.A, p.Ae
             self.Cw, self.J = p.Cw, p.J
+            self.Ix, self.Iy = p.Ix, p.Iy
+            self.Sx = p.Sx  # modulo elastico
         with open(file  + '_mesh.fig', 'rb') as input:
             fig = pickle.load(input)
         fig.show()
@@ -336,9 +338,11 @@ class c_w_lps_profile():
             (self.sc_x, self.sc_y) = section.get_sc() # shear center
             self.Cw = section.get_gamma() # warping
             (self.rx, self.ry) = section.get_rc() # radios de giro
-            self.J = section.get_j()
+            self.J = section.get_j()    # St Venant
             self.A = section.get_area()
             self.Ae = section.get_area()
+            (self.Ix, self.Iy, _) = section.get_ic()
+            (self.Sx, _, _, _) = section.get_z()    # modulo elastico
 
             self.save(section)
 
@@ -471,6 +475,8 @@ class c_profile():
             self.J = section.get_j()
             self.A = section.get_area()
             self.Ae = section.get_area()
+            (self.Ix, self.Iy, _) = section.get_ic()
+            (self.Sx, _, _, _) = section.get_z()    # modulo elastico
 
             self.save(section)
 
@@ -699,6 +705,8 @@ class I_builtup_c_w_lps_profile():
             self.A = section.get_area()
             self.Ae = section.get_area()
             self.ri = c0.ry # radios de giro de c1
+            (self.Ix, self.Iy, _) = section.get_ic()
+            (self.Sx, _, _, _) = section.get_z()    # modulo elastico
 
             self.save(section)
 
@@ -912,6 +920,8 @@ class I_builtup_c_profile():
             self.A = section.get_area()
             self.Ae = self.A
             self.ri = c0.ry # radios de giro y de c1
+            (self.Ix, self.Iy, _) = section.get_ic()
+            (self.Sx, _, _, _) = section.get_z()    # modulo elastico
 
             self.save(section)
 
