@@ -239,7 +239,7 @@ class c_w_lps_profile():
         B : float
             ancho total del perfil.
         D : float
-            largo del labio sin tener en cuenta la curvatura.
+            largo del labio.
         t : float
             espesor.
         r_out : float
@@ -264,6 +264,8 @@ class c_w_lps_profile():
             Constante torsional de warping de la seccion
         J : float
             Constante de torsion de St. Venant
+        elements : dict
+            diccionario con los parametros geometricos de cada elemento. Basicos: 'name', 'type', 'w'
         
     Methods
     -------
@@ -295,7 +297,7 @@ class c_w_lps_profile():
         self.r_out= r_out
         self.elements= {
             1: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
-            2: {'name': 'flange', 'type': 'stiffned_w_slps', 'w': B-2*r_out},
+            2: {'name': 'flange', 'type': 'stiffned_w_slps', 'w': B-2*r_out, 'wf': B-t+D},
             3: {'name': 'lip', 'type': 'unstiffned', 'w': D-r_out},
             }
                 
@@ -383,7 +385,9 @@ class c_profile():
         Cw : float
             Constante torsional de warping de la seccion
         J : float
-            Constante de torsion de St. Venant 
+            Constante de torsion de St. Venant
+        elements : dict
+            diccionario con los parametros geometricos de cada elemento. Basicos: 'name', 'type', 'w'
     Methods
     -------
         calculate() :
@@ -416,8 +420,8 @@ class c_profile():
         self.t = t
         self.r_out= r_out
         self.elements = {
-            1: {'name': 'flange', 'type': 'unstiffned', 'width': B},
-            2: {'name': 'web', 'type': 'stiffned', 'width': H},
+            1: {'name': 'flange', 'type': 'unstiffned', 'w': B, 'wf': B-t},
+            2: {'name': 'web', 'type': 'stiffned', 'w': H},
             }
                 
         # nombre para la seccion
@@ -532,6 +536,8 @@ class I_builtup_c_w_lps_profile():
             Constante torsional de warping de la seccion
         J : float
             Constante de torsion de St. Venant
+        elements : dict
+            diccionario con los parametros geometricos de cada elemento. Basicos: 'name', 'type', 'w'
         
     Methods
     -------
@@ -603,7 +609,7 @@ class I_builtup_c_w_lps_profile():
         self.wld = wld_factor
         self.mesh_size = t/mesh_div
         self.elements= {
-            1: {'name': 'flange', 'type': 'stiffned_w_slps', 'w': B-2*r_out},
+            1: {'name': 'flange', 'type': 'stiffned_w_slps', 'w': B-2*r_out, 'wf': B-t+D},
             2: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
             3: {'name': 'lip', 'type': 'unstiffned', 'w': D-r_out},
             }
@@ -748,6 +754,8 @@ class I_builtup_c_profile():
             Constante torsional de warping de la seccion
         J : float
             Constante de torsion de St. Venant
+        elements : dict
+            diccionario con los parametros geometricos de cada elemento. Basicos: 'name', 'type', 'w'
         
     Methods
     -------
@@ -807,7 +815,7 @@ class I_builtup_c_profile():
         self.wld = wld_factor
         self.mesh_size = t/mesh_div
         self.elements = {
-            1: {'name': 'flange', 'type': 'unstiffned', 'w': B-r_out},
+            1: {'name': 'flange', 'type': 'unstiffned', 'w': B-r_out, 'wf': B-t},
             2: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
             }
                 

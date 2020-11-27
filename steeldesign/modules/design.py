@@ -118,7 +118,9 @@
 '''
 
 from math import pi
-from .sec_2 import sec2_1_1, sec2_2_1, sec2_3_1, sec2_4_2
+from .sec_2 import sec2_1_1_c1,sec2_1_1_c3, sec2_2_1, sec2_3_1, sec2_4_2
+from .sec_3 import E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_4_3_e1
+#from .sec_2 import sec2_1_1, sec2_2_1, sec2_3_1, sec2_4_2
 from .sec_3 import sec3_2, E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_4_3_e1
 # Imports for Section 3.3.1.1
 from .sec_3 import sec3_3_1_1, E_3_3_1_1_e1, LocalDistorsion
@@ -142,6 +144,8 @@ class designParameters:
             Factor de longitud efectiva | def : 1.0 | z: direccion axial
         Lx, Ly, Lz : float
             longitud de referencia del miembro | def : 0.0
+        cLoadFlag : bool
+            Indica si el miembro soporta cargas puntuales para realizar chequeo segun 2.1.1-3 Shear Lag Effects
 
     Attributes
     ----------
@@ -162,13 +166,14 @@ class designParameters:
     ------
         En archivo
     '''
-    def __init__(self, Kx = 1.0, Ky = 1.0, Kz = 1.0, Lx = 0.0, Ly = 0.0, Lz = 0.0):
+    def __init__(self, Kx = 1.0, Ky = 1.0, Kz = 1.0, Lx = 0.0, Ly = 0.0, Lz = 0.0, cLoadFlag = True):
         self.Kx = Kx
         self.Ky = Ky
         self.Kz = Kz
         self.Lx = Lx
         self.Ly = Ly
         self.Lz = Lz
+        self.cLoadFlag = cLoadFlag
 
 class member():
     '''Miembro estructural.
@@ -255,13 +260,10 @@ class ASCE_8_02:
     -------
         s3_4() : 
             Design axial strength
-
         s3_FTB() : 
             Tension y Carga críticas de pandeo flexo-torsional
-
         s3_FB() : 
             Tension y Carga críticas de pandeo flexional
-
         s3_TB() : 
             Tension y Carga críticas de pandeo torsional
         s2_Ae_compMemb(f) :
@@ -277,6 +279,74 @@ class ASCE_8_02:
             print ('Advertencia: El miembro', member.name, 'no tiene asignado ningun acero.')
         if not member.dP:
             print ('Advertencia: El miembro', member.name, 'no tiene asignado parametros de diseño.')
+    def s2_1(self):
+        '''Dimensional Limits and Considerations. 
+        2.1.1 Flange Flat-Width-to-Thickness Considerations
+            2.1.1-1 Maximum Flat-Width-to-Thickness Ratios
+            2.1.1-2 Flange Curling NOT IMPLEMENTED
+            2.1.1-3 Shear Lag Effects—Unusually Short Spans Supporting Concentrated Loads
+        2.1.2 Maximum Web Depth-to-Thickness Ratio
+
+        Parameters
+        ----------
+            none
+        Returns
+        -------
+            none
+        Raises
+        ------
+            none
+        Tests
+        -----
+            En archivo
+        '''
+        profile = self.member.profile
+        elements = profile.elements
+        
+        for key in elements.keys():
+            element = elements[key]
+            # condition i
+            if element['type'] == 'stiffned_w_slps':
+                ratio_adm_1, midC = sec2_1_1_c1(condition= 'i', w= element['w'], t= profile.t)
+                element['ratioAdm_1']= ratio_adm_1
+                element['ratio_1']= midC['ratio_1']
+                element['condition']= 'i'
+                if element['ratio_1'] > element['ratioAdm_1']:
+                    print('El elemento:',key , element['name'],'del perfil:',profile.name, 'excede los limites la clausula 2.2.1-1')
+                    raise Exception('>> Analisis abortado <<')
+                # 2.1.1-3 Shear Lag Effects - Flanges
+                if element['name'] == 'flange' and self.member.dP.cLoadFlag:
+                    ratio_3, _ = sec2_1_1_c3(L = self.member.L*2, wf= element['wf'])
+                    element['ratio_3'] = ratio_3
+                    if ratio_3 < 1.0:
+                        element['beff_max'] = element['w']*ratio_3
+            # condition ii
+            elif element['name'] == 'web':
+                ratio_adm_1, midC = sec2_1_1_c1(condition= 'ii', w= element['w'], t= profile.t)
+                element['ratioAdm_1']= ratio_adm_1
+                element['ratio_1']= midC['ratio_1']
+                element['condition']= 'ii'
+                if element['ratio_1'] > element['ratioAdm_1']:
+                    print('El elemento:',key , element['name'],'del perfil:',profile.name, 'excede los limites la clausula 2.2.1-1')
+                    raise Exception('>> Analisis abortado <<')
+            # condition iii
+            elif element['type'] == 'unstiffned' or (element['type'] == 'stiffned_w_slps' and element['Is']<element['Ia']):
+                ratio_adm_1, midC = sec2_1_1_c1(condition= 'iii', w= element['w'], t= profile.t)
+                element['ratioAdm_1']= ratio_adm_1
+                element['ratio_1']= midC['ratio_1']
+                element['condition']= 'iii'
+                if element['ratio_1'] > element['ratioAdm_1']:
+                    print('El elemento:',key , element['name'],'del perfil:',profile.name, 'excede los limites la clausula 2.2.1-1')
+                    raise Exception('>> Analisis abortado <<')
+                # 2.1.1-3 Shear Lag Effects - Flanges
+                if element['name'] == 'flange' and self.member.dP.cLoadFlag:
+                    ratio_3, _ = sec2_1_1_c3(L = self.member.L*2, wf= element['wf'])
+                    element['ratio_3'] = ratio_3
+                    if ratio_3 < 1.0:
+                        element['beff_max'] = element['w']*ratio_3
+            else:
+                print('El elemento:',element['name'], 'del perfil:', profile.name, 'no tiene asignada una clasificacion reconocida:', element['type'])
+                raise Exception('>> Analisis abortado <<')
 
 
     def s3_2(self):
@@ -299,8 +369,8 @@ class ASCE_8_02:
         -----
             En archivo
         '''
-        profile = member.profile
-        steel = member.steel
+        profile = self.member.profile
+        steel = self.member.steel
         # Area neta igual a Area total ??
         An = profile.A    
         FY = steel.FY
@@ -452,10 +522,10 @@ class ASCE_8_02:
 
         fi = 0.85
         fiVn = fi*Vn
-        limit = 0.95*FYV*h*t
+        limit = 0.95*FY_v*h*t
         if fiVn > limit: fiVn = limit   # no puede superar fluencia del alma
 
-        midC['Shear_fi': fi, 'Vn': Vn, 'Av': Av]
+        midC= {'Shear_fi': fi, 'Vn': Vn, 'Av': Av}
         return fi*Vn, midC
 
 
@@ -467,7 +537,6 @@ class ASCE_8_02:
         Parameters
         ----------
             none
-
         Returns
         -------
             fiPn : float
@@ -477,11 +546,9 @@ class ASCE_8_02:
                 Fn_TB: Tension de pandeo torsional
                 Fn_FTB: Tension de pandeo flexo-torsional
                 Ae: Area efectiva calculada a Fn
-
         Raises
         ------
             none
-
         Tests
         -----
             En archivo
@@ -543,11 +610,13 @@ class ASCE_8_02:
                 if elements[3]['name'] == 'lip':
                     d = elements[3]['w']
                 else:
-                    print('El elemento',3, 'no corresponde al tipo <lip>. Redefinir los elemenentos en el perfil',profile.type)
+                    print('El elemento',3, 'no corresponde al tipo <lip>. Reordenar los elemenentos en el perfil',profile.type)
                     raise Exception('>> Analisis abortado <<')
                 b, midC = sec2_4_2(E0=E0, f = f, w= element['w'], t= t, d=d, r_out= profile.r_out)
                 element['b']= b
                 element['rho']= midC['rho']
+                element['Is']= midC['Is']
+                element['Ia']= midC['Ia']
                 element['esbeltez']= midC['esbeltez']
                 element['CASE'] = midC['CASE']
             else:
@@ -630,13 +699,13 @@ class ASCE_8_02:
         steel = self.member.steel
         #fi_n = 0.9 # chequear valor
         
-        FFx = E_3_3_1_2_e6(E0= steel.E0, K = dP.Kx, L = dP.Lx, r = profile.rx, eta= 1)
+        FFx = E_3_3_1_2_e6(E0= steel.E0, K = dP.Kx, L = dP.Lx, r = profile.rx)
         Fnx = eta_iter(FFx,steel)
         if Fnx > steel.FY:
             Fnx = steel.FY
         Pnx = Fnx* profile.A
 
-        FFy = E_3_3_1_2_e6(E0= steel.E0, K = dP.Ky, L = dP.Ly, r = profile.ry, eta= 1)
+        FFy = E_3_3_1_2_e6(E0= steel.E0, K = dP.Ky, L = dP.Ly, r = profile.ry)
         Fny = eta_iter(FFy,steel)
         if Fny > steel.FY:
             Fny = steel.FY

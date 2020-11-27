@@ -7,29 +7,34 @@ from math import pi, sin, cos
 
 
 # 2.1 DIMENSIONAL LIMITS AND CONSIDERATIONS
-def sec2_1_1(condition, L, w, t, stiff_type = 'SL'):
-    '''Flange Flat-Width-to-Thickness Considerations.
+def sec2_1_1_c1(condition, w, t, stiff_type = 'SL', D= 0.0):
+    '''Maximum Flat-Width-to-Thickness Ratios.
     Parameters
     ----------
-        condition: string,
-            determina si se aplica caso i, ii o iii de la seccion 2.1.1-1.
-        L: float,
-            longitud del miembro.
-        w: float,
+        condition: string
+            determina el caso a considerar de la seccion 2.1.1-1:
+                i: (stiffned, 1 edge, Is mayor Ia, and D/w menor 0.8)
+                ii: (stiffned, 2 edge)
+                iii: (unstiffned or Is menor Ia) 
+        w: float
             ancho del elemento.
-        t: float,
+
+        t: float
             espesor del elemento.
+        stiff_type: string
+            Indica si el refuerzo es de labio simple (SL) u otro tipo (OTHER)
+        D: float
+            Largo del refuerzo de labio en el caso de stiff_type= OTHER
+
     Returns
     -------
-        ratio_1: float,
+        ratio_adm_1: float
             maximo ratio ancho-plano/espesor segun seccion 2.1.1-1.
-        ratio_3: float,
-            maximo ratio permitido ancho-diseno/ancho-real segun seccion 2.1.1-3 (Shear Lag Effect).
-        midC: diccionario,
+        midC: diccionario
             calculos intermedios.
     Raises
     ------
-        none
+        Exception() : No se reconone la condicion: condition
     Tests
     -----
         >>> ratio_1_adm, w_eff, midC = sec2_1_1(condition='i', L=430, w=10, t=1)
@@ -38,22 +43,65 @@ def sec2_1_1(condition, L, w, t, stiff_type = 'SL'):
     '''
 
     ratio_1 = w/t
-    ratio_3 = L/w
+    midC = {'ratio_1': ratio_1}
 
     if condition == 'i':
-        if stiff_type == 'SL': ratio_adm_1 = 50
-        if stiff_type == 'OTHER': ratio_adm_1 = 90
+        if stiff_type == 'SL':
+            ratio_adm_1 = 50
+        elif stiff_type == 'OTHER': 
+            ratio_lip = D/w
+            midC = {'ratio_lip': ratio_lip}
+            if ratio_lip < 0.8:
+                ratio_adm_1 = 90
+            else:
+                print('Clausula 2.1.1-1. No se reconone la condicion:', condition)
+                raise Exception('>> Analisis abortado <<')
+        else:
+            print('Clausula 2.1.1-1. No se reconone el tipo de rigidizador:', stiff_type)
+            raise Exception('>> Analisis abortado <<')
+    elif condition == 'ii': 
+        ratio_adm_1 = 400
+    elif condition == 'iii': 
+        ratio_adm_1 = 50
+    else:
+        print('Clausula 2.1.1-1. No se reconone la condicion:', condition)
+        raise Exception('>> Analisis abortado <<')
 
-    if condition == 'ii': ratio_adm_1 = 400
-    if condition == 'iii': ratio_adm_1 = 50
+    return ratio_adm_1, midC
 
-    ratio_3 = TABLE1(L,w)
-    if ratio_3 > 1: ratio_3 = 1
-    w_eff = w*ratio_3
+def sec2_1_1_c3(L, wf):
+    '''Shear Lag Effects—Unusually Short Spans Supporting Concentrated Loads.
+    Parameters
+    ----------
+        wf: float
+            ancho del elemento proyectado mas alla del alma
+        L: float
+            extension del miembro (ver definicion en codigo ASCE-8).
+    Returns
+    -------
+        ratio_3: float
+            factor para evaluar el ancho efectivo maximo de cualquier ala, sea a compresion o traccion.
+        midC: diccionario
+            calculos intermedios.
+    Raises
+    ------
+        none
+    Tests
+    -----
+        #>>> ratio_1_adm, w_eff, midC = sec2_1_1(condition='i', L=430, w=10, t=1)
+        #>>> print('ratio 1 adm: {:{fmt}} | w_eff: {:{fmt}} | ratio 1: {m[ratio w/t]:{fmt}} | ratio 3 adm: {m[ratio L/w]:{fmt}}'.format(ratio_1_adm, w_eff, m = midC, fmt = '.2f'))
+        ratio 1 adm: 50.00 | w_eff: 10.00 | ratio 1: 10.00 | ratio 3 adm: 1.00
+    '''
 
-    midC = {'ratio w/t': ratio_1, 'ratio L/w': ratio_3}
+    # sec 2.1.1-3
+    if L < 30*wf:
+        ratio_3 = TABLE1(L,wf)
+    else:
+        ratio_3 = 1.0
 
-    return ratio_adm_1, w_eff, midC
+    midC = {}
+
+    return ratio_3, midC
 
 def TABLE1(L, wf):
     '''TABLE 1. Short, Wide Flanges: Maximum Allowable Ratio of Effective Design Width to Actual Width
@@ -445,7 +493,7 @@ def E_2_4_e1(E, f):
     return S
 
 def E_2_4_e2(d, t, theta = 90):
-    '''Ecuacion 2.4-2.
+    '''Is: Ecuacion 2.4-2.
     Parameters
     ----------
         d: float,
@@ -472,7 +520,7 @@ def E_2_4_e2(d, t, theta = 90):
     return Is
 
 def E_2_4_e3(ds_prima, t):
-    '''Ecuacion 2.4-3.
+    '''As_prima: Ecuacion 2.4-3.
     Parameters
     ----------
         ds_prima: float,
@@ -617,7 +665,7 @@ def sec2_4_2_CASEIII(E0, f, t, w, theta, D, ds_prima, stiff, S, Is, As_prima):
     return b, midC
     
 def E_2_4_2_CASES(E0, f, t, w, theta, D, ds_prima, stiff, Is, As_prima, n, Ia, k_u = 0.43):
-    '''Funcion para evaluar CASE I o CASE II segun corresponda.
+    '''Funcion para evaluar CASE II o CASE III segun corresponda.
     Parameters
     ----------
         E0: float,
