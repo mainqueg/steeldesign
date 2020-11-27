@@ -121,15 +121,16 @@ from math import pi
 from .sec_2 import sec2_1_1, sec2_2_1, sec2_3_1, sec2_4_2
 from .sec_3 import sec3_2, E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_4_3_e1
 # Imports for Section 3.3.1.1
-from .sec_3 import s3_3_1_Nominal, sec3_3_1_1, E_3_3_1_1_e1, LocalDistorsion
+from .sec_3 import sec3_3_1_1, E_3_3_1_1_e1, LocalDistorsion
 # Imports for Section 3.3.1.2
-from .sec_3 import s3_3_1_LB, sec3_3_1_2_3_i, E_3_3_1_2_e1, E_3_3_1_2_e2, E_3_3_1_2_e4, E_3_3_1_2_e6, E_3_3_1_2_e8, E_3_3_1_2_e9
+from .sec_3 import sec3_3_1_2_eta, sec3_3_1_2_3_i, E_3_3_1_2_e1, E_3_3_1_2_e2, E_3_3_1_2_e4, E_3_3_1_2_e6, E_3_3_1_2_e8, E_3_3_1_2_e9
 # Imports for Section 3.3.2
-from .sec_3 import sec3_3_2, E_3_3_2_e1
+from .sec_3 import E_3_3_2_e1
 # Imports for Section 3.3.3
 from .sec_3 import E_3_3_3_e1
 from .appendix_B import B_2, B_1
 from .properties import c_w_lps_profile, c_profile, steel, I_builtup_c_profile
+from .functions import eta_iter
 
 
 class designParameters:
@@ -333,9 +334,75 @@ class ASCE_8_02:
         -----
             En archivo
         '''
-        fiMn_Nominal, midC = s3_3_1_Nominal(member=self.member, LD=LD)
-        fiMn_LB, midC2 = s3_3_1_LB(member=self.member)
+        steel = self.member.steel
+        profile = self.member.profile
+        elements = self.member.profile.elements
+        dpar = self.member.dP
+        member = self.member
 
+        # Section 3.3.1.1 - Nominal Strength
+        for key in elements.keys(): # determino si el ala esta rigidizada o no
+            element = elements[key]
+            if element['name'] == 'flange':
+                if element['type'] == 'stiffned_w_slps':
+                    comp_flange = 'STIFF'
+                if element['type'] == 'unstiffned':
+                    comp_flange = 'UNSTIFF'
+
+        if  LD == 'YES': # determino el procedimiento para 3.3.1.1
+            procedure = 'LD'
+        else:
+            procedure = 'PI'
+
+        FY = steel.FY
+        # Valor corresponfiente al example 8.1
+        # Falta implementar el calculo de Se
+        Se = 1.422
+
+        fiMn_Nominal, midC = sec3_3_1_1(FY=FY, Se=Se, procedure=procedure, comp_flange=comp_flange)
+
+
+        # Section 3.3.1.2 - Lateral Buckling Strength
+        prof_type = profile.type
+        E0 = steel.E0
+        d = profile.H
+        Iyc = profile.Iy/2
+        L = member.L
+        rx = profile.rx
+        ry = profile.ry
+        c_x = profile.c_x
+        sc_x = profile.sc_x
+        A = profile.A
+        Lx = dpar.Lx
+        Kx = dpar.Kx
+        Ly = dpar.Ly
+        Ky = dpar.Ky
+        Lz = dpar.Lz
+        Kz = dpar.Kz
+        Cw = profile.Cw
+        G0 = steel.G0
+        J = profile.J
+        beta = 0
+        # Valor corresponfiente al example 8.1
+        # Falta implementar el calculo de Cb
+        Cb = 1.75
+
+        Sf = profile.Sx
+        # Valor corresponfiente al example 8.1
+        # Falta implementar el calculo de Sc
+        Sc = 1.470
+
+        Mc_eta_LB = sec3_3_1_2_eta(prof_type=prof_type, Cb=Cb, E0=E0, d=d, Iyc=Iyc, L=L, rx=rx, ry=ry, c_x=c_x, sc_x=sc_x, A=A, Lx=Lx, Kx=Kx, Ly=Ly, Ky=Ky, Lz=Lz, Kz=Kz, Cw=Cw, G0=G0, J=J, beta=beta)
+        # construyo ecuacion: f - Mc/Sf = 0
+        #                     f - (Mc_eta_LB/Sf)*eta(f) = 0
+        #                     f - FF*eta(f) = 0 (itero con eta_iter)
+        FF = Mc_eta_LB/Sf
+        f = eta_iter(FF=FF, mat=steel)
+        eta = f/FF
+
+        fiMn_LB, midC2 = E_3_3_1_2_e1(Sc=Sc, Mc=Mc_eta_LB*eta, Sf=Sf)
+
+        # Defino que resistencia controla
         fiMn = min(fiMn_Nominal, fiMn_LB)
         midC.update(midC2)  # merge entre los diccionarios
 
@@ -615,59 +682,3 @@ class ASCE_8_02:
         Pn = Fn* profile.A
 
         return Fn, Pn
-
-def eta_iter(FF, mat, s = 0):
-    ''' A partir de la constante FF, se itera con un esquema de newton-rapson para 
-    satisfacer la ecuacion f(s): s- FF*eta(s) = 0
-
-    Parameters
-    ----------
-        FF : float
-            Valor de la ecuacion para eta = 1
-        mat : <class steel>
-            Material del miembro
-        s : float
-            Tension incial de la iteracion. Por default s = 0.75*FY
-
-    Tests
-    -----
-        incluido en test generales
-    '''
-
-    # tension inicial para iterar
-    if not s:
-        s = mat.FY*0.75
-    ds = 0.1
-    # error tolerado porcentual
-    err = 1
-    #inicializo el contador de iteraciones
-    iterr = 0
-    #inicializo eta
-    eta = mat.eta(s)
-    F = FF*eta
-
-    # funcion para encontrar raices
-    fn = s - F
-    
-    # newton-rapson para encontrar raiz de fn
-    while abs((F-s)/s*100) > err and iterr < 100:
-        # diferencial de eta
-        eta_2 = mat.eta(s+ds)
-        # diferencial de F
-        F_2 = FF*eta_2
-        # diferencial de fn
-        fn_2 = s+ds - F_2
-        # derivada  dfn/ds
-        dfn = (fn_2 - fn)/ds
-        # nuevo valor de s
-        s = s - fn/dfn
-
-        # actualizo valores, itero
-        eta = mat.eta(s)
-        F = FF*eta
-        fn = s - F
-        iterr += 1
-        #print(iterr, s, F, 100-(F-s)/s*100)
-    if abs((F-s)/s*100) > err:
-        print('Se excedieron las 100 iteraciones')
-    return F

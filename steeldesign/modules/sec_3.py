@@ -34,79 +34,6 @@ def sec3_2(An, FY):
 
 ## 3.3 Flexural Memebers
 ## 3.3.1 Strength for Bending Only
-def s3_3_1_Nominal(member, LD = 'NO'):
-    '''Design Nominal Section Strength. Section 3.3.1.1.
-    Parameters
-    ----------
-        LD: string,
-            determina si se consideran distorsiones locales para la resistencia a la flexion nominal (3.3.1.1-CASE III).
-    Returns
-    -------
-        fiMn_Nominal: float,
-            resistencia nominal de diseno a la flexion.
-        [Nominal_fi, Nominal_Mn]: list of float,
-            Nominal_fi: factor de diseno.
-            Nominal_Mn: resistencia nominal de la seccion a flexion. 
-    Raises
-    ------
-        none
-    Tests
-    -----
-        En archivo
-    '''
-    steel = member.steel
-    profile = member.profile
-    elements = member.profile.elements
-
-    FY = steel.FY
-    # en realidad es el Sx de la seccion efectiva con tension Fyc o Fyt, pero por ahora va Sx full
-    Se = profile.Sx
-
-    for key in elements.keys(): # determino si el ala esta rigidizada o no
-        element = elements[key]
-        
-        if element['name'] == 'flange':
-            
-            if element['type'] == 'stiffned_w_slps':
-                comp_flange = 'STIFF'
-            
-            if element['type'] == 'stiffned_w_slps':
-                comp_flange = 'UNSTIFF'
-
-    if  LD == 'YES': # determino el procedimiento para 3.3.1.1
-        procedure = 'LD'
-
-    else:
-        procedure = 'PI'
-
-    fiMn_Nominal, midC = sec3_3_1_1(FY=FY, Se=Se, procedure=procedure, comp_flange=comp_flange)
-    return fiMn_Nominal, midC
-
-def s3_3_1_LB(member):
-    '''Design Lateral Buckling Strength. Section 3.3.1.2.
-    Parameters
-    ----------
-        none
-    Returns
-    -------
-        fiMn_LB: float,
-            resistencia de diseno al Lateral Buckling.
-        [LB_fi, Nominal_Mn, Mc, eta]: list of float,
-            LB_fi: factor de diseno.
-            Lb_Mn: resistencia nominal al Lateral Buckling.
-            Mc: momento critico.
-            eta: factor plastico de reduccion.
-    Raises
-    ------
-        none
-    Tests
-    -----
-        En archivo
-    '''
-    fiMn_LB, midC = sec3_3_1_2(member)
-    return fiMn_LB, midC
-
-
 def sec3_3_1_1(FY, Se, procedure = 'PI', comp_flange = 'UNSTIFF'):
     '''Strength for Bending Only. Nominal Section Strength.
     Parameters
@@ -130,8 +57,9 @@ def sec3_3_1_1(FY, Se, procedure = 'PI', comp_flange = 'UNSTIFF'):
         none
     Tests
     -----
-        >>> Mn, _ = sec3_3_1_1(FY=50, Se=1.422, procedure = 'PI', comp_flange = 'UNSTIFF')
-        >>> round(Mn, 2)
+        Example 8.1 - I-section w/unstiffened flanges 
+        >>> fiMn, _ = sec3_3_1_1(FY=50, Se=1.422, procedure = 'PI', comp_flange = 'UNSTIFF')
+        >>> round(fiMn, 2)
         60.43
     '''
     if comp_flange == 'UNSTIFF':    # Unstiffened compresion flanges
@@ -172,79 +100,44 @@ def LocalDistorsion(self):
     raise NotImplementedError
 
 
-def sec3_3_1_2(member):
+def sec3_3_1_2_eta(prof_type, E0, d, Iyc, L, rx, ry, c_x, sc_x, A, Lx, Kx, Ly, Ky, Lz, Kz, Cw, G0, J, beta, Cb = 1.0):
     '''Strength for Bending Only. Design Lateral Buckling Strength.
     Parameters
     ----------
-        none
-    Returns
-    -------
-        fiMn: float,
-            resistencia de diseno al Lateral Buckling.
-        midC: diccionario,
-            calculos intermedios y parametros.
-    Raises
-    ------
-        none
-    Tests
-    -----
-        >>> 
-    '''
-    steel = member.steel
-    profile = member.profile
-    dpar = member.designParameters
-    
-    # habria que implementar la formula de calculo (1 es conservativo)
-    Cb = 1
-
-    if profile.type == 'I_builtup_cee' or profile.type == 'I_builtup_cee_w_lps':  # perfil I - aplica CASE I
-        
-        E0 = steel.E0
-        d = profile.H
-        Iyc = profile.Iy/2
-        L = member.L
-        # Mc_eta = Mc/eta
-        Mc_eta = E_3_3_1_2_e2(E0=E0, Cb=Cb, d=d, Iyc=Iyc, L=L)
-    
-    elif profile.type == 'cee' or profile.type == 'c_w_lps':  # perfil C - aplica CASE III
-        
-        # implemento solo flexion alrededor del eje de simetria (tambien hay que ver como va disernir entre un caso y otro)
-        # Mc_eta = Mc/eta
-        Mc_eta = sec3_3_1_2_3_i(member=member, Cb=Cb)
-        # Mc_eta = sec3_3_1_2_3_ii(member=member, Cb=Cb, Cs=Cs)
-
-    Sf = profile.Sx
-    # en realidad es el Sc de la seccion efectiva con tension Mc/Sf, pero por ahora va Sx full
-    Sc = profile.Sx
-
-    # construyo ecuacion: f - Mc/Sf = 0
-    #                     f - (Mc_eta/Sf)*eta(f) = 0
-    #                     f - FF*eta(f) = 0 (itero con eta_iter)
-    FF = Mc_eta/Sf
-    f = eta_iter(FF=FF, mat=steel)
-    eta = f/FF
-
-    Mn = E_3_3_1_2_e1(Sc=Sc, Mc=Mc_eta*eta, Sf=Sf)
-
-
-    fi = 0.85
-    fiMn = fi*Mn
-
-    midC['LB_Mn'] = Mn
-    midC['LB_fi'] = fi
-    midC['Mc'] = Mc_eta*eta
-    midC['eta'] = eta
-
-    return fiMn, midC
-
-def sec3_3_1_2_3_i(member, Cb):
-    '''Lateral Buckling Strength. Singly symmetric sections bent about the axis of symmetry.
-    Parameters
-    ----------
-        member: class,
-            miembro a analizar segun seccion 3.3.1.2.
+        prof_type: string,
+            seccion del miembro.
         Cb: float,
             coeficiente de flexion.
+        E0: float,
+            modulo de elasticidad inicial.
+        d: float,
+            altura total de la seccion.
+        Iyc: float,
+            momento de inercia de la porcion de la seccion en compresion con respecto al eje vertical.
+        L: float,
+            longitud del miembro sin soporte.
+        rx, ry: float,
+            radios de giro.
+        c_x: float
+            coordenada x del centroide de la seccion.
+        sc_x,: float
+            coordenada x del centro de corte.
+        A: float,
+            area de la seccion.
+        Lx, Kx: float,
+            longitud efectiva para miembros en compresion sometidos a flexion en x.
+        Ly, Ky: float,
+            longitud efectiva para miembros en compresion sometidos a flexion en y.
+        Lz, Kz: float,
+            longitud efectiva para miembros en compresion sometidos a torsion.
+        Cw: float,
+            constante de warping
+        G0: float,
+            modulo de elasticida de corte inicial.
+        J: float,
+            constante de St Venant.
+        beta: float,
+            cosntante monosimetrica de la seccion.
     Returns
     -------
         Mc_eta: float,
@@ -254,27 +147,71 @@ def sec3_3_1_2_3_i(member, Cb):
         none
     Tests
     -----
-        >>> 
-    '''
-    steel = member.steel
-    profile = member.profile
-    dpar = member.designParameters
+        Example 8.1 - I-section w/unstiffened flanges
+        >>> round(sec3_3_1_2(prof_type='I_builtup_cee', E0=27000, d=6.0, Iyc=0.172, L=4*12, rx=2.224, ry=0.564, c_x=0, sc_x=0, A=1.083, Lx=4*12, Kx=1.0, Ly=4*12, Ky=1.0, Lz=4*12, Kz=1.0, Cw=3.00, G0=10384.61, J=0.0037, beta=0.0, Cb=1.75), 2)
+        208.88
 
+        Example 9.1 - C-section w/lateral buckling consideration
+        En realidad el valor de ref es 326.54 pero sigma_ey en ref es 47.14 y en calculos es 47.37 (leve error en ref)
+        >>> round(sec3_3_1_2(prof_type='cee', Cb=1.685, E0=27000, d=7.0, Iyc=0.204/2, L=2.5*12, rx=2.47, ry=0.40, c_x=0.217, sc_x=-0.417, A=1.284, Lx=2.5*12, Kx=1.0, Ly=2.5*12, Ky=1.0, Lz=2.5*12, Kz=1.0, Cw=1.819, G0=10500, J=0.0078, beta=0), 2)
+        327.35
+    '''    
+    if prof_type == 'I_builtup_cee' or prof_type == 'I_builtup_cee_w_lps':  # perfil I - aplica CASE I
+
+        Mc_eta = E_3_3_1_2_e2(E0=E0, Cb=Cb, d=d, Iyc=Iyc, L=L)
+    
+    elif prof_type == 'cee' or prof_type == 'c_w_lps':  # perfil C - aplica CASE III
+
+        # implemento solo flexion alrededor del eje de simetria (tambien hay que ver como va disernir entre un caso y otro)
+        # Mc_eta = Mc/eta
+        Mc_eta = sec3_3_1_2_3_i(Cb=Cb, rx=rx, ry=ry, c_x=c_x, sc_x=sc_x, E0=E0, A=A, Ly=Ly, Ky=Ky, Lz=Lz, Kz=Kz, Cw=Cw, G0=G0, J=J)
+        # Mc_eta = sec3_3_1_2_3_ii(Cb=Cb, rx=rx, ry=ry, c_x=c_x, sc_x=sc_x, E0=E0, A=A, Lx=Lx, Kx=Kx, Lz=Lz, Kz=Kz, Cw=Cw, G0=G0, J=J, beta=beta)
+
+    return Mc_eta
+
+def sec3_3_1_2_3_i(Cb, rx, ry, c_x, sc_x, E0, A, Ly, Ky, Lz, Kz, Cw, G0, J):
+    '''Lateral Buckling Strength. Singly symmetric sections bent about the axis of symmetry.
+    Parameters
+    ----------
+        Cb: float,
+            coeficiente de flexion.
+        rx, ry: float,
+            radios de giro.
+        c_x: float
+            coordenada x del centroide de la seccion.
+        sc_x,: float
+            coordenada x del centro de corte.
+        E0: float,
+            modulo de elasticidad inicial.
+        A: float,
+            area de la seccion.
+        Ly, Ky: float,
+            longitud efectiva para miembros en compresion sometidos a flexion en y.
+        Lz, Kz: float,
+            longitud efectiva para miembros en compresion sometidos a torsion.
+        Cw: float,
+            constante de warping
+        G0: float,
+            modulo de elasticida de corte inicial.
+        J: float,
+            constante de St Venant.
+    Returns
+    -------
+        Mc_eta: float,
+            momento critico dividido por eta (para iterar).
+    Raises
+    ------
+        none
+    Tests
+    -----
+        Example 9.1 - C-section w/lateral buckling consideration
+        En realidad el valor de ref es 326.54 pero sigma_ey en ref es 47.14 y en calculos es 47.37 (leve error en ref)
+        >>> round(sec3_3_1_2_3_i(Cb=1.685, rx=2.47, ry=0.40, c_x=0.217, sc_x=-0.417, E0=27000, A=1.284, Ly=2.5*12, Ky=1.0, Lz=2.5*12, Kz=1.0, Cw=1.819, G0=10500, J=0.0078), 2)
+        327.35
+    '''
     # parametros para calculo r0
-    rx = profile.rx
-    ry = profile.ry
-    c_x = profile.c_x
-    sc_x = profile.sc_x
     x0 = -abs(c_x-sc_x)
     r0 = E_3_3_1_2_e9(rx=rx, ry=ry, x0=x0)
-
-    # parametros para calculo sigmas
-    E0 = steel.E0
-    A = profile.A
-    Ly = dpar.Ly
-    Ky = dpar.Ky
-    Lz = dpar.Lz
-    Kz = dpar.Kz
 
     sigma_ey_eta = E_3_3_1_2_e6(E0=E0, K=Ky, L=Ly, r=ry)
     sigma_t_eta = E_3_3_1_2_e8(E0=E0, Kt=Kz, Lt=Lz, r0=r0, A=A, Cw=Cw, G0=G0, J=J)
@@ -282,16 +219,36 @@ def sec3_3_1_2_3_i(member, Cb):
     Mc_eta = E_3_3_1_2_e4(Cb=Cb, r0=r0, A=A, sigma_ey_eta=sigma_ey_eta, sigma_t_eta=sigma_t_eta)
     return Mc_eta
 
-def sec3_3_1_2_3_ii(member, Cb, Cs):
+def sec3_3_1_2_3_ii(Cb, Cs, rx, ry, c_x, sc_x, E0, A, Lx, Kx, Lz, Kz, Cw, G0, J, beta):
     '''Lateral Buckling Strength. Singly symmetric sections bent about the axis perpendicular to the axis of symmetry.
     Parameters
     ----------
-        member: class,
-            miembro a analizar segun seccion 3.3.1.2.
         Cb: float,
             coeficiente de flexion.
         Cs: float,
             +1 si hay compresion en el lado del centro de corte, sino -1.
+        rx, ry: float,
+            radios de giro.
+        c_x: float
+            coordenada x del centroide de la seccion.
+        sc_x,: float
+            coordenada x del centro de corte.
+        E0: float,
+            modulo de elasticidad inicial.
+        A: float,
+            area de la seccion.
+        Lx, Kx: float,
+            longitud efectiva para miembros en compresion sometidos a flexion en x.
+        Lz, Kz: float,
+            longitud efectiva para miembros en compresion sometidos a torsion.
+        Cw: float,
+            constante de warping
+        G0: float,
+            modulo de elasticida de corte inicial.
+        J: float,
+            constante de St Venant.
+        beta: float,
+            cosntante monosimetrica de la seccion.
     Returns
     -------
         Mc_eta: float,
@@ -305,33 +262,14 @@ def sec3_3_1_2_3_ii(member, Cb, Cs):
     '''
     raise NotImplementedError
 
-    steel = member.steel
-    profile = member.profile
-    dpar = member.designParameters
-
     # parametros para calculo r0
-    rx = profile.rx
-    ry = profile.ry
-    c_x = profile.c_x
-    sc_x = profile.sc_x
     x0 = -abs(c_x-sc_x)
     r0 = E_3_3_1_2_e9(rx=rx, ry=ry, x0=x0)
-
-    # parametros para calculo sigmas
-    E0 = steel.E0
-    A = profile.A
-    Lx = dpar.Lx
-    Kx = dpar.Kx
-    Lz = dpar.Lz
-    Kz = dpar.Kz
-    Cw = dpar.Cw
-    J = dpar.J
 
     sigma_ex_eta = E_3_3_1_2_e6(E0=E0, K=Kx, L=Lx, r=rx)
     sigma_t_eta = E_3_3_1_2_e8(E0=E0, Kt=Kz, Lt=Lz, r0=r0, A=A, Cw=Cw, G0=G0, J=J)
 
-    j = dpar.j
-    Mc_eta = E_3_3_1_2_e5(Cb, Cs, r0, A, sigma_ex_eta, sigma_t_eta, j)
+    Mc_eta = E_3_3_1_2_e5(Cb, Cs, r0, A, sigma_ex_eta, sigma_t_eta, beta)
     return Mc_eta
 
 
@@ -371,19 +309,26 @@ def E_3_3_1_2_e1(Sc, Mc, Sf):
             modulo de seccion elastico.
     Returns
     -------
-        Mn: float,
-            resistencia nominal al Lateral Buckling.
+        fiMn: float,
+            resistencia de diseño nominal al Lateral Buckling.
+        [LB_fi, LB_Mn, Mc, eta]: list of float,
+            LB_fi: factor de diseno.
+            Lb_Mn: resistencia nominal al Lateral Buckling.
     Raises
     ------
         none
     Tests
     -----
-        >>> round(E_3_3_1_2_e1(Sc=2.239, Mc=42.12*2.239, Sf=2.239), 2)
-        94.31
+        >>> fiMn, _ = E_3_3_1_2_e1(Sc=2.239, Mc=42.12*2.239, Sf=2.239)
+        >>> round(fiMn, 2)
+        80.16
     '''
-    
+    fi = 0.85
     Mn = Sc*(Mc/Sf)
-    return Mn
+
+    fiMn = fi*Mn
+    midC = {'LB_Mn': Mn, 'LB_fi': fi}
+    return fiMn, midC
 
 def E_3_3_1_2_e2(E0, Cb, d, Iyc, L):
     '''Lateral Buckling Strength. CASE I: doubly symmetric I-sections bent about their minor axis. 
@@ -398,7 +343,7 @@ def E_3_3_1_2_e2(E0, Cb, d, Iyc, L):
         Iyc: float,
             momento de inercia de la porcion de la seccion en compresion con respecto al eje vertical.
         L: float,
-            longitud del miembro sin soporte.
+            longitud del miembro sin soporte lateral.
     Returns
     -------
         Mc_eta: float,
@@ -689,6 +634,7 @@ def sec3_3_4(member):
     C_theta = E_3_3_4_e20(theta=theta)
 
 
+## 3.3.5 Strength for Combined Bending and Shear
 
 
 def E_3_3_4_e1(t, C3, C4, Ctheta, h, N, Ct):
@@ -868,7 +814,7 @@ def Ct(units = 'SI'):
     '''
     if units == 'SI':
         return 6.9
-    if units == 'US'
+    if units == 'US':
         return 1.0
 
 def E_3_3_4_e10(FY, Ct, k):
@@ -984,7 +930,7 @@ def E_3_3_4_e17(h, t, k):
     -----
         none        
     '''
-    if h/t <= 66.5
+    if h/t <= 66.5:
         C7 = 1/k
     else: C7 = (1.10 - h/t/660)/k
     return C7
@@ -1208,61 +1154,5 @@ def E3_4_3_e3(E0, K, L, r, eta):
     s_ex = s_ex_eta*eta
     return s_ex
 
-
 #####################################################################################
 #####################################################################################
-def eta_iter(FF, mat, s = 0):
-    ''' A partir de la constante FF, se itera con un esquema de newton-rapson para 
-    satisfacer la ecuacion f(s): s- FF*eta(s) = 0
-
-    Parameters
-    ----------
-        FF : float
-            Valor de la ecuacion para eta = 1
-        mat : <class steel>
-            Material del miembro
-        s : float
-            Tension incial de la iteracion. Por default s = 0.75*FY
-
-    Tests
-    -----
-        incluido en test generales
-    '''
-
-    # tension inicial para iterar
-    if not s:
-        s = mat.FY*0.75
-    ds = 0.1
-    # error tolerado porcentual
-    err = 1
-    #inicializo el contador de iteraciones
-    iterr = 0
-    #inicializo eta
-    eta = mat.eta(s)
-    F = FF*eta
-
-    # funcion para encontrar raices
-    fn = s - F
-    
-    # newton-rapson para encontrar raiz de fn
-    while abs((F-s)/s*100) > err and iterr < 100:
-        # diferencial de eta
-        eta_2 = mat.eta(s+ds)
-        # diferencial de F
-        F_2 = FF*eta_2
-        # diferencial de fn
-        fn_2 = s+ds - F_2
-        # derivada  dfn/ds
-        dfn = (fn_2 - fn)/ds
-        # nuevo valor de s
-        s = s - fn/dfn
-
-        # actualizo valores, itero
-        eta = mat.eta(s)
-        F = FF*eta
-        fn = s - F
-        iterr += 1
-        #print(iterr, s, F, 100-(F-s)/s*100)
-    if abs((F-s)/s*100) > err:
-        print('Se excedieron las 100 iteraciones')
-    return F
