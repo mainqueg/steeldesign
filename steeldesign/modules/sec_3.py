@@ -82,7 +82,7 @@ def sec3_3_1_1(FY, Se, procedure = 'PI', comp_flange = 'UNSTIFF'):
 
     return fiMn, midC
 
-def LocalDistorsion(self):
+def LocalDistorsion():
     '''Nominal Section Strength. Local Distorsion Consideration.
     Parameters
     ----------
@@ -260,8 +260,8 @@ def sec3_3_1_2_3_ii(Cb, Cs, rx, ry, c_x, sc_x, E0, A, Lx, Kx, Lz, Kz, Cw, G0, J,
     -----
         >>> 
     '''
-    raise NotImplementedError
-
+    
+    """
     # parametros para calculo r0
     x0 = -abs(c_x-sc_x)
     r0 = E_3_3_1_2_e9(rx=rx, ry=ry, x0=x0)
@@ -270,7 +270,9 @@ def sec3_3_1_2_3_ii(Cb, Cs, rx, ry, c_x, sc_x, E0, A, Lx, Kx, Lz, Kz, Cw, G0, J,
     sigma_t_eta = E_3_3_1_2_e8(E0=E0, Kt=Kz, Lt=Lz, r0=r0, A=A, Cw=Cw, G0=G0, J=J)
 
     Mc_eta = E_3_3_1_2_e5(Cb, Cs, r0, A, sigma_ex_eta, sigma_t_eta, beta)
-    return Mc_eta
+    return Mc_eta"""
+
+    raise NotImplementedError
 
 
 def E_3_3_1_1_e1(Se, FY):
@@ -588,7 +590,7 @@ def E_3_3_3_e2(fiMn, fiVn, Mu, Vu):
         return True
     else:
         return False
-
+""" 
 ## 3.3.4 Web Crippling Strength
 def sec3_3_4(member):
     '''Web Crippling Strength.
@@ -614,9 +616,9 @@ def sec3_3_4(member):
     h = profile.H - 2*profile.r_out
     t = profile.t
 
-    Ct = Ct(units='US')
-    k = FY/33/Ct
-    m = E_3_3_4_e22(units='US')
+    ct = Ct(units='US')
+    k = FY/33/ct
+    m = E_3_3_4_e22(t= t, units='US')
 
     # N = 
     R = profile.r_out - t
@@ -798,7 +800,7 @@ def E_3_3_4_e9(t, C3, C4, Ctheta, h, N, Ct):
     f2 = 0.82 - 0.15*m
     f3 = 15 + 3.25*(N/t)**0.5
 
-    return f1*f2*f3
+    return f1*f2*f3 """
 
 def Ct(units = 'SI'):
     '''Ct.
