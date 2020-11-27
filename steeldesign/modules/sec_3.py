@@ -70,7 +70,7 @@ def sec3_3_1_1(FY, Se, procedure = 'PI', comp_flange = 'UNSTIFF'):
     if procedure == 'PI':    # Procedimiento I - basado en fluencia
         Mn = E_3_3_1_1_e1(Se=Se, FY=FY)
 
-    elif procedure == 'PII':    # Procedimiento II - basado en endurecimiento
+    elif procedure == 'PII':    # Procedimiento II - basado en endurecimiento 
         print('Seccion 3.3.1.1 - Procedimiento II No implementada.')
         raise NotImplementedError
 
