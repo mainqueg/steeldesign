@@ -497,6 +497,8 @@ def E_3_3_1_2_e9(rx, ry, x0):
             radio de giro con respecto al eje x (eje menor).
         ry: float,
             radio de giro con respecto al eje y (eje mayor).
+        x0 : float
+            distancia entre el centro de corte y centroide
     Returns
     -------
         r0: float,
