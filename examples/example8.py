@@ -7,6 +7,8 @@ for Cold-Formed Steel Structures Library. 174
 '''
 import steeldesign as sd
 from steeldesign.modules.functions import adjustNeutralAxis
+# from steeldesign.modules.sec_2 import sec2_2_1
+
 H= 6.0
 B= 1.625
 t= 0.06
@@ -17,8 +19,9 @@ p1.calculate()
 
 s = sd.steel(FY= 50, E0= 27000, nu= 0.3, n= 4.58, offset= 0.002, name= 'SA301_1_4Hard')
 
-b = 0.806
 w = B - r_out
+b = 0.806   # si usas la funcion sec2_2_1 da bien el ancho efectivo
+# b = sec2_2_1(w=w, t=t, f=s.FY, E=s.E0, k=0.5)
 cy_ = (H-t)/2.0
 
 cy, Ix = adjustNeutralAxis(Ix=p1.Ix, A= p1.A, t= p1.t, b_= w - b, cy_= cy_)

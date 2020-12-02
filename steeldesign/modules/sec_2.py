@@ -219,7 +219,6 @@ def sec2_2_1(w, t, f, E, k = 4):
 
 def E_2_2_1_e3(esbeltez):
     '''Factor rho definida en ecuacion 2.2.1-3
-
     Parameters
     ----------
         esbeltez : float
@@ -357,7 +356,7 @@ def sec2_3_1(w, t, f, E, k = 0.5):
 
 
 def sec2_3_2(w, t, f3, E, k = 0.5):
-    '''Uniformly Compressed Unstiffened Elements. Load Capacity Determination or Deflection Determination.
+    '''Unstiffened Elements and Edge Stiffeners with Stress Gradient. Load Capacity Determination or Deflection Determination.
     Parameters
     ----------
         w: float,
@@ -388,7 +387,7 @@ def sec2_3_2(w, t, f3, E, k = 0.5):
         >>> print('b: {:{fmt}} | esbeltez: {m[esbeltez]:{fmt}} | rho: {m[rho]:{fmt}}'.format(b, m= midC, fmt = '.2f'))
         b: 44.22 | esbeltez: 0.83 | rho: 0.88
     '''
-    b, midC = sec2_2_1(w=w, t=t, f=f3, E=E, k=0.5)
+    b, midC = sec2_2_1(w=w, t=t, f=f3, E=E, k=k)
     return b, midC
 
 
