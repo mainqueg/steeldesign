@@ -9,6 +9,7 @@ sectionsDB/
 
 # VS
 .vscode/
+*.code-workspace
 
 # Distribution / packaging
 .Python

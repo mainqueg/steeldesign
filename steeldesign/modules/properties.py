@@ -264,6 +264,8 @@ class c_w_lps_profile():
             Constante torsional de warping de la seccion
         J : float
             Constante de torsion de St. Venant
+        Ix, Iy : float
+            Segundo momento de area respecto de ejes globales en el centroide
         elements : dict
             diccionario con los parametros geometricos de cada elemento. Basicos: 'name', 'type', 'w'
         
@@ -352,6 +354,132 @@ class c_w_lps_profile():
         print('Aeff() NotImplementedError')
         return self.A
 
+class c_w_lps_profile_half():
+    '''Medio perfil C con labios de refuerzos.
+
+    Parameters
+    ----------
+        H : float
+            Altura total del perfil.
+        B : float
+            ancho total del perfil.
+        D : float
+            largo del labio.
+        t : float
+            espesor.
+        r_out : float
+            Radio externo de los plegados.
+        name : string
+            Nombre para el perfil, sino se asigna uno por defecto.
+        
+    Attibutes
+    ---------
+            Mismos que los parametros y se agregan:
+        type : string
+            'c_w_lps'
+        rx, ry : float
+            radio de giro del miembro | sqrt(I/A)
+        c_x, c_y : float
+            coordenada del centroide de la seccion
+        sc_x, sc_y : float
+            coordenada del centro de corte
+        A : float
+            Area de la seccion
+        Cw : float
+            Constante torsional de warping de la seccion
+        J : float
+            Constante de torsion de St. Venant
+        Ix, Iy : float
+            Segundo momento de area respecto de ejes globales
+        elements : dict
+            diccionario con los parametros geometricos de cada elemento. Basicos: 'name', 'type', 'w'
+        
+    Methods
+    -------
+        calculate() :
+            Ejecuta el calculo de las propiedades de la seccion
+        Ae(Fn) : float
+            Calcula el area efectiva para la tension Fn
+
+    Tests
+    -----
+        >>>
+    '''
+    save = commonMethods.save
+    load = commonMethods.load
+
+    def __init__(self, H, B, D, t, r_out, name = ''):
+        self.type = 'c_w_lps_half'
+        self.B = B
+        self.D = D
+        self.H = H
+        self.t = t
+        self.r_out= r_out
+        self.elements= {
+            1: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
+            2: {'name': 'flange', 'type': 'stiffned_w_slps', 'w': B-2*r_out, 'wf': B-t+D},
+            3: {'name': 'lip', 'type': 'unstiffned', 'w': D-r_out},
+            }
+                
+        # nombre para la seccion
+        args = ['_H','D','B','t','r-out', '']
+        defName = self.type + '{:{fmt}}_'.join(args)
+        defName = defName.format(H, D, B, t, r_out, fmt='.2f')
+        if not name:
+            self.name = defName
+
+    def calculate(self):
+        '''Se ejecuta el calculo de las propiedades de la seccion.
+
+            Referencia
+            ----------
+                rx, ry : radio de giro del miembro | sqrt(I/A)
+                c_i : coordenada del centroide de la seccion
+                sc_i : coordenada del centro de corte
+                A : Area de la seccion
+                Cw : Constante torsional de warping de la seccion
+                J : Constante de torsion de St. Venant
+
+        '''
+        try:
+            self.load()
+        except:
+            ## CALCULO PROPIEDADES A PARTIR DEL PAQUETE sectionproperties
+            geometry = sections.CeeSection(d=self.H, b=self.B, l=self.D, t=self.t, r_out=self.r_out, n_r=8, shift=[0,-self.H/2.0])
+            
+            #elimino la mitad del perfil
+            p1 = geometry.add_point([0, 0])
+            p2 = geometry.add_point([self.t, 0])
+
+            geometry.add_facet([p1, p2])
+            geometry.add_hole([self.t/2.0,-self.H/4.0])  # add hole
+            geometry.clean_geometry()  # clean the geometry
+            # create mesh
+            mesh = geometry.create_mesh(mesh_sizes=[self.t/4.0])
+            # creo la seccion
+            section = CrossSection(geometry, mesh)
+            # calculo las propiedades
+            section.calculate_geometric_properties()
+            section.calculate_warping_properties()
+
+            (self.c_x, self.c_y) = section.get_c() # centroides
+            (self.sc_x, self.sc_y) = section.get_sc() # shear center
+            self.Cw = section.get_gamma() # warping
+            (self.rx, self.ry) = section.get_rc() # radios de giro
+            self.J = section.get_j()    # St Venant
+            self.A = section.get_area()
+            self.Ae = section.get_area()
+            (self.Ix, self.Iy, _) = section.get_ig()
+            (self.Sx, _, _, _) = section.get_z()    # modulo elastico
+
+            self.save(section)
+
+            self.section = section
+
+    def Aeff(self, Fn):
+        print('Aeff() NotImplementedError')
+        return self.A
+
 class c_profile():
     '''Perfil C.
 
@@ -386,6 +514,8 @@ class c_profile():
             Constante torsional de warping de la seccion
         J : float
             Constante de torsion de St. Venant
+        Ix, Iy : float
+            Segundo momento de area respecto de ejes globales en el centroide
         elements : dict
             diccionario con los parametros geometricos de cada elemento. Basicos: 'name', 'type', 'w'
     Methods
@@ -493,6 +623,149 @@ class c_profile():
         #Ae = Ae - (self.H-2*self.r_out-Heff)*self.t
         return self.A
 
+class c_profile_half():
+    '''Perfil C.
+
+    Parameters
+    ----------
+        H : float
+            Altura total del perfil.
+        B : float
+            ancho total del perfil.
+        t : float
+            espesor.
+        r_out : float
+            Radio externo de los plegados.
+        name : string
+            Nombre para el perfil, sino se asigna uno por defecto.
+    Attibutes
+    ---------
+            Mismos que los parametros y se agregan:
+        type : string
+            'c_w_lps'
+        rx, ry : float
+            radio de giro del miembro | sqrt(I/A)
+        c_x, c_y : float
+            coordenadas del centroide de la seccion
+        sc_x, sc_y : float
+            coordenadas del centro de corte
+        A : float
+            Area de la seccion
+        Ae : float
+            Area efectiva de la seccion
+        Cw : float
+            Constante torsional de warping de la seccion
+        J : float
+            Constante de torsion de St. Venant
+        Ix, Iy : float
+            Segundo momento de area respecto de ejes globales
+        elements : dict
+            diccionario con los parametros geometricos de cada elemento. Basicos: 'name', 'type', 'w'
+    Methods
+    -------
+        calculate() :
+            Ejecuta el calculo de las propiedades de la seccion
+        Aeff(Fn) : float
+            Calcula el area efectiva para la tension Fn
+    Tests
+    -----
+        >>>
+
+    '''
+    save = commonMethods.save
+    load = commonMethods.load
+
+    def __init__(self, H, B, t, r_out, name = ''):
+        self.type = 'cee_half'
+        self.B = B
+        self.H = H
+        self.t = t
+        self.r_out= r_out
+        self.elements = {
+            1: {'name': 'flange', 'type': 'unstiffned', 'w': B, 'wf': B-t},
+            2: {'name': 'web', 'type': 'stiffned', 'w': H},
+            }
+                
+        # nombre para la seccion
+        args = ['_H','B','t','r-out', '']
+        defName = self.type + '{:{fmt}}_'.join(args)
+        defName = defName.format(H, B, t, r_out, fmt='.2f')
+        if not name:
+            self.name = defName
+
+    def calculate(self):
+        '''Se ejecuta el calculo de las propiedades de la seccion.
+
+        Referencia
+        ----------
+            rx, ry : radio de giro del miembro | sqrt(I/A)
+            c_i : coordenada del centroide de la seccion
+            sc_i : coordenada del centro de corte
+            A : Area de la seccion
+            Cw : Constante torsional de warping de la seccion
+            J : Constante de torsion de St. Venant
+
+        '''
+        try:
+            self.load()
+        except:
+            ## CALCULO PROPIEDADES A PARTIR DEL PAQUETE sectionproperties
+            geometry = sections.CeeSection(d=self.H, b=self.B+self.r_out, l=self.r_out, t=self.t, r_out=self.r_out, n_r=8)
+            # corto los labios y el radio
+            p1 = geometry.add_point([self.B, 0])
+            p2 = geometry.add_point([self.B, self.t])
+            p3 = geometry.add_point([self.B, self.H])
+            p4 = geometry.add_point([self.B, self.H-self.t])
+
+            geometry.add_facet([p1, p2])
+            geometry.add_facet([p3, p4])
+            geometry.add_hole([self.B+self.r_out/10, self.t/2])  # add hole
+            geometry.add_hole([self.B+self.r_out/10, self.H-self.t/2])  # add hole
+            geometry.clean_geometry()  # clean the geometry
+
+            geometry.shift = [0,-self.H/2.0]
+            geometry.shift_section()
+
+            #elimino la mitad del perfil
+            p5 = geometry.add_point([0, 0])
+            p6 = geometry.add_point([self.t, 0])
+
+            geometry.add_facet([p5, p6])
+            geometry.add_hole([self.t/2.0,-self.H/4.0])  # add hole
+            geometry.clean_geometry()  # clean the geometry
+            # create mesh
+            mesh = geometry.create_mesh(mesh_sizes=[self.t/4.0])
+            # creo la seccion
+            section = CrossSection(geometry, mesh)
+            # calculo las propiedades
+            section.calculate_geometric_properties()
+            section.calculate_warping_properties()
+
+            (self.c_x, self.c_y) = section.get_c() # centroides
+            (self.sc_x, self.sc_y) = section.get_sc() # shear center
+            self.Cw = section.get_gamma() # warping
+            (self.rx, self.ry) = section.get_rc() # radios de giro
+            self.J = section.get_j()
+            self.A = section.get_area()
+            self.Ae = section.get_area()
+            (self.Ix, self.Iy, _) = section.get_ig()
+            (self.Sx, _, _, _) = section.get_z()    # modulo elastico
+
+            self.save(section)
+
+            self.section = section
+ 
+    def Aeff(self):
+        print('Aeff() NotImplementedError')
+        # Ancho efectivo
+        ## Ala
+        #Beff = 1 # calculo a partir de sec_2
+        #Ae = self.A - (self.B-2*self.r_out-Beff)*self.t
+        ## Alma
+        #Heff = 1 # calculo a partir de sec_2
+        #Ae = Ae - (self.H-2*self.r_out-Heff)*self.t
+        return self.A
+
 class I_builtup_c_w_lps_profile():
     '''Perfil C con labios de refuerzos.
 
@@ -501,9 +774,9 @@ class I_builtup_c_w_lps_profile():
         H : float
             Altura total del perfil.
         B : float
-            ancho total del perfil.
+            ancho de cada perfil c_w_lps.
         D : float
-            largo del labio sin tener en cuenta la curvatura.
+            longitud total del labio.
         t : float
             espesor.
         r_out : float
@@ -536,6 +809,8 @@ class I_builtup_c_w_lps_profile():
             Constante torsional de warping de la seccion
         J : float
             Constante de torsion de St. Venant
+        Ix, Iy : float
+            Segundo momento de area respecto de ejes globales en el centroide
         elements : dict
             diccionario con los parametros geometricos de cada elemento. Basicos: 'name', 'type', 'w'
         
@@ -725,7 +1000,7 @@ class I_builtup_c_profile():
         H : float
             Altura total del perfil.
         B : float
-            ancho total del perfil.
+            ancho de cada perfil c.
         t : float
             espesor.
         r_out : float
@@ -754,6 +1029,8 @@ class I_builtup_c_profile():
             Constante torsional de warping de la seccion
         J : float
             Constante de torsion de St. Venant
+        Ix, Iy : float
+            Segundo momento de area respecto de ejes globales en el centroide
         elements : dict
             diccionario con los parametros geometricos de cada elemento. Basicos: 'name', 'type', 'w'
         
