@@ -12,7 +12,7 @@ import steeldesign as sd
 p1 = sd.I_builtup_c_profile(H= 6.0, B= 1.625, t= 0.06, r_out= (0.06+3/32) )
 p2 = sd.c_profile(H= 6.0, B= 1.625, t= 0.06, r_out= (0.06+3/32) )
 
-p1.calculate()
+#p1.calculate()
 p2.calculate()
 p1.J = 2*p2.J
 

@@ -34,7 +34,7 @@ def sec3_2(An, FY):
 
 ## 3.3 Flexural Memebers
 ## 3.3.1 Strength for Bending Only
-def sec3_3_1_1(FY, Se, procedure = 'PI', comp_flange = 'UNSTIFF'):
+def sec3_3_1_1(FY, Se, procedure = 'PI', comp_flange = 'UNSTIFF', localDistorsion= False):
     '''Strength for Bending Only. Nominal Section Strength.
     Parameters
     ----------
@@ -62,6 +62,7 @@ def sec3_3_1_1(FY, Se, procedure = 'PI', comp_flange = 'UNSTIFF'):
         >>> round(fiMn, 2)
         60.43
     '''
+    midC={}
     if comp_flange == 'UNSTIFF':    # Unstiffened compresion flanges
         fi = 0.85
     elif comp_flange == 'STIFF':    # Stiffened or partially stiffened flanges
@@ -69,15 +70,15 @@ def sec3_3_1_1(FY, Se, procedure = 'PI', comp_flange = 'UNSTIFF'):
 
     if procedure == 'PI':    # Procedimiento I - basado en fluencia
         Mn = E_3_3_1_1_e1(Se=Se, FY=FY)
-
     elif procedure == 'PII':    # Procedimiento II - basado en endurecimiento 
         print('Seccion 3.3.1.1 - Procedimiento II No implementada.')
         raise NotImplementedError
 
-    elif procedure == 'LD':     # Local Distorsion Considerations
-        Mn, midC = LocalDistorsion()
+    if localDistorsion:     # Local Distorsion Considerations
+        Mld, midC = LocalDistorsion()
+        midC['Mld']= Mld
 
-    midC = {'Nominal_Mn': Mn, 'Nominal_fi': fi}
+    midC.update({'Mn': Mn, 'fi': fi})
     fiMn = fi*Mn
 
     return fiMn, midC
@@ -100,7 +101,7 @@ def LocalDistorsion():
     raise NotImplementedError
 
 
-def sec3_3_1_2_eta(prof_type, E0, d, Iyc, L, rx, ry, c_x, sc_x, A, Lx, Kx, Ly, Ky, Lz, Kz, Cw, G0, J, beta, Cb = 1.0):
+def sec3_3_1_2_eta(prof_type, E0, d, Iyc, L, rx, ry, c_x, sc_x, A, Lx, Kx, Ly, Ky, Lz, Kz, Cw, G0, J, beta, Cb):
     '''Strength for Bending Only. Design Lateral Buckling Strength.
     Parameters
     ----------
@@ -156,16 +157,20 @@ def sec3_3_1_2_eta(prof_type, E0, d, Iyc, L, rx, ry, c_x, sc_x, A, Lx, Kx, Ly, K
         >>> round(sec3_3_1_2(prof_type='cee', Cb=1.685, E0=27000, d=7.0, Iyc=0.204/2, L=2.5*12, rx=2.47, ry=0.40, c_x=0.217, sc_x=-0.417, A=1.284, Lx=2.5*12, Kx=1.0, Ly=2.5*12, Ky=1.0, Lz=2.5*12, Kz=1.0, Cw=1.819, G0=10500, J=0.0078, beta=0), 2)
         327.35
     '''    
-    if prof_type == 'I_builtup_cee' or prof_type == 'I_builtup_cee_w_lps':  # perfil I - aplica CASE I
+    if prof_type in ['I_builtup_cee', 'I_builtup_cee_w_lps']:  # perfil I - aplica CASE I
 
         Mc_eta = E_3_3_1_2_e2(E0=E0, Cb=Cb, d=d, Iyc=Iyc, L=L)
     
-    elif prof_type == 'cee' or prof_type == 'c_w_lps':  # perfil C - aplica CASE III
+    elif prof_type in ['cee', 'c_w_lps']:  # perfil C - aplica CASE III
 
         # implemento solo flexion alrededor del eje de simetria (tambien hay que ver como va disernir entre un caso y otro)
         # Mc_eta = Mc/eta
         Mc_eta = sec3_3_1_2_3_i(Cb=Cb, rx=rx, ry=ry, c_x=c_x, sc_x=sc_x, E0=E0, A=A, Ly=Ly, Ky=Ky, Lz=Lz, Kz=Kz, Cw=Cw, G0=G0, J=J)
         # Mc_eta = sec3_3_1_2_3_ii(Cb=Cb, rx=rx, ry=ry, c_x=c_x, sc_x=sc_x, E0=E0, A=A, Lx=Lx, Kx=Kx, Lz=Lz, Kz=Kz, Cw=Cw, G0=G0, J=J, beta=beta)
+    else:
+        print('Seccion del tipo', prof_type,'no implementada en analisis 3.3.1.2.')
+        raise NotImplementedError
+        
 
     return Mc_eta
 

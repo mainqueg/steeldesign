@@ -14,7 +14,7 @@ Long =[300,500,700,1000,1200,1500,1800,2000,2200,2500,2800,3000,3500,5000]
 
 # creo un perfil c on refuerz ode labios
 p1 = sd.c_w_lps_profile(H= 100, B= 50, D= 12, t= 1.5, r_out= 3.75)
-p1.calculate()
+#p1.calculate()
 # creo un acero
 s = sd.steel(FY= 337, E0= 180510.0, nu= 0.3, n= 13.5, offset= 0.002, name= 'SA304_1_4Hard')
 
@@ -32,7 +32,7 @@ for L in Long:
     #(Fn, Pn_A) = analysis.s3_FTB()
     fiPn, midC = analysis.s3_4()
     Pn_As.append(midC['Fn']*p1.A)
-    Pn_Aes.append(midC['Fn']*p1.Ae)
+    Pn_Aes.append(midC['Fn']*midC['Ae'])
     Pn_A = midC['Fn']*p1.A
     print('L=', L, '| Fn =', round(midC['Fn'],2),'| Pn_A =', round(Pn_A,2), '| Ae =', round(midC['Ae'],2), '| Pn_Ae =', round(midC['Fn']*midC['Ae'],2) )
 
