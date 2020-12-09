@@ -119,7 +119,6 @@
 
 from math import pi
 from .sec_2 import sec2_1_1_c1,sec2_1_1_c3, sec2_2_1, sec2_3_1, sec2_3_2, sec2_4_2, sec2_2_2
-from .sec_3 import E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_4_3_e1
 #from .sec_2 import sec2_1_1, sec2_2_1, sec2_3_1, sec2_4_2
 from .sec_3 import sec3_2
 # Imports for Section 3.3.1.1
@@ -459,8 +458,6 @@ class ASCE_8_02:
 
         # Section 3.3.1.2 - Lateral Buckling Strength
         Sf = profile.Sx
-        
-        
 
         Mc_eta_LB = sec3_3_1_2_eta(prof_type=profile.type, Cb=dp.Cb, E0=steel.E0, d=profile.H, Iyc=profile.Iy/2, L=member.L,
                                      rx=profile.rx, ry=profile.ry, c_x=profile.c_x, sc_x=profile.sc_x, A=profile.A,

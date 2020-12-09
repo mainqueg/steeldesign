@@ -310,7 +310,7 @@ class c_w_lps_profile():
         if not name:
             self.name = defName
 
-    def calculate(self, loadProfileFromDB):
+    def calculate(self, loadProfileFromDB = True):
         '''Se ejecuta el calculo de las propiedades de la seccion.
 
             Parameters
@@ -325,7 +325,7 @@ class c_w_lps_profile():
                 A : Area de la seccion
                 Cw : Constante torsional de warping de la seccion
                 J : Constante de torsion de St. Venant
-
+                beta : Constante monosimetrica de la seccion con respecto al eje y.
         '''
         if loadProfileFromDB:
             try:
@@ -353,6 +353,7 @@ class c_w_lps_profile():
             self.Ae = section.get_area()
             (self.Ix, self.Iy, _) = section.get_ic()
             (self.Sx, _, _, _) = section.get_z()    # modulo elastico
+            self.beta = section.get_beta_y_plus()   # monosymmetric constant
 
             self.save(section)
 
@@ -580,7 +581,7 @@ class c_profile():
             A : Area de la seccion
             Cw : Constante torsional de warping de la seccion
             J : Constante de torsion de St. Venant
-
+            beta : Constante monosimetrica de la seccion con respecto al eje y.
         '''
         if loadProfileFromDB:
             try:
@@ -619,6 +620,7 @@ class c_profile():
             self.Ae = section.get_area()
             (self.Ix, self.Iy, _) = section.get_ic()
             (self.Sx, _, _, _) = section.get_z()    # modulo elastico
+            self.beta = section.get_beta_y_plus()   # monosymmetric constant
 
             self.save(section)
 

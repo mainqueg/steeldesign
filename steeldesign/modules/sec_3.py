@@ -538,7 +538,7 @@ def E_3_3_2_e1(E0, t, h):
     -----
         Example 9.1 - C-profile with LB consideration 
         >>> round(E_3_3_2_e1(E0=27e3, t=0.135, h=6.354), 2)
-        21.25
+        50.6
     '''
     Vn_eta = 4.84*E0*t**3/h
     return Vn_eta
@@ -565,7 +565,7 @@ def E_3_3_3_e1(fiMn, fiVn, Mu, Vu):
     -----
         Example 9.1 - C-profile with LB consideration 
         >>> round(E_3_3_3_e1(fiMn=80.16, fiVn=27.88, Mu=44.16, Vu=2.21), 2)
-        0.31 
+        0.31
     '''
     comb = (Mu/fiMn)**2 + (Vu/fiVn)**2
     limit = 1.0
@@ -693,7 +693,8 @@ def E_3_3_4_e2(t, C3, C4, Ctheta, h, N, Ct):
         
     Tests
     -----
-        none        
+        >>> round(E_3_3_4_e2(t=0.135, C3=1.258, C4=0.942, Ctheta=1.0, h=6.354, N=3.0, Ct=1.0), 2)
+        5.38
     '''
     f1 = t**2*C3*C4*Ctheta
     f2 = 217 - 0.28*h/t
@@ -729,7 +730,8 @@ def E_3_3_4_e4(t, C1, C2, Ctheta, h, N, Ct):
         
     Tests
     -----
-        none        
+        >>> round(E_3_3_4_e4(t=0.135, C1=1.343, C2=0.977, Ctheta=1.0, h=6.354, N=6.0, Ct=1.0), 2)
+        15.79
     '''
     f1 = t**2*C1*C2*Ctheta
     f2 = 538 - 0.74*h/t
@@ -855,7 +857,8 @@ def E_3_3_4_e10(FY, Ct, k):
         
     Tests
     -----
-        none        
+        >>> round(E_3_3_4_e10(FY=50, Ct=1.0, k=1.515), 3)
+        1.343
     '''
     limit = FY/91.5/Ct
     if limit <= 1:
@@ -873,7 +876,8 @@ def E_3_3_4_e11(R, t):
         
     Tests
     -----
-        none        
+        >>> round(E_3_3_4_e11(R=3.0/16.0, t=0.135), 3)
+        0.977
     '''
     C2 = (1.06 - 0.06*R/t)
     if C2 > 1: C2 = 1.0
@@ -889,7 +893,8 @@ def E_3_3_4_e12(FY, Ct, k):
         
     Tests
     -----
-        none        
+        >>> round(E_3_3_4_e12(FY=50, Ct=1.0, k=1.515), 3)
+        1.258
     '''
     limit = FY/66.5/Ct
     if limit <= 1:
@@ -907,7 +912,8 @@ def E_3_3_4_e13(R, t):
         
     Tests
     -----
-        none        
+        >>> round(E_3_3_4_e13(R=3.0/16.0, t=0.135), 3)
+        0.942
     '''
     C4 = (1.15 - 0.15*R/t)
     if C4 < 0.5: C4 = 0.5
@@ -987,7 +993,8 @@ def E_3_3_4_e20(theta):
         
     Tests
     -----
-        none        
+        >>> round(E_3_3_4_e20(theta=90), 2)
+        1.0
     '''
     return 0.7 + 0.3*(theta/90)**2
 
@@ -1001,7 +1008,8 @@ def E_3_3_4_e21(FY, Ct):
         
     Tests
     -----
-        none        
+        >>> round(E_3_3_4_e21(FY=50, Ct=1.0), 3)
+        1.515
     '''
     return FY/33/Ct
 
