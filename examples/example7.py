@@ -25,4 +25,4 @@ print('fiMn =', round(fiMn,2),'| Mn_no =', round(midC['Mn_no'],2), '| Mn_LB =', 
 # Valores de referencia:    fiMn = 80.16 | Mn_no = 111.95 | Mn_LB = 94.30
 # Valores de steeldesign:   fiMn = 78.38 | Mn_no = 111.90 | Mn_LB = 92.21
 
-# NOTA: Error tiene origen en el uso de eta_iter. En lugar de los valores de tabla que usa la referencia. f_ref=42.12 f_eta_iter= 41.2
+# NOTA: Error tiene origen en el uso de eta_iter en lugar de los valores de tabla que usa la referencia. f_ref=42.12 f_eta_iter= 41.2

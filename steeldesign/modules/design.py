@@ -490,6 +490,14 @@ class ASCE_8_02:
         t= profile.t
         E0= self.member.steel.E0
         nEffAreas= {}
+
+        if profile.type in ['I_builtup_cee', 'I_builtup_cee_w_lps']:
+            nEf= 2.0
+        elif profile.type in ['cee', 'c_w_lps']:
+            nEf= 1.0
+        else:
+            print('Seccion del tipo', profile.type,'no implementada en analisis 3.3.1 Se effecivo')
+            raise NotImplementedError
         
         # calculo beff para flange
         flange = elements[1]
@@ -504,7 +512,7 @@ class ASCE_8_02:
             b, midC = sec2_3_1(w= flange['w'], t= t, f= fFlange, E= E0)
             flange['sec3.3.1.1'].update({'b':b,'rho': midC['rho'],'esbeltez': midC['esbeltez']})
             cy_ = (profile.H-t)/2.0
-            nEffAreas[1] = {'t': t, 'b_': flange['w'] - b, 'cy_': cy_, 'paralel': True}
+            nEffAreas[1] = {'t': t, 'b_': (flange['w'] - b)*nEf, 'cy_': cy_, 'paralel': True}
         elif flange['type'] == 'stiffned_w_slps':
             if lip['name'] == 'lip':
                 d = lip['w']                
@@ -516,7 +524,7 @@ class ASCE_8_02:
             flange['sec3.3.1.1'].update(midC)
             flange['sec3.3.1.1']['b']= b
             cy_ = (profile.H-t)/2.0
-            nEffAreas[1] = {'t': t, 'b_': flange['w'] - b, 'cy_': cy_, 'paralel': True}
+            nEffAreas[1] = {'t': t, 'b_': (flange['w'] - b)*nEf, 'cy_': cy_, 'paralel': True}
             
             #lip
             b, midC = sec2_3_2(w= lip['w'], t= t, f3= fFlange, E= E0)
@@ -527,7 +535,7 @@ class ASCE_8_02:
                 b = flange['sec3.3.1.1']['ds']
             b_ = lip['w'] - b
             cy_ = (profile.H + b_)/2.0 - profile.D
-            nEffAreas[3] = {'t': t, 'b_': b_ , 'cy_': cy_, 'paralel': False}                         
+            nEffAreas[3] = {'t': t, 'b_': b_*nEf , 'cy_': cy_, 'paralel': False}                         
             lip['sec3.3.1.1'].update({'b':b, 'cy_': cy_})
             lip['sec3.3.1.1'].update(midC)
         else:
@@ -662,10 +670,10 @@ class ASCE_8_02:
 
         Fn = min(Fn_FBx, Fn_FBy, Fn_TB, Fn_FTB)
 
-        Ae = self.s2_Ae_compMemb(Fn)
+        Ae = self.s2_Ae_compMemb(Fn, origin= 'sec 3.4-fiPn')
         fiPn = E3_4_e1(Fn, Ae)
 
-        Ae_no = self.s2_Ae_compMemb(FY)
+        Ae_no = self.s2_Ae_compMemb(FY, origin= 'sec 3.4-fiPno')
         fiPno = E3_4_e1(FY, Ae_no)
 
         midC = {'fiPno': fiPno, 'Pno': Ae_no*FY ,'Pn': Ae*Fn , 'Fn_FBx': Fn_FBx, 'Fn_FBy': Fn_FBy, 'Fn_TB': Fn_TB, 'Fn_FTB':Fn_FTB, 'Fn': Fn, 'Ae': Ae, 'Ae_no': Ae_no} # convertir en diccionario
@@ -673,13 +681,15 @@ class ASCE_8_02:
         return fiPn, midC
 
 
-    def s2_Ae_compMemb(self, f):
+    def s2_Ae_compMemb(self, f, origin):
         '''Area efectiva para miembros a compresion, segun 2.2.1 (stiffned), 2.3.1 (unstiffned) y 2.4.2 (stiffned_w_slps)
         
         Parameters
         ----------
             f : float
                 Valor de la tension a compresion uniforme del elemento
+            origin : string
+                Label para almacenar los midC
         Returns
         -------
             Ae : float
@@ -698,43 +708,51 @@ class ASCE_8_02:
         t= profile.t
         E0= self.member.steel.E0
 
+        if profile.type in ['I_builtup_cee', 'I_builtup_cee_w_lps']:
+            nEf= 4.0
+        elif profile.type in ['cee', 'c_w_lps']:
+            nEf= 2.0
+        else:
+            print('Seccion del tipo', profile.type,'no implementada en analisis 3.3.1 Se effecivo')
+            raise NotImplementedError
+
         for element in elements.values():
             if element['type'] == 'stiffned':
-                element['sec3.4']= {}
+                element[origin]= {}
                 b, midC = sec2_2_1(w= element['w'], t= t, f= f, E= E0)
-                element['sec3.4'].update({'b':b,'rho': midC['rho'],'esbeltez': midC['esbeltez']})
-                element['sec3.4']['A_'] = (element['w'] - b)*t
+                element[origin].update({'b':b,'rho': midC['rho'],'esbeltez': midC['esbeltez']})
+                element[origin]['A_'] = (element['w'] - b)*t
             elif element['type'] == 'unstiffned' and element['name'] != 'lip':
-                element['sec3.4']= {}
+                element[origin]= {}
                 b, midC = sec2_3_1(w= element['w'], t= t, f= f, E= E0)
-                element['sec3.4'].update({'b':b,'rho': midC['rho'],'esbeltez': midC['esbeltez']})
-                element['sec3.4']['A_'] = (element['w'] - b)*t
+                element[origin].update({'b':b,'rho': midC['rho'],'esbeltez': midC['esbeltez']})
+                element[origin]['A_'] = (element['w'] - b)*t*nEf
             elif element['type'] == 'stiffned_w_slps':
-                element['sec3.4']= {}
+                element[origin]= {}
                 if elements[3]['name'] == 'lip':
                     d = elements[3]['w']
                     lip = elements[3]
-                    lip['sec3.4']= {}
+                    lip[origin]= {}
                 else:
                     print('El elemento',3, 'no corresponde al tipo <lip>. Reordenar los elemenentos en el perfil',profile.type)
                     raise Exception('>> Analisis abortado <<')
                 b, midC = sec2_4_2(E0=E0, f = f, w= element['w'], t= t, d=d, r_out= profile.r_out)
-                element['sec3.4'].update(midC)
-                element['sec3.4']['b']= b
-                element['sec3.4']['A_'] = (element['w'] - b)*t*2
+                element[origin].update(midC)
+                element[origin]['b']= b
+                element[origin]['A_'] = (element['w'] - b)*t*nEf
 
                 #lip
                 b, midC = sec2_3_1(w= lip['w'], t= t, f= f, E= E0)
-                lip['sec3.4'].update(midC)
-                lip['sec3.4']['b']= b
-                if element['sec3.4']['ds'] < b: # ancho efectivo del lip (ver definicion ds en 2.4)
-                    lip['sec3.4']['b'] = element['sec3.4']['ds']
-                lip['sec3.4']['A_'] = (lip['w'] - lip['sec3.4']['b'])*t*2
+                lip[origin].update(midC)
+                lip[origin]['b']= b
+                if element[origin]['ds'] < b: # ancho efectivo del lip (ver definicion ds en 2.4)
+                    lip[origin]['b'] = element[origin]['ds']
+                lip[origin]['A_'] = (lip['w'] - lip[origin]['b'])*t*nEf
             elif element['name'] != 'lip':
                 print('El elemento:',element['name'], 'del perfil:',profile.name, 'no tiene asignada una clasificacion reconocida:', element['type'])
                 raise Exception('>> Analisis abortado <<')
 
-            Ae =  Ae - element['sec3.4']['A_']
+            Ae =  Ae - element[origin]['A_']
         return Ae
 
 
