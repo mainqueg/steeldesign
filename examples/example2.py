@@ -3,14 +3,15 @@ Barbara Rossi; Jean-Pierre Jaspart; and Kim J. R. Rasmussen
 JOURNAL OF STRUCTURAL ENGINEERING © ASCE / APRIL 2010
 DOI: 10.1061/ASCEST.1943-541X.0000147
 
-Fig. 1, Curva Al*fn,Et y A*fn,Et
+Fig. 1, Curva Ald*fn,Et y A*fn,Et
+Table 2. Pu_AS/NZS
 
 '''
 
 import steeldesign as sd
 import matplotlib.pyplot as plt
 
-Long =[300,500,700,1000,1200,1500,1800,2000,2200,2500,2800,3000,3500,5000]
+Long =[300,400,700,900,1200,1400,1800,2000,2200,2600,2800,3000,3200,5000, 8000]
 
 # creo un perfil c on refuerz ode labios
 p1 = sd.c_w_lps_profile(H= 100, B= 50, D= 12, t= 1.5, r_out= 3.75)

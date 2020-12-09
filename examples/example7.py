@@ -1,22 +1,23 @@
-'''Example 4.5 C-wlps neutral axis. 
+'''Example 9.1 I-Section (LRFD). 
 
-Cold-Formed steel design - Chen, Helen. 
-
-import importlib
-importlib.reload(sd)
+Lin, Shin-Hua; Yu, Wei-wen; and Galambos, Theodore V., "Illustrative examples based on the ASCE
+standard specifcation for the design of cold-formed stainless steel structural members" (1991). Center
+for Cold-Formed Steel Structures Library. p122
 
 '''
+
 import steeldesign as sd
 from steeldesign.modules.functions import adjustNeutralAxis
 
-p1 = sd.c_w_lps_profile(H= 10.0, B= 3.5, D=0.72, t= 0.075, r_out= (0.075+3/32) )
-p1.calculate()
-
+# creo perfil
+p1 = sd.c_profile(H= 7.0, B= 1.5, t= 0.135, r_out= (0.135+3/16) )
+# creo material
 s = sd.steel(FY= 50, E0= 27000, nu= 0.3, n= 4.58, offset= 0.002, name= 'SA301_1_4Hard')
-
-p1_half = sd.c_w_lps_profile_half(H= 10.0, B= 3.5, D=0.72, t= 0.075, r_out= (0.075+3/32) )
-p1_half.calculate()
-
-
-
-adjustNeutralAxis(p1.Ix, p1.A, )
+# design parameters (default)
+dp = sd.designParameters(Ly= 2.5*12, Lz= 2.5*12)
+# creo un miembro
+m = sd.member(L= 30*12, profile= p1, steel= s, designParameters= dp)
+# creo el analisis
+analysis = sd.ASCE_8_02(m)
+Se, nEffAreas= analysis.s3_Se_effective(50)
+print(Se)

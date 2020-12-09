@@ -452,7 +452,7 @@ class ASCE_8_02:
 
         # Section 3.3.1.2 - Lateral Buckling Strength
         Sf = profile.Sx
-        Sc, nEffAreas= self.s3_Se_effective(fFlange= 1.0)
+        
         
 
         Mc_eta_LB = sec3_3_1_2_eta(prof_type=profile.type, Cb=dp.Cb, E0=steel.E0, d=profile.H, Iyc=profile.Iy/2, L=member.L,
@@ -465,6 +465,8 @@ class ASCE_8_02:
         FF = Mc_eta_LB/Sf
         f = eta_iter(FF=FF, mat=steel)
         eta = f/FF
+
+        Sc, nEffAreas= self.s3_Se_effective(Mc_eta_LB/Sf)
 
         fiMn_LB, midC2 = E_3_3_1_2_e1(Sc=Sc, Mc=Mc_eta_LB*eta, Sf=Sf)
 
@@ -572,7 +574,7 @@ class ASCE_8_02:
                 
             err = abs((yMAX_prev-yMAX)/yMAX_prev)
             nIter += 1
-        if maxIter >= nIter:
+        if nIter >= maxIter:
             print('Sec. 3, determinacion de Se: Se alcanzo el numero maximo de iteraciones. Error % alcanzado:', err*100)
         
         Se = Ix/yMAX
@@ -705,10 +707,12 @@ class ASCE_8_02:
                 element['sec3.4']= {}
                 b, midC = sec2_2_1(w= element['w'], t= t, f= f, E= E0)
                 element['sec3.4'].update({'b':b,'rho': midC['rho'],'esbeltez': midC['esbeltez']})
+                element['sec3.4']['A_'] = (element['w'] - b)*t
             elif element['type'] == 'unstiffned' and element['name'] != 'lip':
                 element['sec3.4']= {}
                 b, midC = sec2_3_1(w= element['w'], t= t, f= f, E= E0)
                 element['sec3.4'].update({'b':b,'rho': midC['rho'],'esbeltez': midC['esbeltez']})
+                element['sec3.4']['A_'] = (element['w'] - b)*t
             elif element['type'] == 'stiffned_w_slps':
                 element['sec3.4']= {}
                 if elements[3]['name'] == 'lip':
@@ -721,6 +725,7 @@ class ASCE_8_02:
                 b, midC = sec2_4_2(E0=E0, f = f, w= element['w'], t= t, d=d, r_out= profile.r_out)
                 element['sec3.4'].update(midC)
                 element['sec3.4']['b']= b
+                element['sec3.4']['A_'] = (element['w'] - b)*t*2
 
                 #lip
                 b, midC = sec2_3_1(w= lip['w'], t= t, f= f, E= E0)
@@ -728,11 +733,12 @@ class ASCE_8_02:
                 lip['sec3.4']['b']= b
                 if element['sec3.4']['ds'] < b: # ancho efectivo del lip (ver definicion ds en 2.4)
                     lip['sec3.4']['b'] = element['sec3.4']['ds']
+                lip['sec3.4']['A_'] = (lip['w'] - lip['sec3.4']['b'])*t*2
             elif element['name'] != 'lip':
                 print('El elemento:',element['name'], 'del perfil:',profile.name, 'no tiene asignada una clasificacion reconocida:', element['type'])
                 raise Exception('>> Analisis abortado <<')
 
-            Ae =  Ae - (element['w']-element['sec3.4']['b'])*t
+            Ae =  Ae - element['sec3.4']['A_']
         return Ae
 
 

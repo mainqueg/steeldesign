@@ -158,11 +158,8 @@ def sec3_3_1_2_eta(prof_type, E0, d, Iyc, L, rx, ry, c_x, sc_x, A, Lx, Kx, Ly, K
         327.35
     '''    
     if prof_type in ['I_builtup_cee', 'I_builtup_cee_w_lps']:  # perfil I - aplica CASE I
-
         Mc_eta = E_3_3_1_2_e2(E0=E0, Cb=Cb, d=d, Iyc=Iyc, L=L)
-    
     elif prof_type in ['cee', 'c_w_lps']:  # perfil C - aplica CASE III
-
         # implemento solo flexion alrededor del eje de simetria (tambien hay que ver como va disernir entre un caso y otro)
         # Mc_eta = Mc/eta
         Mc_eta = sec3_3_1_2_3_i(Cb=Cb, rx=rx, ry=ry, c_x=c_x, sc_x=sc_x, E0=E0, A=A, Ly=Ly, Ky=Ky, Lz=Lz, Kz=Kz, Cw=Cw, G0=G0, J=J)
@@ -171,7 +168,6 @@ def sec3_3_1_2_eta(prof_type, E0, d, Iyc, L, rx, ry, c_x, sc_x, A, Lx, Kx, Ly, K
         print('Seccion del tipo', prof_type,'no implementada en analisis 3.3.1.2.')
         raise NotImplementedError
         
-
     return Mc_eta
 
 def sec3_3_1_2_3_i(Cb, rx, ry, c_x, sc_x, E0, A, Ly, Ky, Lz, Kz, Cw, G0, J):
