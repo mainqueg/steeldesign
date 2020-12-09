@@ -452,8 +452,6 @@ class ASCE_8_02:
 
         # Section 3.3.1.2 - Lateral Buckling Strength
         Sf = profile.Sx
-        
-        
 
         Mc_eta_LB = sec3_3_1_2_eta(prof_type=profile.type, Cb=dp.Cb, E0=steel.E0, d=profile.H, Iyc=profile.Iy/2, L=member.L,
                                      rx=profile.rx, ry=profile.ry, c_x=profile.c_x, sc_x=profile.sc_x, A=profile.A,
@@ -464,11 +462,9 @@ class ASCE_8_02:
         #                     f - FF*eta(f) = 0 (itero con eta_iter)
         FF = Mc_eta_LB/Sf
         f = eta_iter(FF=FF, mat=steel)
-        eta = f/FF
+        Sc, nEffAreas= self.s3_Se_effective(f)
 
-        Sc, nEffAreas= self.s3_Se_effective(Mc_eta_LB/Sf)
-
-        fiMn_LB, midC2 = E_3_3_1_2_e1(Sc=Sc, Mc=Mc_eta_LB*eta, Sf=Sf)
+        fiMn_LB, midC2 = E_3_3_1_2_e1(Sc=Sc, Mc=f*Sf, Sf=Sf)
 
         # Defino que resistencia controla
         fiMn = min(fiMn_Nominal, fiMn_LB)
