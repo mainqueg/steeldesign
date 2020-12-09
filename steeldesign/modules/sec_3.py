@@ -149,12 +149,12 @@ def sec3_3_1_2_eta(prof_type, E0, d, Iyc, L, rx, ry, c_x, sc_x, A, Lx, Kx, Ly, K
     Tests
     -----
         Example 8.1 - I-section w/unstiffened flanges
-        >>> round(sec3_3_1_2(prof_type='I_builtup_cee', E0=27000, d=6.0, Iyc=0.172, L=4*12, rx=2.224, ry=0.564, c_x=0, sc_x=0, A=1.083, Lx=4*12, Kx=1.0, Ly=4*12, Ky=1.0, Lz=4*12, Kz=1.0, Cw=3.00, G0=10384.61, J=0.0037, beta=0.0, Cb=1.75), 2)
+        >>> round(sec3_3_1_2_eta(prof_type='I_builtup_cee', E0=27000, d=6.0, Iyc=0.172, L=4*12, rx=2.224, ry=0.564, c_x=0, sc_x=0, A=1.083, Lx=4*12, Kx=1.0, Ly=4*12, Ky=1.0, Lz=4*12, Kz=1.0, Cw=3.00, G0=10384.61, J=0.0037, beta=0.0, Cb=1.75), 2)
         208.88
 
         Example 9.1 - C-section w/lateral buckling consideration
         En realidad el valor de ref es 326.54 pero sigma_ey en ref es 47.14 y en calculos es 47.37 (leve error en ref)
-        >>> round(sec3_3_1_2(prof_type='cee', Cb=1.685, E0=27000, d=7.0, Iyc=0.204/2, L=2.5*12, rx=2.47, ry=0.40, c_x=0.217, sc_x=-0.417, A=1.284, Lx=2.5*12, Kx=1.0, Ly=2.5*12, Ky=1.0, Lz=2.5*12, Kz=1.0, Cw=1.819, G0=10500, J=0.0078, beta=0), 2)
+        >>> round(sec3_3_1_2_eta(prof_type='cee', Cb=1.685, E0=27000, d=7.0, Iyc=0.204/2, L=2.5*12, rx=2.47, ry=0.40, c_x=0.217, sc_x=-0.417, A=1.284, Lx=2.5*12, Kx=1.0, Ly=2.5*12, Ky=1.0, Lz=2.5*12, Kz=1.0, Cw=1.819, G0=10500, J=0.0078, beta=0), 2)
         327.35
     '''    
     if prof_type in ['I_builtup_cee', 'I_builtup_cee_w_lps']:  # perfil I - aplica CASE I
@@ -536,8 +536,9 @@ def E_3_3_2_e1(E0, t, h):
         none
     Tests
     -----
-        >>> round(E_3_3_2_e1(E0=27e3, t=0.06, h=6.0), 2)
-        4.7
+        Example 9.1 - C-profile with LB consideration 
+        >>> round(E_3_3_2_e1(E0=27e3, t=0.135, h=6.354), 2)
+        21.25
     '''
     Vn_eta = 4.84*E0*t**3/h
     return Vn_eta
@@ -558,16 +559,18 @@ def E_3_3_3_e1(fiMn, fiVn, Mu, Vu):
             resistencia requerida al corte.
     Returns
     -------
-        bool
+        ratio: float,
+            ratio entre las resistencias requeridas y las correspondientes de diseno.
     Tests
     -----
-        none        
+        Example 9.1 - C-profile with LB consideration 
+        >>> round(E_3_3_3_e1(fiMn=80.16, fiVn=27.88, Mu=44.16, Vu=2.21), 2)
+        0.31 
     '''
     comb = (Mu/fiMn)**2 + (Vu/fiVn)**2
-    if comb <= 1: 
-        return True
-    else:
-        return False
+    limit = 1.0
+    ratio = comb/limit
+    return ratio
 
 def E_3_3_3_e2(fiMn, fiVn, Mu, Vu):
     '''Ecuacion de interaccion flexion-corte. Ecuacion 3.3.3-2.
@@ -583,16 +586,17 @@ def E_3_3_3_e2(fiMn, fiVn, Mu, Vu):
             resistencia requerida al corte.
     Returns
     -------
-        bool
+        ratio: float,
+            ratio entre las resistencias requeridas y las correspondientes de diseno.
     Tests
     -----
         none        
     '''
     comb = (Mu/fiMn)*0.6 + (Vu/fiVn)
-    if comb <= 1.3: 
-        return True
-    else:
-        return False
+    limit = 1.3
+    ratio = comb/limit
+    return ratio
+
 """ 
 ## 3.3.4 Web Crippling Strength
 def sec3_3_4(member):
@@ -614,6 +618,8 @@ def sec3_3_4(member):
     profile = member.profile
 
     # Parametros
+
+    fi = 0.70
 
     FY = steel.FY
     h = profile.H - 2*profile.r_out
@@ -638,8 +644,25 @@ def sec3_3_4(member):
     C8 = E_3_3_4_e19(h=h, t=t, k=k)
     C_theta = E_3_3_4_e20(theta=theta)
 
+    ## Shapes Having Single Webs
+        # Stiffened or Partially Stiffened Flenges
+            # End Reaction
+    E_3_3_4_e1(t, C3, C4, Ctheta, h, N, Ct)
+            # Interior Reaction
+    E_3_3_4_e4(t, C1, C2, Ctheta, h, N, Ct)
 
-## 3.3.5 Strength for Combined Bending and Shear
+       # Unstiffened Flanges
+            # End Reaction
+    E_3_3_4_e2(t, C3, C4, Ctheta, h, N, Ct)
+            # Interior Reaction
+    E_3_3_4_e4(t, C1, C2, Ctheta, h, N, Ct)
+
+    ## I-sections or Similar Sections
+        # Stiffened, Partially Stiffened and Unstiffened Flanges
+            # End Reaction
+    E_3_3_4_e3(N, t, FY, C6)
+            # Interior Reaction
+    E_3_3_4_e5(N, t, FY, C5, m)
 
 
 def E_3_3_4_e1(t, C3, C4, Ctheta, h, N, Ct):
@@ -999,8 +1022,62 @@ def E_3_3_4_e22(t, units='SI'):
     if units == 'US':
         return t/0.075
 
+
+## 3.3.5 Strength for Combined Bending and Web Crippling
+def E_3_3_5_e1(Pu, fiPn, Mu, fiMn):
+    '''Ecuacion de interaccion flexion-corte. Ecuacion 3.3.3-1.
+    Parameters
+    ----------
+        fiMn: float,
+            resistencia de diseno a la flexion, cuando actua solo la flexion.
+        fiPn: float,
+            resistencia de diseno a una carga concentrada o reaccion, en ausencia de flexion segun seccion 3.3.4.
+        Mu: float,
+            resistencia requerida a la flexion. 
+        Pu: float,
+            resistencia requerida a una carga concentrada o reaccion, en ausencia de flexion.
+    Returns
+    -------
+        ratio: float,
+            ratio entre las resistencias requeridas y las correspondientes de diseno.
+    Tests
+    -----
+        Example 9.1 - C-profile with LB consideration
+        >>> round(E_3_3_5_e1(Pu=4.05, fiPn=11.05, Mu=44.16, fiMn=80.16), 2)
+        0.66
+    '''
+    comb = Mu/fiMn + 1.07*Pu/fiPn
+    limit = 1.42
+    ratio = comb/limit
+    return ratio
+
+def E_3_3_5_e2(Pu, fiPn, Mu, fiMn):
+    '''Ecuacion de interaccion flexion-corte. Ecuacion 3.3.3-1.
+    Parameters
+    ----------
+        fiMn: float,
+            resistencia de diseno a la flexion, cuando actua solo la flexion.
+        fiPn: float,
+            resistencia de diseno a una carga concentrada o reaccion, en ausencia de flexion segun seccion 3.3.4.
+        Mu: float,
+            resistencia requerida a la flexion. 
+        Pu: float,
+            resistencia requerida a una carga concentrada o reaccion, en ausencia de flexion.
+    Returns
+    -------
+        ratio: float,
+            ratio entre las resistencias requeridas y las correspondientes de diseno.
+    Tests
+    -----
+        none        
+    '''
+    comb = 0.82*Pu/fiPn + Mu/fiMn
+    limit = 1.32
+    ratio = comb/limit
+    return ratio
+    
 ## 3.4 Compression Members
-def E3_4_e1(Fn, Ae):
+def E_3_4_e1(Fn, Ae):
     ''' Design axial strength Ec 3.4-1.
 
     Parameters
@@ -1015,16 +1092,16 @@ def E3_4_e1(Fn, Ae):
             Resistencia axial de diseño.
     Tests
     -----
-        >>> round( E3_4_e1(1.5, 1.5), 4)
+        >>> round( E_3_4_e1(1.5, 1.5), 4)
         1.9125
     '''
     fi_c = 0.85 # factor de resistencia a compresion
     fiPn = fi_c*Fn*Ae
     return fiPn
 
-def E3_4_2_e1(E0, Kt, Lt, rx, ry, eta, c_x, sc_x, A, Cw, G0, J):
+def E_3_4_2_e1(E0, Kt, Lt, rx, ry, eta, c_x, sc_x, A, Cw, G0, J):
     """Fn = s_t = TB en Eq 3.4.2-1. Tension critica de Torsional.
-    
+
         Parameters
         ----------
         E0 : float,
@@ -1053,13 +1130,11 @@ def E3_4_2_e1(E0, Kt, Lt, rx, ry, eta, c_x, sc_x, A, Cw, G0, J):
         Returns
         -------
         Fn : float,
-            Tension critica de pandeo torsional.
+            Tension critica de pandeo torsional con eta=1.
 
         Tests
         -----
-            >>> round ( E3_4_2_e1(E0 = 180510, Kt = 0.5, Lt = 1800,
-            ... rx = 40.272, ry = 18.2673, eta = 0.6225, c_x = 15.59,
-            ... sc_x = -23.1, A = 319, Cw = 215e6, G0 = 69426.9, J = 239), 2)
+            >>> round ( E_3_4_2_e1(E0 = 180510, Kt = 0.5, Lt = 1800, rx = 40.272, ry = 18.2673, eta = 0.6225, c_x = 15.59, sc_x = -23.1, A = 319, Cw = 215e6, G0 = 69426.9, J = 239), 2)
             276.66
     """
     x0 = -abs(c_x-sc_x) # distancia desde el centroide al centro de corte, negativo
@@ -1069,7 +1144,7 @@ def E3_4_2_e1(E0, Kt, Lt, rx, ry, eta, c_x, sc_x, A, Cw, G0, J):
     Fn = s_t_eta*eta
     return Fn
 
-def E3_4_3_e1(E0, Kx, Lx, Kt, Lt, rx, ry, eta, c_x, sc_x, A, Cw, G0, J):
+def E_3_4_3_e1(E0, Kx, Lx, Kt, Lt, rx, ry, eta, c_x, sc_x, A, Cw, G0, J):
     '''Fn de FTB en Eq 3.4.3-1. Tension critica de pandeo Flexo-torsional.
 
         Parameters
@@ -1104,13 +1179,11 @@ def E3_4_3_e1(E0, Kx, Lx, Kt, Lt, rx, ry, eta, c_x, sc_x, A, Cw, G0, J):
         Returns
         -------
         Fn : float,
-            Tension critica de pandeo flexo-torsional.
+            Tension critica de pandeo flexo-torsional con eta=1.
 
         Tests
         -----
-            >>> round ( E3_4_3_e1(E0 = 180510, Kx = 0.5, Lx = 1800, Kt = 0.5,
-            ... Lt = 1800, rx = 40.272, ry = 18.2673, eta = 0.6225, c_x = 15.59,
-            ... sc_x = -23.1, A = 319, Cw = 215e6, G0 = 69426.9, J = 239), 2)
+            >>> round ( E_3_4_3_e1(E0 = 180510, Kx = 0.5, Lx = 1800, Kt = 0.5, Lt = 1800, rx = 40.272, ry = 18.2673, eta = 0.6225, c_x = 15.59, sc_x = -23.1, A = 319, Cw = 215e6, G0 = 69426.9, J = 239), 2)
             261.53
     '''
     
@@ -1128,7 +1201,7 @@ def E3_4_3_e1(E0, Kx, Lx, Kt, Lt, rx, ry, eta, c_x, sc_x, A, Cw, G0, J):
     Fn = t1*(s_ex + s_t - raiz)
     return Fn
 
-def E3_4_3_e3(E0, K, L, r, eta):
+def E_3_4_3_e3(E0, K, L, r, eta):
     '''Tension critica de pandeo flexional. s_ex en Eq 3.4.3-3.
 
         Parameters
@@ -1151,13 +1224,132 @@ def E3_4_3_e3(E0, K, L, r, eta):
 
         Tests
         -----
-            >>> round (E3_4_3_e3(E0 = 180510 ,K = 0.5,L = 1800, r = 40.272 , eta = 0.6225), 2)
+            >>> round (E_3_4_3_e3(E0 = 180510 ,K = 0.5,L = 1800, r = 40.272 , eta = 0.6225), 2)
             2220.56
     '''
-
     s_ex_eta = E_3_3_1_2_e6(E0=E0, K=K, L=L, r=r)
     s_ex = s_ex_eta*eta
     return s_ex
+
+
+## 3.5 Combined Axial Load and Bending
+def E_3_5_e1(Pu, fiPn, Mu_x, Mu_y, fiMn_x, fiMn_y, alpha_nx, alpha_ny, Cm_x = 0.85, Cm_y = 0.85):
+    '''Ecuacion de interaccion para carga axial y flexion. Caso Pu/fiPn > 0.15.
+    Parameters
+    ----------
+        Pu: float,
+            resistencia axial requerida a la compresion.
+        fiPn: float,
+            resistencia de diseno a la compresion.
+        Mu_x, Mu_y: float,
+            resistencias requeridas a la flexion.
+        fiMn_x, fiMn_y: float,
+            resistencias de diseno a la flexion.
+        alpha_nx, alpha_ny: float,
+            factores de amplificacion.
+        Cm_x, Cm_y: float,
+            coeficientes segun restriccion en la junta.
+    
+    Returns
+    -------
+        ratio: float,
+            ratio entre las resistencias requeridas y las correspondientes de diseno.
+
+    Tests
+    -----
+        >>> 
+    '''
+    return Pu/fiPn + Cm_x*Mu_x/(fiMn_x*alpha_nx) + Cm_y*Mu_y/(fiMn_y*alpha_ny)
+
+def E_3_5_e2(Pu, fiPn_0, Mu_x, Mu_y, fiMn_x, fiMn_y):
+    '''Ecuacion de interaccion para carga axial y flexion. Caso Pu/fiPn > 0.15.
+    Parameters
+    ----------
+        Pu: float,
+            resistencia axial requerida a la compresion.
+        fiPn_0: float,
+            resistencia de diseno a la compresion segun seccion 3.4 con Fn=FY.
+        Mu_x, Mu_y: float,
+            resistencias requeridas a la flexion.
+        fiMn_x, fiMn_y: float,
+            resistencias de diseno a la flexion.
+    
+    Returns
+    -------
+        ratio: float,
+            ratio entre las resistencias requeridas y las correspondientes de diseno.
+
+    Tests
+    -----
+        >>> 
+    '''
+    return Pu/fiPn_0 + Mu_x/fiMn_x + Mu_y/fiMn_y
+
+def E_3_5_e3(Pu, fiPn, Mu_x, Mu_y, fiMn_x, fiMn_y):
+    '''Ecuacion de interaccion para carga axial y flexion. Caso Pu/fiPn <= 0.15.
+    Parameters
+    ----------
+        Pu: float,
+            resistencia axial requerida a la compresion.
+        fiPn: float,
+            resistencia de diseno a la compresion.
+        Mu_x, Mu_y: float,
+            resistencias requeridas a la flexion.
+        fiMn_x, fiMn_y: float,
+            resistencias de diseno a la flexion.
+    
+    Returns
+    -------
+        ratio: float,
+            ratio entre las resistencias requeridas y las correspondientes de diseno.
+
+    Tests
+    -----
+        >>> 
+    '''
+    return Pu/fiPn + Mu_x/fiMn_x + Mu_y/fiMn_y
+
+def E_3_5_e4(Pu, Pe):
+    '''Magnification factor.
+    Parameters
+    ---------- 
+        Pu: float,
+            resistencia requerida axial a la compresion.
+        Pe: float,
+            resistencia de pandeo elastico.
+    Returns
+    -------
+        alpha_n: float,
+            factor de amplificacion.
+    Tests
+    -----
+        >>> round(E_3_5_e4(Pu=15, Pe=20), 1)
+        4.0
+    '''
+    return 1/(1 - Pu/Pe)
+
+def E_3_5_e5(E0, Kb, Lb, Ib):
+    '''Elastic Buckling Strength.
+    Parameters
+    ----------
+        fiMn_x, fiMn_y: float,
+            resistencias de diseno a la flexion, cuando actuan solas.
+        fiPn: float,
+            resistencia de diseno axial a la compresion.
+        Mu_x, Mu_y: float,
+            resistencias requeridas a la flexion. 
+        Pu: float,
+            resistencia requerida axial a la compresion.
+    Returns
+    -------
+        Pe: float,
+            resistencia de pandeo elastico.
+    Tests
+    -----
+        >>> round(E_3_5_e5(E0=27000, Kb=1.0, Lb=4*12, Ib=5.357), 2)
+        619.59
+    '''
+    return pi**2*E0*Ib/(Kb*Lb)**2
 
 #####################################################################################
 #####################################################################################

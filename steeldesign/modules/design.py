@@ -121,7 +121,7 @@ from math import pi
 from .sec_2 import sec2_1_1_c1,sec2_1_1_c3, sec2_2_1, sec2_3_1, sec2_3_2, sec2_4_2, sec2_2_2
 from .sec_3 import E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_4_3_e1
 #from .sec_2 import sec2_1_1, sec2_2_1, sec2_3_1, sec2_4_2
-from .sec_3 import sec3_2, E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_4_3_e1
+from .sec_3 import sec3_2
 # Imports for Section 3.3.1.1
 from .sec_3 import sec3_3_1_1, E_3_3_1_1_e1, LocalDistorsion
 # Imports for Section 3.3.1.2
@@ -129,7 +129,13 @@ from .sec_3 import sec3_3_1_2_eta, sec3_3_1_2_3_i, E_3_3_1_2_e1, E_3_3_1_2_e2, E
 # Imports for Section 3.3.2
 from .sec_3 import E_3_3_2_e1
 # Imports for Section 3.3.3
-from .sec_3 import E_3_3_3_e1
+from .sec_3 import E_3_3_3_e1, E_3_3_3_e2
+# Imports for Section 3.3.4
+
+# Imports for Section 3.4
+from .sec_3 import E_3_4_e1, E_3_4_2_e1, E_3_4_3_e1, E_3_4_3_e3
+# Imports for Section 3.5
+from .sec_3 import E_3_5_e1, E_3_5_e2, E_3_5_e3, E_3_5_e4, E_3_5_e5
 from .appendix_B import B_2, B_1
 from .properties import c_w_lps_profile, c_profile, steel, I_builtup_c_profile
 from .functions import eta_iter, adjustNeutralAxis, get_linear_stress
@@ -290,6 +296,7 @@ class ASCE_8_02:
             print ('Advertencia: El miembro', member.name, 'no tiene asignado ningun acero.')
         if not member.dP:
             print ('Advertencia: El miembro', member.name, 'no tiene asignado parametros de diseño.')
+
     def s2_1(self):
         '''Dimensional Limits and Considerations. 
         2.1.1 Flange Flat-Width-to-Thickness Considerations
@@ -383,7 +390,7 @@ class ASCE_8_02:
         profile = self.member.profile
         steel = self.member.steel
         # Area neta igual a Area total ??
-        An = profile.A    
+        An = profile.A
         FY = steel.FY
         fiTn, midC = sec3_2(An=An, FY=FY)
         midC['An'] = An
@@ -785,7 +792,7 @@ class ASCE_8_02:
         profile = self.member.profile
         steel = self.member.steel
 
-        FF = E3_4_3_e1(E0 = steel.E0, G0 = steel.G0,
+        FF = E_3_4_3_e1(E0 = steel.E0, G0 = steel.G0,
                         Kx = dP.Kx, Kt = dP.Kz, Lx = dP.Lx, Lt = dP.Lz,
                         rx = profile.rx, ry = profile.ry, c_x = profile.c_x, sc_x = profile.sc_x,
                         A = profile.A, Cw = profile.Cw, J = profile.J,
@@ -872,7 +879,7 @@ class ASCE_8_02:
         profile = self.member.profile
         steel = self.member.steel
         
-        FF = E3_4_2_e1(E0= steel.E0, Kt= dP.Kz, Lt= dP.Lz, rx= profile.rx, ry= profile.ry,
+        FF = E_3_4_2_e1(E0= steel.E0, Kt= dP.Kz, Lt= dP.Lz, rx= profile.rx, ry= profile.ry,
                     c_x= profile.c_x, sc_x= profile.sc_x, A= profile.A, Cw= profile.Cw, G0= steel.G0, J= profile.J,
                     eta= 1)
         Fn = eta_iter(FF,steel)
@@ -881,3 +888,34 @@ class ASCE_8_02:
         Pn = Fn* profile.A
 
         return Fn, Pn
+
+    def s3_5(self, Pu, fiPn, Mu_x, Mu_y, fiMn_x, fiMn_y):
+        '''
+        '''
+        # Parametros
+        steel = self.member.steel
+        profile = self.member.profile
+        dpar = self.member.dP
+
+        E0 = steel.E0
+        Kx = dpar.Kx
+        Ky = dpar.Ky
+        Lx = dpar.Lx
+        Ly = dpar.Ly
+        Ix = profile.Ix
+        Iy = profile.Iy
+
+        Cm_x = 0.85
+        Cm_y = 0.85
+
+        Pe_x = E_3_5_e5(E0=E0, Kb=Kx, Lb=Lx, Ib=Ix)
+        Pe_y = E_3_5_e5(E0=E0, Kb=Ky, Lb=Ly, Ib=Iy)
+        alpha_nx = E_3_5_e4(Pu=Pu, Pe=Pe_x)
+        alpha_ny = E_3_5_e4(Pu=Pu, Pe=Pe_y)
+
+        # Ae = 
+        fiPn_0 = E_3_4_e1(Fn=FY, Ae=Ae)
+
+        
+
+        

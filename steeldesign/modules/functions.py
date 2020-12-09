@@ -87,6 +87,8 @@ def adjustNeutralAxis(Ix, A, nEffAreas):
     -------
         cy : float
             Distancia del nuevo eje neutro x'-x' al eje x-x original
+        Ixx : float
+            Momento de inercia efectivo de la seccion
     Tests
     -----
         # Ex. 1.1 Illustrative examples C-section: H= 6, t= 0.06, w= 1.471, b= 0.806
