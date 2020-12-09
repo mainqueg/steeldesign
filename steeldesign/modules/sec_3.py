@@ -78,7 +78,7 @@ def sec3_3_1_1(FY, Se, procedure = 'PI', comp_flange = 'UNSTIFF', localDistorsio
         Mld, midC = LocalDistorsion()
         midC['Mld']= Mld
 
-    midC.update({'Mn': Mn, 'fi': fi})
+    midC.update({'Mn_no': Mn, 'fi': fi})
     fiMn = fi*Mn
 
     return fiMn, midC
@@ -330,7 +330,7 @@ def E_3_3_1_2_e1(Sc, Mc, Sf):
     Mn = Sc*(Mc/Sf)
 
     fiMn = fi*Mn
-    midC = {'LB_Mn': Mn, 'LB_fi': fi}
+    midC = {'Mn_LB': Mn, 'fi_LB': fi}
     return fiMn, midC
 
 def E_3_3_1_2_e2(E0, Cb, d, Iyc, L):

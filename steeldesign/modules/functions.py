@@ -4,7 +4,8 @@
         esquema de newton-rapson f(s): s- FF*eta(s) = 0
     adjustNeutralAxis : 
         busca el eje neutro de la seccion
-
+    get_linear_stress :
+        Devuelve el valor de tension en la coordenada indicada para una variacion lineal de tension
 
 '''
 
