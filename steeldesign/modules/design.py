@@ -119,9 +119,8 @@
 
 from math import pi
 from .sec_2 import sec2_1_1_c1,sec2_1_1_c3, sec2_2_1, sec2_3_1, sec2_4_2
-from .sec_3 import E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_4_3_e1
 #from .sec_2 import sec2_1_1, sec2_2_1, sec2_3_1, sec2_4_2
-from .sec_3 import sec3_2, E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_4_3_e1
+from .sec_3 import sec3_2
 # Imports for Section 3.3.1.1
 from .sec_3 import sec3_3_1_1, E_3_3_1_1_e1, LocalDistorsion
 # Imports for Section 3.3.1.2
@@ -129,11 +128,13 @@ from .sec_3 import sec3_3_1_2_eta, sec3_3_1_2_3_i, E_3_3_1_2_e1, E_3_3_1_2_e2, E
 # Imports for Section 3.3.2
 from .sec_3 import E_3_3_2_e1
 # Imports for Section 3.3.3
-from .sec_3 import E_3_3_3_e1
+from .sec_3 import E_3_3_3_e1, E_3_3_3_e2
+# Imports for Section 3.3.4
+
 # Imports for Section 3.4
-from .sec_3 import E_3_4_e1
+from .sec_3 import E_3_4_e1, E_3_4_2_e1, E_3_4_3_e1, E_3_4_3_e3
 # Imports for Section 3.5
-from .sec_3 import sec3_5, E_3_5_e4, E_3_5_e5
+from .sec_3 import E_3_5_e1, E_3_5_e2, E_3_5_e3, E_3_5_e4, E_3_5_e5
 from .appendix_B import B_2, B_1
 from .properties import c_w_lps_profile, c_profile, steel, I_builtup_c_profile
 from .functions import eta_iter
@@ -468,7 +469,7 @@ class ASCE_8_02:
         Sc = 1.470
 
         Mc_eta_LB = sec3_3_1_2_eta(prof_type=prof_type, Cb=Cb, E0=E0, d=d, Iyc=Iyc, L=L, rx=rx, ry=ry, c_x=c_x, sc_x=sc_x, 
-                                ... A=A, Lx=Lx, Kx=Kx, Ly=Ly, Ky=Ky, Lz=Lz, Kz=Kz, Cw=Cw, G0=G0, J=J, beta=beta)
+                                    A=A, Lx=Lx, Kx=Kx, Ly=Ly, Ky=Ky, Lz=Lz, Kz=Kz, Cw=Cw, G0=G0, J=J, beta=beta)
         # construyo ecuacion: f - Mc/Sf = 0
         #                     f - (Mc_eta_LB/Sf)*eta(f) = 0
         #                     f - FF*eta(f) = 0 (itero con eta_iter)
@@ -568,7 +569,7 @@ class ASCE_8_02:
         self.s2_Ae_compMemb(Fn)
         Ae = self.member.profile.Ae
 
-        fiPn = E3_4_e1(Fn, Ae)
+        fiPn = E_3_4_e1(Fn, Ae)
 
         midC = {'Fn_FBx': Fn_FBx, 'Fn_FBy': Fn_FBy, 'Fn_TB': Fn_TB, 'Fn_FTB':Fn_FTB, 'Fn': Fn, 'Ae': Ae} # convertir en diccionario
 
@@ -781,7 +782,7 @@ class ASCE_8_02:
         alpha_nx = E_3_5_e4(Pu=Pu, Pe=Pe_x)
         alpha_ny = E_3_5_e4(Pu=Pu, Pe=Pe_y)
 
-        Ae = 
+        # Ae = 
         fiPn_0 = E_3_4_e1(Fn=FY, Ae=Ae)
 
         

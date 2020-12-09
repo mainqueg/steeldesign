@@ -148,12 +148,12 @@ def sec3_3_1_2_eta(prof_type, E0, d, Iyc, L, rx, ry, c_x, sc_x, A, Lx, Kx, Ly, K
     Tests
     -----
         Example 8.1 - I-section w/unstiffened flanges
-        >>> round(sec3_3_1_2(prof_type='I_builtup_cee', E0=27000, d=6.0, Iyc=0.172, L=4*12, rx=2.224, ry=0.564, c_x=0, sc_x=0, A=1.083, Lx=4*12, Kx=1.0, Ly=4*12, Ky=1.0, Lz=4*12, Kz=1.0, Cw=3.00, G0=10384.61, J=0.0037, beta=0.0, Cb=1.75), 2)
+        >>> round(sec3_3_1_2_eta(prof_type='I_builtup_cee', E0=27000, d=6.0, Iyc=0.172, L=4*12, rx=2.224, ry=0.564, c_x=0, sc_x=0, A=1.083, Lx=4*12, Kx=1.0, Ly=4*12, Ky=1.0, Lz=4*12, Kz=1.0, Cw=3.00, G0=10384.61, J=0.0037, beta=0.0, Cb=1.75), 2)
         208.88
 
         Example 9.1 - C-section w/lateral buckling consideration
         En realidad el valor de ref es 326.54 pero sigma_ey en ref es 47.14 y en calculos es 47.37 (leve error en ref)
-        >>> round(sec3_3_1_2(prof_type='cee', Cb=1.685, E0=27000, d=7.0, Iyc=0.204/2, L=2.5*12, rx=2.47, ry=0.40, c_x=0.217, sc_x=-0.417, A=1.284, Lx=2.5*12, Kx=1.0, Ly=2.5*12, Ky=1.0, Lz=2.5*12, Kz=1.0, Cw=1.819, G0=10500, J=0.0078, beta=0), 2)
+        >>> round(sec3_3_1_2_eta(prof_type='cee', Cb=1.685, E0=27000, d=7.0, Iyc=0.204/2, L=2.5*12, rx=2.47, ry=0.40, c_x=0.217, sc_x=-0.417, A=1.284, Lx=2.5*12, Kx=1.0, Ly=2.5*12, Ky=1.0, Lz=2.5*12, Kz=1.0, Cw=1.819, G0=10500, J=0.0078, beta=0), 2)
         327.35
     '''    
     if prof_type == 'I_builtup_cee' or prof_type == 'I_builtup_cee_w_lps':  # perfil I - aplica CASE I
@@ -535,8 +535,9 @@ def E_3_3_2_e1(E0, t, h):
         none
     Tests
     -----
-        >>> round(E_3_3_2_e1(E0=27e3, t=0.06, h=6.0), 2)
-        4.7
+        Example 9.1 - C-profile with LB consideration 
+        >>> round(E_3_3_2_e1(E0=27e3, t=0.135, h=6.354), 2)
+        21.25
     '''
     Vn_eta = 4.84*E0*t**3/h
     return Vn_eta
@@ -561,7 +562,9 @@ def E_3_3_3_e1(fiMn, fiVn, Mu, Vu):
             ratio entre las resistencias requeridas y las correspondientes de diseno.
     Tests
     -----
-        none        
+        Example 9.1 - C-profile with LB consideration 
+        >>> round(E_3_3_3_e1(fiMn=80.16, fiVn=27.88, Mu=44.16, Vu=2.21), 2)
+        0.31 
     '''
     comb = (Mu/fiMn)**2 + (Vu/fiVn)**2
     limit = 1.0
@@ -1019,7 +1022,7 @@ def E_3_3_4_e22(t, units='SI'):
         return t/0.075
 
 
-## 3.3.5 Strength for Combined Bending and Shear
+## 3.3.5 Strength for Combined Bending and Web Crippling
 def E_3_3_5_e1(Pu, fiPn, Mu, fiMn):
     '''Ecuacion de interaccion flexion-corte. Ecuacion 3.3.3-1.
     Parameters
@@ -1038,7 +1041,9 @@ def E_3_3_5_e1(Pu, fiPn, Mu, fiMn):
             ratio entre las resistencias requeridas y las correspondientes de diseno.
     Tests
     -----
-        none        
+        Example 9.1 - C-profile with LB consideration
+        >>> round(E_3_3_5_e1(Pu=4.05, fiPn=11.05, Mu=44.16, fiMn=80.16), 2)
+        0.66
     '''
     comb = Mu/fiMn + 1.07*Pu/fiPn
     limit = 1.42
@@ -1086,7 +1091,7 @@ def E_3_4_e1(Fn, Ae):
             Resistencia axial de diseño.
     Tests
     -----
-        >>> round( E3_4_e1(1.5, 1.5), 4)
+        >>> round( E_3_4_e1(1.5, 1.5), 4)
         1.9125
     '''
     fi_c = 0.85 # factor de resistencia a compresion
@@ -1128,9 +1133,7 @@ def E_3_4_2_e1(E0, Kt, Lt, rx, ry, eta, c_x, sc_x, A, Cw, G0, J):
 
         Tests
         -----
-            >>> round ( E3_4_2_e1(E0 = 180510, Kt = 0.5, Lt = 1800,
-            ... rx = 40.272, ry = 18.2673, eta = 0.6225, c_x = 15.59,
-            ... sc_x = -23.1, A = 319, Cw = 215e6, G0 = 69426.9, J = 239), 2)
+            >>> round ( E_3_4_2_e1(E0 = 180510, Kt = 0.5, Lt = 1800, rx = 40.272, ry = 18.2673, eta = 0.6225, c_x = 15.59, sc_x = -23.1, A = 319, Cw = 215e6, G0 = 69426.9, J = 239), 2)
             276.66
     """
     x0 = -abs(c_x-sc_x) # distancia desde el centroide al centro de corte, negativo
@@ -1179,9 +1182,7 @@ def E_3_4_3_e1(E0, Kx, Lx, Kt, Lt, rx, ry, eta, c_x, sc_x, A, Cw, G0, J):
 
         Tests
         -----
-            >>> round ( E3_4_3_e1(E0 = 180510, Kx = 0.5, Lx = 1800, Kt = 0.5,
-            ... Lt = 1800, rx = 40.272, ry = 18.2673, eta = 0.6225, c_x = 15.59,
-            ... sc_x = -23.1, A = 319, Cw = 215e6, G0 = 69426.9, J = 239), 2)
+            >>> round ( E_3_4_3_e1(E0 = 180510, Kx = 0.5, Lx = 1800, Kt = 0.5, Lt = 1800, rx = 40.272, ry = 18.2673, eta = 0.6225, c_x = 15.59, sc_x = -23.1, A = 319, Cw = 215e6, G0 = 69426.9, J = 239), 2)
             261.53
     '''
     
@@ -1199,7 +1200,7 @@ def E_3_4_3_e1(E0, Kx, Lx, Kt, Lt, rx, ry, eta, c_x, sc_x, A, Cw, G0, J):
     Fn = t1*(s_ex + s_t - raiz)
     return Fn
 
-def E3_4_3_e3(E0, K, L, r, eta):
+def E_3_4_3_e3(E0, K, L, r, eta):
     '''Tension critica de pandeo flexional. s_ex en Eq 3.4.3-3.
 
         Parameters
@@ -1222,10 +1223,9 @@ def E3_4_3_e3(E0, K, L, r, eta):
 
         Tests
         -----
-            >>> round (E3_4_3_e3(E0 = 180510 ,K = 0.5,L = 1800, r = 40.272 , eta = 0.6225), 2)
+            >>> round (E_3_4_3_e3(E0 = 180510 ,K = 0.5,L = 1800, r = 40.272 , eta = 0.6225), 2)
             2220.56
-    '''3
-
+    '''
     s_ex_eta = E_3_3_1_2_e6(E0=E0, K=K, L=L, r=r)
     s_ex = s_ex_eta*eta
     return s_ex
