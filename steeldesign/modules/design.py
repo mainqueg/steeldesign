@@ -119,8 +119,6 @@
 
 from math import pi
 from .sec_2 import sec2_1_1_c1,sec2_1_1_c3, sec2_2_1, sec2_3_1, sec2_3_2, sec2_4_2, sec2_2_2
-from .sec_3 import E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_4_3_e1
-#from .sec_2 import sec2_1_1, sec2_2_1, sec2_3_1, sec2_4_2
 from .sec_3 import sec3_2
 # Imports for Section 3.3.1.1
 from .sec_3 import sec3_3_1_1, E_3_3_1_1_e1, LocalDistorsion
@@ -678,10 +676,10 @@ class ASCE_8_02:
         Fn = min(Fn_FBx, Fn_FBy, Fn_TB, Fn_FTB)
 
         Ae = self.s2_Ae_compMemb(Fn, origin= 'sec 3.4-fiPn')
-        fiPn = E3_4_e1(Fn, Ae)
+        fiPn = E_3_4_e1(Fn, Ae)
 
         Ae_no = self.s2_Ae_compMemb(FY, origin= 'sec 3.4-fiPno')
-        fiPno = E3_4_e1(FY, Ae_no)
+        fiPno = E_3_4_e1(FY, Ae_no)
 
         midC = {'fiPno': fiPno, 'Pno': Ae_no*FY ,'Pn': Ae*Fn , 'Fn_FBx': Fn_FBx, 'Fn_FBy': Fn_FBy, 'Fn_TB': Fn_TB, 'Fn_FTB':Fn_FTB, 'Fn': Fn, 'Ae': Ae, 'Ae_no': Ae_no} # convertir en diccionario
 
@@ -913,8 +911,9 @@ class ASCE_8_02:
         alpha_nx = E_3_5_e4(Pu=Pu, Pe=Pe_x)
         alpha_ny = E_3_5_e4(Pu=Pu, Pe=Pe_y)
 
-        # Ae = 
-        fiPn_0 = E_3_4_e1(Fn=FY, Ae=Ae)
+        Ae = 1
+        fiPn_0 = E_3_4_e1(Fn=self.member.steel.FY, Ae=Ae)
+        raise NotImplementedError
 
         
 
