@@ -279,9 +279,9 @@ def sec2_2_2(w, t, f1, f2, E0, k=4):
         t: float,
             espsesor del alma o elemento.
         f1: float
-            tension sobre el alma o elemento (ver figura 2 - ASCE 8).
+            maxima tension de compresion sobre el elemento (ver figura 2 - ASCE 8). compresion (+), traccion (-)
         f2: float,
-            tension sobre el alma o elemento.
+            minima tension sobre el elemento (traccion o compresion).
         E0: float,
             modulo de elasticidad inicial.
         k: float,
@@ -289,10 +289,15 @@ def sec2_2_2(w, t, f1, f2, E0, k=4):
 
     Returns
     -------
-        b_eff_1, b_eff_2: float,
-            anchos efectivos del alma o del elemento rigidizado bajo gradiente de compresion.
-        midC: diccionario,
-            calculos intermedios.
+        b_eff_1 : float
+            longitud del segmento efectivo desde el eje neutro (ver figura 2 - ASCE 8)
+        b_eff_2 : float
+            longitud del segmento efectivo desde el final del elemento a compresion 
+        midC: dict
+            calculos intermedios {b_e, k, psi}
+            b_e: ancho efectivo segun 2.2.1 con k y f1
+            k: plate buckling coeficient
+            psi: ratio f2/f1
     Raises
     ------
         none
@@ -460,7 +465,7 @@ def sec2_4_2(E0, f, w, t, d, r_out, theta = 90,  stiff = 'SL'):
 
     if w/t <= S/3:  # Ec 2.4.2-1
         b, midC = sec2_4_2_CASEI(Is=Is, As_prima=As_prima, w=w, ds_prima=ds_prima, t=t)
-    elif w/t > S/3 and w/t < S:
+    elif S/3 < w/t and w/t < S:
         b, midC = sec2_4_2_CASEII(E0=E0, f=f, t=t, w=w, theta=theta, D=D, ds_prima=ds_prima, stiff=stiff, S=S, Is=Is, As_prima=As_prima)
     else:
         b, midC = sec2_4_2_CASEIII(E0=E0, f=f, t=t, w=w, theta=theta, D=D, ds_prima=ds_prima, stiff=stiff, S=S, Is=Is, As_prima=As_prima)

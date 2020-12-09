@@ -298,8 +298,8 @@ class c_w_lps_profile():
         self.t = t
         self.r_out= r_out
         self.elements= {
-            1: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
-            2: {'name': 'flange', 'type': 'stiffned_w_slps', 'w': B-2*r_out, 'wf': B-t+D},
+            2: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
+            1: {'name': 'flange', 'type': 'stiffned_w_slps', 'w': B-2*r_out, 'wf': B-t+D},
             3: {'name': 'lip', 'type': 'unstiffned', 'w': D-r_out},
             }
                 
@@ -310,9 +310,13 @@ class c_w_lps_profile():
         if not name:
             self.name = defName
 
-    def calculate(self):
+    def calculate(self, loadProfileFromDB):
         '''Se ejecuta el calculo de las propiedades de la seccion.
 
+            Parameters
+            ----------
+                loadProfileFromDB: bool
+                    indica si se debe intentar cargar el perfil desde la base de datos
             Referencia
             ----------
                 rx, ry : radio de giro del miembro | sqrt(I/A)
@@ -323,9 +327,13 @@ class c_w_lps_profile():
                 J : Constante de torsion de St. Venant
 
         '''
-        try:
-            self.load()
-        except:
+        if loadProfileFromDB:
+            try:
+                self.load()
+            except:
+                loadProfileFromDB = False
+                pass
+        if not loadProfileFromDB:
             ## CALCULO PROPIEDADES A PARTIR DEL PAQUETE sectionproperties
             geometry = sections.CeeSection(d=self.H, b=self.B, l=self.D, t=self.t, r_out=self.r_out, n_r=8)
             # create mesh
@@ -349,10 +357,6 @@ class c_w_lps_profile():
             self.save(section)
 
             self.section = section
-
-    def Aeff(self, Fn):
-        print('Aeff() NotImplementedError')
-        return self.A
 
 class c_w_lps_profile_half():
     '''Medio perfil C con labios de refuerzos.
@@ -416,8 +420,8 @@ class c_w_lps_profile_half():
         self.t = t
         self.r_out= r_out
         self.elements= {
-            1: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
-            2: {'name': 'flange', 'type': 'stiffned_w_slps', 'w': B-2*r_out, 'wf': B-t+D},
+            2: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
+            1: {'name': 'flange', 'type': 'stiffned_w_slps', 'w': B-2*r_out, 'wf': B-t+D},
             3: {'name': 'lip', 'type': 'unstiffned', 'w': D-r_out},
             }
                 
@@ -428,9 +432,13 @@ class c_w_lps_profile_half():
         if not name:
             self.name = defName
 
-    def calculate(self):
+    def calculate(self, loadProfileFromDB):
         '''Se ejecuta el calculo de las propiedades de la seccion.
-
+            
+            Parameters
+            ----------
+                loadProfileFromDB: bool
+                    indica si se debe intentar cargar el perfil desde la base de datos
             Referencia
             ----------
                 rx, ry : radio de giro del miembro | sqrt(I/A)
@@ -441,9 +449,13 @@ class c_w_lps_profile_half():
                 J : Constante de torsion de St. Venant
 
         '''
-        try:
-            self.load()
-        except:
+        if loadProfileFromDB:
+            try:
+                self.load()
+            except:
+                loadProfileFromDB = False
+                pass
+        if not loadProfileFromDB:
             ## CALCULO PROPIEDADES A PARTIR DEL PAQUETE sectionproperties
             geometry = sections.CeeSection(d=self.H, b=self.B, l=self.D, t=self.t, r_out=self.r_out, n_r=8, shift=[0,-self.H/2.0])
             
@@ -475,10 +487,6 @@ class c_w_lps_profile_half():
             self.save(section)
 
             self.section = section
-
-    def Aeff(self, Fn):
-        print('Aeff() NotImplementedError')
-        return self.A
 
 class c_profile():
     '''Perfil C.
@@ -550,8 +558,8 @@ class c_profile():
         self.t = t
         self.r_out= r_out
         self.elements = {
-            1: {'name': 'flange', 'type': 'unstiffned', 'w': B, 'wf': B-t},
-            2: {'name': 'web', 'type': 'stiffned', 'w': H},
+            1: {'name': 'flange', 'type': 'unstiffned', 'w': B - r_out, 'wf': B-t},
+            2: {'name': 'web', 'type': 'stiffned', 'w': H - 2*r_out},
             }
                 
         # nombre para la seccion
@@ -561,7 +569,7 @@ class c_profile():
         if not name:
             self.name = defName
 
-    def calculate(self):
+    def calculate(self, loadProfileFromDB):
         '''Se ejecuta el calculo de las propiedades de la seccion.
 
         Referencia
@@ -574,9 +582,13 @@ class c_profile():
             J : Constante de torsion de St. Venant
 
         '''
-        try:
-            self.load()
-        except:
+        if loadProfileFromDB:
+            try:
+                self.load()
+            except:
+                loadProfileFromDB = False
+                pass
+        if not loadProfileFromDB:
             ## CALCULO PROPIEDADES A PARTIR DEL PAQUETE sectionproperties
             geometry = sections.CeeSection(d=self.H, b=self.B+self.r_out, l=self.r_out, t=self.t, r_out=self.r_out, n_r=8)
             # corto los labios y el radio
@@ -611,17 +623,6 @@ class c_profile():
             self.save(section)
 
             self.section = section
- 
-    def Aeff(self):
-        print('Aeff() NotImplementedError')
-        # Ancho efectivo
-        ## Ala
-        #Beff = 1 # calculo a partir de sec_2
-        #Ae = self.A - (self.B-2*self.r_out-Beff)*self.t
-        ## Alma
-        #Heff = 1 # calculo a partir de sec_2
-        #Ae = Ae - (self.H-2*self.r_out-Heff)*self.t
-        return self.A
 
 class c_profile_half():
     '''Perfil C.
@@ -693,7 +694,7 @@ class c_profile_half():
         if not name:
             self.name = defName
 
-    def calculate(self):
+    def calculate(self, loadProfileFromDB):
         '''Se ejecuta el calculo de las propiedades de la seccion.
 
         Referencia
@@ -706,9 +707,13 @@ class c_profile_half():
             J : Constante de torsion de St. Venant
 
         '''
-        try:
-            self.load()
-        except:
+        if loadProfileFromDB:
+            try:
+                self.load()
+            except:
+                loadProfileFromDB = False
+                pass
+        if not loadProfileFromDB:
             ## CALCULO PROPIEDADES A PARTIR DEL PAQUETE sectionproperties
             geometry = sections.CeeSection(d=self.H, b=self.B+self.r_out, l=self.r_out, t=self.t, r_out=self.r_out, n_r=8)
             # corto los labios y el radio
@@ -900,7 +905,7 @@ class I_builtup_c_w_lps_profile():
         if not name:
             self.name = defName
 
-    def calculate(self):
+    def calculate(self, loadProfileFromDB):
         '''Se ejecuta el calculo de las propiedades de la seccion.
 
         Referencia
@@ -914,12 +919,16 @@ class I_builtup_c_w_lps_profile():
             J : Constante de torsion de St. Venant
 
         '''
-        try:
-            self.load()
-        except:
+        if loadProfileFromDB:
+            try:
+                self.load()
+            except:
+                loadProfileFromDB = False
+                pass
+        if not loadProfileFromDB:
             # cee individual
             c0 = c_w_lps_profile(H= self.H, D= self.D, B= self. B, t= self.t, r_out= self.r_out)
-            c0.calculate()
+            c0.calculate(loadProfileFromDB)
 
             c1 = sections.CeeSection(d=self.H, b=self.B, l=self.D, t=self.t, r_out=self.r_out, n_r=8)
             c2 = sections.CeeSection(d=self.H, b=self.B, l=self.D, t=self.t, r_out=self.r_out, n_r=8, shift= [0,-self.H])
@@ -987,10 +996,6 @@ class I_builtup_c_w_lps_profile():
 
             self.section = section
             #self.section_c1 = section_c1
-
-    def Aeff(self, Fn):
-        print('Ae() NotImplementedError')
-        return self.A
 
 class I_builtup_c_profile():
     '''Perfil C.
@@ -1107,7 +1112,7 @@ class I_builtup_c_profile():
         if not name:
             self.name = defName
 
-    def calculate(self):
+    def calculate(self, loadProfileFromDB):
         '''Se ejecuta el calculo de las propiedades de la seccion.
 
         Referencia
@@ -1121,11 +1126,15 @@ class I_builtup_c_profile():
             J : Constante de torsion de St. Venant
 
         '''
-        try:
-            self.load()
-        except:
+        if loadProfileFromDB:
+            try:
+                self.load()
+            except:
+                loadProfileFromDB = False
+                pass
+        if not loadProfileFromDB:
             c0 = c_profile(H= self.H, B= self. B, t= self.t, r_out= self.r_out)
-            c0.calculate()
+            c0.calculate(loadProfileFromDB)
 
             c1 = sections.CeeSection(d=self.H, b=self.B+self.r_out, l=self.r_out, t=self.t, r_out=self.r_out, n_r=8)
             c2 = deepcopy(c1)
@@ -1204,17 +1213,6 @@ class I_builtup_c_profile():
 
             self.section = section
             #self.section_c1 = section_c1
- 
-    def Aeff(self, Fn):
-        print('Ae() NotImplementedError')
-        # Ancho efectivo
-        ## Ala
-        #Beff = 1 # calculo a partir de sec_2
-        #Ae = self.A - (self.B-2*self.r_out-Beff)*self.t
-        ## Alma
-        #Heff = 1 # calculo a partir de sec_2
-        #Ae = Ae - (self.H-2*self.r_out-Heff)*self.t
-        return self.A
 
 def saveItem(item, fileName, mode = 'o'):
     '''Guarda en un archivo binario de nombre file la variable item.

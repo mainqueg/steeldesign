@@ -5,7 +5,7 @@ Long =[300,500,700,1000,1200,1500,1800,2000,2200,2500,2800,3000,3500,5000]
 
 # creo un perfil c on refuerz ode labios
 p1 = sd.c_profile(H= 50, B= 50, t= 4, r_out= 3.75)
-p1.calculate()
+#p1.calculate()
 # creo un acero
 s = sd.steel(FY= 337, E0= 180510.0, nu= 0.3, n= 13.5, offset= 0.002, name= 'SA304_1_4Hard')
 

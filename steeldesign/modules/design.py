@@ -118,7 +118,8 @@
 '''
 
 from math import pi
-from .sec_2 import sec2_1_1_c1,sec2_1_1_c3, sec2_2_1, sec2_3_1, sec2_4_2
+from .sec_2 import sec2_1_1_c1,sec2_1_1_c3, sec2_2_1, sec2_3_1, sec2_3_2, sec2_4_2, sec2_2_2
+from .sec_3 import E3_4_e1,E3_4_2_e1, E3_4_3_e1, E3_4_3_e1
 #from .sec_2 import sec2_1_1, sec2_2_1, sec2_3_1, sec2_4_2
 from .sec_3 import sec3_2
 # Imports for Section 3.3.1.1
@@ -137,7 +138,7 @@ from .sec_3 import E_3_4_e1, E_3_4_2_e1, E_3_4_3_e1, E_3_4_3_e3
 from .sec_3 import E_3_5_e1, E_3_5_e2, E_3_5_e3, E_3_5_e4, E_3_5_e5
 from .appendix_B import B_2, B_1
 from .properties import c_w_lps_profile, c_profile, steel, I_builtup_c_profile
-from .functions import eta_iter
+from .functions import eta_iter, adjustNeutralAxis, get_linear_stress
 
 
 class designParameters:
@@ -151,6 +152,8 @@ class designParameters:
             longitud de referencia del miembro | def : 0.0
         cLoadFlag : bool
             Indica si el miembro soporta cargas puntuales para realizar chequeo segun 2.1.1-3 Shear Lag Effects
+        Cb: float
+            Factor de distribucion de momento. Valor por defecto 1.0. Si se espeficica Cb= 0 se calcula internamente.
 
     Attributes
     ----------
@@ -171,13 +174,14 @@ class designParameters:
     ------
         En archivo
     '''
-    def __init__(self, Kx = 1.0, Ky = 1.0, Kz = 1.0, Lx = 0.0, Ly = 0.0, Lz = 0.0, cLoadFlag = True):
+    def __init__(self, Kx = 1.0, Ky = 1.0, Kz = 1.0, Lx = 0.0, Ly = 0.0, Lz = 0.0, cLoadFlag = True, Cb= 1.0):
         self.Kx = Kx
         self.Ky = Ky
         self.Kz = Kz
         self.Lx = Lx
         self.Ly = Ly
         self.Lz = Lz
+        self.Cb = Cb
         self.cLoadFlag = cLoadFlag
 
 class member():
@@ -223,7 +227,7 @@ class member():
 
     '''
 
-    def __init__(self, L, name = 'none', profile = '', steel = '', designParameters = '', loads = '', reports = ''):
+    def __init__(self, L, name = 'none', profile = '', steel = '', designParameters = '', loads = '', reports = '', loadProfileFromDB= True):
 
         self.name = name
         self.L = L
@@ -231,6 +235,12 @@ class member():
             print ('Advertencia: El miembro', self.name, 'no tiene asignado ningun pefil.')
         else:
             self.profile = profile
+            try:
+                profile.A
+                profile.Ix
+                profile.J
+            except AttributeError:
+                profile.calculate(loadProfileFromDB)
 
         if not steel:
             print ('Advertencia: El miembro', self.name, 'no tiene asignado ningun acero.')
@@ -265,6 +275,8 @@ class ASCE_8_02:
     -------
         s3_4() : 
             Design axial strength
+        s3_3_1() :
+            Strength for Bending Only
         s3_FTB() : 
             Tension y Carga críticas de pandeo flexo-torsional
         s3_FB() : 
@@ -386,23 +398,28 @@ class ASCE_8_02:
         return fiTn, midC
 
     
-    def s3_3_1(self, LD = 'NO'):
+    def s3_3_1(self, procedure= 'PI', localDistorsion = False):
         '''Design Flexural Strength. Bending Only. Smaller of Sections 3.3.1.1 and 3.3.1.2.
         Parameters
         ----------
-            LD: string,
-                determina si se consideran distorsiones locales para la resistencia a la flexion nominal (3.3.1.1-CASE III).
+            procedure : string
+                Indica el procedimiento a aplicar segun 3.3.1.1 
+                    PI: 1. Procedure I—Based on Initiation of Yielding
+                    PII: 2. Procedure II—Based on Inelastic Reserve Capacity
+            localDistorsion: bool
+                determina si se consideran distorsiones locales para la resistencia a la flexion nominal (3.3.1.1-3 [CASE III]).
         Returns
         -------
-            fiMn: float,
+            fiMn : float
                 resistencia de diseno a la flexion.
-            [Nominal_fi, Nominal_Mn, LB_fi, LB_Mn, Mc, eta]: list of float,
-                Nominal_fi: factor de diseno.
-                Nominal_Mn: resistencia nominal de la seccion a flexion.
-                LB_fi: factor de diseno.
-                Lb_Mn: resistencia nominal al Lateral Buckling.
-                Mc: momento critico.
-                eta: factor plastico de reduccion.
+            midC : dict
+                fi: Design factor segun 3.3.1.1 Nominal section strength.
+                Mn: resistencia nominal de la seccion a flexion segun 3.3.1.1
+                LB_fi: Design factor segun 3.3.1.2 Lateral buckling strength
+                LB_Mn: resistencia nominal al Lateral Buckling segun 3.3.1.2.
+                Mc: momento critico al lateral buckling.
+                eta: factor plastico de reduccion utilizado en 3.3.1.2
+                nEffAreas: diccionario con las areas no
         Raises
         ------
             none
@@ -413,69 +430,50 @@ class ASCE_8_02:
         steel = self.member.steel
         profile = self.member.profile
         elements = self.member.profile.elements
-        dpar = self.member.dP
+        dp = self.member.dP
         member = self.member
 
         # Section 3.3.1.1 - Nominal Strength
-        for key in elements.keys(): # determino si el ala esta rigidizada o no
-            element = elements[key]
+        comp_flange = 'UNSTIFF' # valor por defecto
+        for element in elements.values(): # determino si el ala esta rigidizada o no
             if element['name'] == 'flange':
                 if element['type'] == 'stiffned_w_slps':
                     comp_flange = 'STIFF'
-                if element['type'] == 'unstiffned':
+                elif element['type'] == 'unstiffned':
                     comp_flange = 'UNSTIFF'
 
-        if  LD == 'YES': # determino el procedimiento para 3.3.1.1
-            procedure = 'LD'
+        if procedure == 'PI':    
+            Se, nEffAreas = self.s3_Se_effective(fFlange= steel.FY)
+            fiMn_Nominal, midC = sec3_3_1_1(FY=steel.FY, Se=Se, procedure=procedure, comp_flange=comp_flange)
+            midC['nEffAreas'] = nEffAreas
+        elif procedure == 'PII':
+            print('Seccion 3.3.1.1 - Procedimiento II no implementado.')
+            raise NotImplementedError
         else:
-            procedure = 'PI'
+            print('Prodedimiento',procedure,'no roconocido en Section 3.1.1')
+            raise Exception('>> Analisis abortado <<')
 
-        FY = steel.FY
-        # Valor corresponfiente al example 8.1
-        # Falta implementar el calculo de Se
-        Se = 1.422
-
-        fiMn_Nominal, midC = sec3_3_1_1(FY=FY, Se=Se, procedure=procedure, comp_flange=comp_flange)
-
+        if localDistorsion:
+            print('Seccion 3.3.1.1 - Local Distortion Consideration no implementado.')
+            raise NotImplementedError
 
         # Section 3.3.1.2 - Lateral Buckling Strength
-        prof_type = profile.type
-        E0 = steel.E0
-        d = profile.H
-        Iyc = profile.Iy/2
-        L = member.L
-        rx = profile.rx
-        ry = profile.ry
-        c_x = profile.c_x
-        sc_x = profile.sc_x
-        A = profile.A
-        Lx = dpar.Lx
-        Kx = dpar.Kx
-        Ly = dpar.Ly
-        Ky = dpar.Ky
-        Lz = dpar.Lz
-        Kz = dpar.Kz
-        Cw = profile.Cw
-        G0 = steel.G0
-        J = profile.J
-        beta = 0
-        # Valor corresponfiente al example 8.1
-        # Falta implementar el calculo de Cb
-        Cb = 1.75
-
         Sf = profile.Sx
-        # Valor corresponfiente al example 8.1
-        # Falta implementar el calculo de Sc
-        Sc = 1.470
+        
+        
 
-        Mc_eta_LB = sec3_3_1_2_eta(prof_type=prof_type, Cb=Cb, E0=E0, d=d, Iyc=Iyc, L=L, rx=rx, ry=ry, c_x=c_x, sc_x=sc_x, 
-                                    A=A, Lx=Lx, Kx=Kx, Ly=Ly, Ky=Ky, Lz=Lz, Kz=Kz, Cw=Cw, G0=G0, J=J, beta=beta)
+        Mc_eta_LB = sec3_3_1_2_eta(prof_type=profile.type, Cb=dp.Cb, E0=steel.E0, d=profile.H, Iyc=profile.Iy/2, L=member.L,
+                                     rx=profile.rx, ry=profile.ry, c_x=profile.c_x, sc_x=profile.sc_x, A=profile.A,
+                                     Lx=dp.Lx, Kx=dp.Kx, Ly=dp.Ly, Ky=dp.Ky, Lz=dp.Lz, Kz=dp.Kz,
+                                     Cw=profile.Cw, G0=steel.G0, J=profile.J, beta=profile.beta)
         # construyo ecuacion: f - Mc/Sf = 0
         #                     f - (Mc_eta_LB/Sf)*eta(f) = 0
         #                     f - FF*eta(f) = 0 (itero con eta_iter)
         FF = Mc_eta_LB/Sf
         f = eta_iter(FF=FF, mat=steel)
         eta = f/FF
+
+        Sc, nEffAreas= self.s3_Se_effective(Mc_eta_LB/Sf)
 
         fiMn_LB, midC2 = E_3_3_1_2_e1(Sc=Sc, Mc=Mc_eta_LB*eta, Sf=Sf)
 
@@ -484,6 +482,113 @@ class ASCE_8_02:
         midC.update(midC2)  # merge entre los diccionarios
 
         return fiMn, midC
+
+    def s3_Se_effective(self, fFlange, tol = 0.005, maxIter = 100):
+        '''
+        Parameters
+        ----------
+            fFlange : float
+                Tension a considerar en el ala a compresion
+            tol : float
+                Valor requerido a alcanzar del ratio relativo de la variacion de yMax entre dos iteraciones
+            maxIter : int
+                Numero maximo de iteraciones admitidas
+
+        '''
+
+        profile= self.member.profile
+        elements = profile.elements
+        t= profile.t
+        E0= self.member.steel.E0
+        nEffAreas= {}
+        
+        # calculo beff para flange
+        flange = elements[1]
+        flange['sec3.3.1.1'] = {}
+        if 3 in elements.keys():
+            lip = elements[3]
+            lip['sec3.3.1.1'] = {}
+        if flange['name'] != 'flange':
+            print('El elemento', 1, 'no corresponde al tipo 1:<flange>. Reordenar los elemenentos en el perfil',profile.type)
+            raise Exception('>> Analisis abortado <<')
+        elif flange['type'] == 'unstiffned':
+            b, midC = sec2_3_1(w= flange['w'], t= t, f= fFlange, E= E0)
+            flange['sec3.3.1.1'].update({'b':b,'rho': midC['rho'],'esbeltez': midC['esbeltez']})
+            cy_ = (profile.H-t)/2.0
+            nEffAreas[1] = {'t': t, 'b_': flange['w'] - b, 'cy_': cy_, 'paralel': True}
+        elif flange['type'] == 'stiffned_w_slps':
+            if lip['name'] == 'lip':
+                d = lip['w']                
+            else:
+                print('El elemento',3, 'no corresponde al tipo <lip>. Reordenar los elemenentos en el perfil',profile.type)
+                raise Exception('>> Analisis abortado <<')
+            #flange
+            b, midC = sec2_4_2(E0= E0, f= fFlange, w= flange['w'], t= t, d= d, r_out= profile.r_out)
+            flange['sec3.3.1.1'].update(midC)
+            flange['sec3.3.1.1']['b']= b
+            cy_ = (profile.H-t)/2.0
+            nEffAreas[1] = {'t': t, 'b_': flange['w'] - b, 'cy_': cy_, 'paralel': True}
+            
+            #lip
+            b, midC = sec2_3_2(w= lip['w'], t= t, f3= fFlange, E= E0)
+            lip['sec3.3.1.1'].update(midC)
+            lip['sec3.3.1.1']['b']= b
+
+            if flange['sec3.3.1.1']['ds'] < b: # ancho efectivo del lip (ver definicion ds en 2.4)
+                b = flange['sec3.3.1.1']['ds']
+            b_ = lip['w'] - b
+            cy_ = (profile.H + b_)/2.0 - profile.D
+            nEffAreas[3] = {'t': t, 'b_': b_ , 'cy_': cy_, 'paralel': False}                         
+            lip['sec3.3.1.1'].update({'b':b, 'cy_': cy_})
+            lip['sec3.3.1.1'].update(midC)
+        else:
+            print('El elemento:', flange['name'], 'del perfil:', profile.name, 'no tiene asignada una clasificacion reconocida:', flange['type'])
+            raise Exception('>> Analisis abortado <<')
+        
+        ## calculo el yCG, primer iteracion [web y lip fully effective]
+        
+        cy, Ix = adjustNeutralAxis(Ix= profile.Ix, A= profile.A, nEffAreas= nEffAreas)
+        yMAX = (profile.H/2 + cy) # distancia mayor desde el eje neutro al borde de la seccion
+        Se = Ix/yMAX
+        flange['sec3.3.1.1'].update({'Se': Se,'Ix': Ix, 'cy': cy})
+
+        # calculo beff para web, itero
+        web = elements[2]
+        web['sec3.3.1.1']= {}
+        if web['name'] != 'web':
+            print('El elemento', 2, 'no corresponde al tipo 1:<web>. Reordenar los elemenentos en el perfil',profile.type)
+            raise Exception('>> Analisis abortado <<')
+        elif web['type'] != 'stiffned':
+            print('El elemento:', flange['name'], 'del perfil:', profile.name, 'no tiene asignada una clasificacion reconocida:', flange['type'])
+            raise Exception('>> Analisis abortado <<')
+        
+        err = 1.0
+        nIter = 0
+        while err > tol and nIter < maxIter:
+            f1= get_linear_stress(fFlange, yCG= yMAX, y= profile.r_out)
+            f2= get_linear_stress(fFlange, yCG= yMAX, y= profile.H - profile.r_out)
+            b1, b2, midC = sec2_2_2(w= web['w'], t= t, f1= f1, f2=f2, E0= E0) 
+            web['sec3.3.1.1'].update({'b1':b1, 'b2':b2, 'f1': f1, 'f2': f2})
+            web.update(midC)
+
+            yMAX_prev = yMAX
+            if b1 + b2 < yMAX - profile.r_out:
+                b_ = yMAX - profile.r_out - b1 - b2
+                cy_= b1 + b_ - cy # distancia del centroide del area no-efectiva respecto de x-x (incial)
+                nEffAreas[2]= {'t': t, 'b_': b_ , 'cy_': cy_, 'paralel': False}
+                cy, Ix = adjustNeutralAxis(Ix= profile.Ix, A= profile.A, nEffAreas= nEffAreas)
+                yMAX = (profile.H/2 + cy) # distancia mayor desde el eje neutro al borde de la seccion
+                
+            err = abs((yMAX_prev-yMAX)/yMAX_prev)
+            nIter += 1
+        if nIter >= maxIter:
+            print('Sec. 3, determinacion de Se: Se alcanzo el numero maximo de iteraciones. Error % alcanzado:', err*100)
+        
+        Se = Ix/yMAX
+        flange['sec3.3.1.1'].update({'Se': Se,'Ix': Ix, 'cy': cy})
+
+        return Se, nEffAreas
+
 
     def s3_3_2(self, FY_v = 0):
         '''Design Strength for Shear Only. Shear Buckling.
@@ -547,6 +652,8 @@ class ASCE_8_02:
         -------
             fiPn : float
                 Resistencia axial de diseño
+            fiPno : float
+                Resistencia axial de diseño nominal (f=FY)
             [Fn_FB, Fn_TB, Fn_FTB, Ae] : list of float
                 Fn_FB: Tension de pandeo flexional
                 Fn_TB: Tension de pandeo torsional
@@ -559,19 +666,20 @@ class ASCE_8_02:
         -----
             En archivo
         '''
-        
+        FY = self.member.steel.FY
         ([Fn_FBx, _], [Fn_FBy, _]) = self.s3_FB()
         (Fn_TB, _) = self.s3_TB()
         (Fn_FTB, _) = self.s3_FTB()
 
         Fn = min(Fn_FBx, Fn_FBy, Fn_TB, Fn_FTB)
 
-        self.s2_Ae_compMemb(Fn)
-        Ae = self.member.profile.Ae
+        Ae = self.s2_Ae_compMemb(Fn)
+        fiPn = E3_4_e1(Fn, Ae)
 
-        fiPn = E_3_4_e1(Fn, Ae)
+        Ae_no = self.s2_Ae_compMemb(FY)
+        fiPno = E3_4_e1(FY, Ae_no)
 
-        midC = {'Fn_FBx': Fn_FBx, 'Fn_FBy': Fn_FBy, 'Fn_TB': Fn_TB, 'Fn_FTB':Fn_FTB, 'Fn': Fn, 'Ae': Ae} # convertir en diccionario
+        midC = {'fiPno': fiPno, 'Pno': Ae_no*FY ,'Pn': Ae*Fn , 'Fn_FBx': Fn_FBx, 'Fn_FBy': Fn_FBy, 'Fn_TB': Fn_TB, 'Fn_FTB':Fn_FTB, 'Fn': Fn, 'Ae': Ae, 'Ae_no': Ae_no} # convertir en diccionario
 
         return fiPn, midC
 
@@ -585,7 +693,8 @@ class ASCE_8_02:
                 Valor de la tension a compresion uniforme del elemento
         Returns
         -------
-            None
+            Ae : float
+                Area efectiva a la tension f
         Raises
         ------
             none
@@ -595,41 +704,49 @@ class ASCE_8_02:
         '''
         profile= self.member.profile
         # inicio con el area neta
-        profile.Ae = profile.A
+        Ae = profile.A
         elements = profile.elements
         t= profile.t
         E0= self.member.steel.E0
 
-        for key in elements.keys():
-            element = elements[key]
+        for element in elements.values():
             if element['type'] == 'stiffned':
+                element['sec3.4']= {}
                 b, midC = sec2_2_1(w= element['w'], t= t, f= f, E= E0)
-                element['b']= b
-                element['rho']= midC['rho']
-                element['esbeltez']= midC['esbeltez']
-            elif element['type'] == 'unstiffned':
+                element['sec3.4'].update({'b':b,'rho': midC['rho'],'esbeltez': midC['esbeltez']})
+                element['sec3.4']['A_'] = (element['w'] - b)*t
+            elif element['type'] == 'unstiffned' and element['name'] != 'lip':
+                element['sec3.4']= {}
                 b, midC = sec2_3_1(w= element['w'], t= t, f= f, E= E0)
-                element['b']= b
-                element['rho']= midC['rho']
-                element['esbeltez']= midC['esbeltez']
+                element['sec3.4'].update({'b':b,'rho': midC['rho'],'esbeltez': midC['esbeltez']})
+                element['sec3.4']['A_'] = (element['w'] - b)*t
             elif element['type'] == 'stiffned_w_slps':
+                element['sec3.4']= {}
                 if elements[3]['name'] == 'lip':
                     d = elements[3]['w']
+                    lip = elements[3]
+                    lip['sec3.4']= {}
                 else:
                     print('El elemento',3, 'no corresponde al tipo <lip>. Reordenar los elemenentos en el perfil',profile.type)
                     raise Exception('>> Analisis abortado <<')
                 b, midC = sec2_4_2(E0=E0, f = f, w= element['w'], t= t, d=d, r_out= profile.r_out)
-                element['b']= b
-                element['rho']= midC['rho']
-                element['Is']= midC['Is']
-                element['Ia']= midC['Ia']
-                element['esbeltez']= midC['esbeltez']
-                element['CASE'] = midC['CASE']
-            else:
+                element['sec3.4'].update(midC)
+                element['sec3.4']['b']= b
+                element['sec3.4']['A_'] = (element['w'] - b)*t*2
+
+                #lip
+                b, midC = sec2_3_1(w= lip['w'], t= t, f= f, E= E0)
+                lip['sec3.4'].update(midC)
+                lip['sec3.4']['b']= b
+                if element['sec3.4']['ds'] < b: # ancho efectivo del lip (ver definicion ds en 2.4)
+                    lip['sec3.4']['b'] = element['sec3.4']['ds']
+                lip['sec3.4']['A_'] = (lip['w'] - lip['sec3.4']['b'])*t*2
+            elif element['name'] != 'lip':
                 print('El elemento:',element['name'], 'del perfil:',profile.name, 'no tiene asignada una clasificacion reconocida:', element['type'])
                 raise Exception('>> Analisis abortado <<')
 
-            profile.Ae =  profile.Ae - (element['w']-element['b'])*t
+            Ae =  Ae - element['sec3.4']['A_']
+        return Ae
 
 
     def s3_FTB(self):

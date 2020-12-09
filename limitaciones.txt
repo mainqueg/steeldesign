@@ -1,0 +1,4 @@
+- Espesor constante
+- Misma longitud de alas
+- Mismos radios de curvado
+- Momento flector solo en ejes de simetria
