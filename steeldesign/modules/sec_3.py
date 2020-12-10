@@ -78,7 +78,7 @@ def sec3_3_1_1(FY, Se, procedure = 'PI', comp_flange = 'UNSTIFF', localDistorsio
         Mld, midC = LocalDistorsion()
         midC['Mld']= Mld
 
-    midC.update({'Mn_no': Mn, 'fi': fi})
+    midC.update({'Mn_no': Mn, 'fi_no': fi})
     fiMn = fi*Mn
 
     return fiMn, midC
@@ -101,7 +101,7 @@ def LocalDistorsion():
     raise NotImplementedError
 
 
-def sec3_3_1_2_eta(prof_type, E0, d, Iyc, L, rx, ry, c_x, sc_x, A, Lx, Kx, Ly, Ky, Lz, Kz, Cw, G0, J, beta, Cb):
+def sec3_3_1_2_eta(prof_type, E0, d, Iyc, L, rx, ry, c_x, sc_x, A, Lx, Kx, Ly, Ky, Lz, Kz, Cw, G0, J, j, Cb):
     '''Strength for Bending Only. Design Lateral Buckling Strength.
     Parameters
     ----------
@@ -137,8 +137,8 @@ def sec3_3_1_2_eta(prof_type, E0, d, Iyc, L, rx, ry, c_x, sc_x, A, Lx, Kx, Ly, K
             modulo de elasticida de corte inicial.
         J: float,
             constante de St Venant.
-        beta: float,
-            cosntante monosimetrica de la seccion.
+        j: float
+            mitad de la constante monociclica a compresion en eje -y- (beta22-)
     Returns
     -------
         Mc_eta: float,
@@ -163,7 +163,7 @@ def sec3_3_1_2_eta(prof_type, E0, d, Iyc, L, rx, ry, c_x, sc_x, A, Lx, Kx, Ly, K
         # implemento solo flexion alrededor del eje de simetria (tambien hay que ver como va disernir entre un caso y otro)
         # Mc_eta = Mc/eta
         Mc_eta = sec3_3_1_2_3_i(Cb=Cb, rx=rx, ry=ry, c_x=c_x, sc_x=sc_x, E0=E0, A=A, Ly=Ly, Ky=Ky, Lz=Lz, Kz=Kz, Cw=Cw, G0=G0, J=J)
-        # Mc_eta = sec3_3_1_2_3_ii(Cb=Cb, rx=rx, ry=ry, c_x=c_x, sc_x=sc_x, E0=E0, A=A, Lx=Lx, Kx=Kx, Lz=Lz, Kz=Kz, Cw=Cw, G0=G0, J=J, beta=beta)
+        # Mc_eta = sec3_3_1_2_3_ii(Cb=Cb, rx=rx, ry=ry, c_x=c_x, sc_x=sc_x, E0=E0, A=A, Lx=Lx, Kx=Kx, Lz=Lz, Kz=Kz, Cw=Cw, G0=G0, J=J, j=j)
     else:
         print('Seccion del tipo', prof_type,'no implementada en analisis 3.3.1.2.')
         raise NotImplementedError
@@ -220,7 +220,7 @@ def sec3_3_1_2_3_i(Cb, rx, ry, c_x, sc_x, E0, A, Ly, Ky, Lz, Kz, Cw, G0, J):
     Mc_eta = E_3_3_1_2_e4(Cb=Cb, r0=r0, A=A, sigma_ey_eta=sigma_ey_eta, sigma_t_eta=sigma_t_eta)
     return Mc_eta
 
-def sec3_3_1_2_3_ii(Cb, Cs, rx, ry, c_x, sc_x, E0, A, Lx, Kx, Lz, Kz, Cw, G0, J, beta):
+def sec3_3_1_2_3_ii(Cb, Cs, rx, ry, c_x, sc_x, E0, A, Lx, Kx, Lz, Kz, Cw, G0, J, j):
     '''Lateral Buckling Strength. Singly symmetric sections bent about the axis perpendicular to the axis of symmetry.
     Parameters
     ----------
@@ -248,8 +248,8 @@ def sec3_3_1_2_3_ii(Cb, Cs, rx, ry, c_x, sc_x, E0, A, Lx, Kx, Lz, Kz, Cw, G0, J,
             modulo de elasticida de corte inicial.
         J: float,
             constante de St Venant.
-        beta: float,
-            cosntante monosimetrica de la seccion.
+        j: float,
+            mitad de la constante monociclica a compresion en eje -y- (beta22-)
     Returns
     -------
         Mc_eta: float,
@@ -259,10 +259,10 @@ def sec3_3_1_2_3_ii(Cb, Cs, rx, ry, c_x, sc_x, E0, A, Lx, Kx, Lz, Kz, Cw, G0, J,
         none
     Tests
     -----
-        >>> round(sec3_3_1_2_3_ii(Cb=1.0, Cs=1.0, rx=3.121, ry=1.073, c_x=0.820, sc_x=-1.371, E0=27000, A=1.551, Lx=16*12, Kx=1.0, Lz=16*12, Kz=1.0, Cw=23.468, G0=10500, J=0.005699, beta=4.567), 1)
-        1022.0
+        # >>> round(sec3_3_1_2_3_ii(Cb=1.0, Cs=1.0, rx=3.121, ry=1.073, c_x=0.820, sc_x=-1.371, E0=27000, A=1.551, Lx=16*12, Kx=1.0, Lz=16*12, Kz=1.0, Cw=23.468, G0=10500, J=0.005699, j=4.567), 1)
+        # 1022.0
     '''
-    
+    '''
     # parametros para calculo r0
     x0 = -abs(c_x-sc_x)
     r0 = E_3_3_1_2_e9(rx=rx, ry=ry, x0=x0)
@@ -270,8 +270,8 @@ def sec3_3_1_2_3_ii(Cb, Cs, rx, ry, c_x, sc_x, E0, A, Lx, Kx, Lz, Kz, Cw, G0, J,
     sigma_ex_eta = E_3_3_1_2_e6(E0=E0, K=Kx, L=Lx, r=rx)
     sigma_t_eta = E_3_3_1_2_e8(E0=E0, Kt=Kz, Lt=Lz, r0=r0, A=A, Cw=Cw, G0=G0, J=J)
 
-    Mc_eta = E_3_3_1_2_e5(Cb, Cs, r0, A, sigma_ex_eta, sigma_t_eta, beta)
-    return Mc_eta
+    Mc_eta = E_3_3_1_2_e5(Cb=Cb, Cs=Cs, r0=r0, A=A, sigma_ex_eta=sigma_ex_eta, sigma_t_eta=sigma_t_eta, j=j)
+    return Mc_eta'''
 
     raise NotImplementedError
 
@@ -409,7 +409,7 @@ def E_3_3_1_2_e5(Cb, Cs, r0, A, sigma_ex_eta, sigma_t_eta, j):
         sigma_t_eta: float,
             tension critica de pandeo torsional dividida por eta.
         j: float,
-            constante monosimetrica.
+            mitad de la constante monociclica a compresion en eje -y- (beta22-)
     Returns
     -------
         Mc_eta: float,

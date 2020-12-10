@@ -37,8 +37,6 @@ for L in Long:
     Pn_A = midC['Fn']*p1.A
     print('L=', L, '| Fn =', round(midC['Fn'],2),'| Pn_A =', round(Pn_A,2), '| Ae =', round(midC['Ae'],2), '| Pn_Ae =', round(midC['Fn']*midC['Ae'],2) )
 
-#p1.section.plot_centroids()
-
 title = 'Fn_A y Fn_Ae'
 
 f = plt.figure()

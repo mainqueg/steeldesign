@@ -95,8 +95,8 @@ class commonMethods():
             self.A, self.Ae = p.A, p.Ae
             self.Cw, self.J = p.Cw, p.J
             self.Ix, self.Iy = p.Ix, p.Iy
-            self.Sx = p.Sx  # modulo elastico
-            self.beta = p.beta
+            self.Sx, self.Sy= p.Sx, p.Sy  # modulo elastico
+            self.j = p.j
         with open(file  + '_mesh.fig', 'rb') as input:
             fig = pickle.load(input)
         fig.show()
@@ -267,6 +267,10 @@ class c_w_lps_profile():
             Constante de torsion de St. Venant
         Ix, Iy : float
             Segundo momento de area respecto de ejes globales en el centroide
+        Sx, Sy : float
+            Modulo elastico
+        j : float
+            mitad de la constante monociclica a compresion en eje -y- (beta22-)
         elements : dict
             diccionario con los parametros geometricos de cada elemento. Basicos: 'name', 'type', 'w'
         
@@ -326,7 +330,9 @@ class c_w_lps_profile():
                 A : Area de la seccion
                 Cw : Constante torsional de warping de la seccion
                 J : Constante de torsion de St. Venant
-                beta : Constante monosimetrica de la seccion con respecto al eje y.
+                Si : modulo elastico
+                j : mitad de la constante monociclica a compresion en eje -y- (beta22-)
+
         '''
         if loadProfileFromDB:
             try:
@@ -354,7 +360,7 @@ class c_w_lps_profile():
             self.Ae = section.get_area()
             (self.Ix, self.Iy, _) = section.get_ic()
             (self.Sx, _, _, _) = section.get_z()    # modulo elastico
-            _, _, self.beta, _ = section.get_beta_p()   # monosymmetric constant
+            self.j = section.get_beta_p()[3]/2.0    # half monosymmetric constant
 
             self.save(section)
 
@@ -485,7 +491,7 @@ class c_w_lps_profile_half():
             self.Ae = section.get_area()
             (self.Ix, self.Iy, _) = section.get_ig()
             (self.Sx, _, _, _) = section.get_z()    # modulo elastico
-            _, _, self.beta, _ = section.get_beta_p()   # monosymmetric constant
+            self.j = section.get_beta_p()[3]/2.0    # half monosymmetric constant
 
             self.save(section)
 
@@ -527,6 +533,10 @@ class c_profile():
             Constante de torsion de St. Venant
         Ix, Iy : float
             Segundo momento de area respecto de ejes globales en el centroide
+        Sx, Sy : float
+            Modulo elastico
+        j : float
+            mitad de la constante monociclica a compresion en eje -y- (beta22-)
         elements : dict
             diccionario con los parametros geometricos de cada elemento. Basicos: 'name', 'type', 'w'
     Methods
@@ -583,7 +593,9 @@ class c_profile():
             A : Area de la seccion
             Cw : Constante torsional de warping de la seccion
             J : Constante de torsion de St. Venant
-            beta : Constante monosimetrica de la seccion con respecto al eje y.
+            Si : modulo elastico
+            j : mitad de la constante monociclica a compresion en eje -y- (beta22-)
+
         '''
         if loadProfileFromDB:
             try:
@@ -622,7 +634,7 @@ class c_profile():
             self.Ae = section.get_area()
             (self.Ix, self.Iy, _) = section.get_ic()
             (self.Sx, _, _, _) = section.get_z()    # modulo elastico
-            _, _, self.beta, _ = section.get_beta_p()   # monosymmetric constant
+            self.j = section.get_beta_p()[3]/2.0
 
             self.save(section)
 
@@ -673,6 +685,10 @@ class I_builtup_c_w_lps_profile():
             Constante de torsion de St. Venant
         Ix, Iy : float
             Segundo momento de area respecto de ejes globales en el centroide
+        Sx, Sy : float
+            Modulo elastico
+        j : float
+            mitad de la constante monociclica a compresion en eje -y- (beta22-)
         elements : dict
             diccionario con los parametros geometricos de cada elemento. Basicos: 'name', 'type', 'w'
         
@@ -774,6 +790,8 @@ class I_builtup_c_w_lps_profile():
             A : Area de la seccion
             Cw : Constante torsional de warping de la seccion
             J : Constante de torsion de St. Venant
+            Si : modulo elastico
+            j : mitad de la constante monociclica a compresion en eje -y- (beta22-)
 
         '''
         if loadProfileFromDB:
@@ -848,7 +866,7 @@ class I_builtup_c_w_lps_profile():
             self.ri = c0.ry # radios de giro de c1
             (self.Ix, self.Iy, _) = section.get_ic()
             (self.Sx, _, _, _) = section.get_z()    # modulo elastico
-            _, _, self.beta, _ = section.get_beta_p()
+            self.j = section.get_beta_p()[3]/2.0
 
             self.save(section)
 
@@ -894,6 +912,10 @@ class I_builtup_c_profile():
             Constante de torsion de St. Venant
         Ix, Iy : float
             Segundo momento de area respecto de ejes globales en el centroide
+        Sx, Sy : float
+            Modulo elastico
+        j : float
+            mitad de la constante monociclica a compresion en eje -y- (beta22-)
         elements : dict
             diccionario con los parametros geometricos de cada elemento. Basicos: 'name', 'type', 'w'
         
@@ -982,6 +1004,8 @@ class I_builtup_c_profile():
             A : Area de la seccion
             Cw : Constante torsional de warping de la seccion
             J : Constante de torsion de St. Venant
+            Si : modulo elastico
+            j : mitad de la constante monociclica a compresion en eje -y- (beta22-)
 
         '''
         if loadProfileFromDB:
@@ -1066,7 +1090,7 @@ class I_builtup_c_profile():
             self.ri = c0.ry # radios de giro y de c1
             (self.Ix, self.Iy, _) = section.get_ic()
             (self.Sx, _, _, _) = section.get_z()    # modulo elastico
-            _, _, self.beta, _ = section.get_beta_p()
+            self.j = section.get_beta_p()[3]/2.0
 
             self.save(section)
 
