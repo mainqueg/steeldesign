@@ -259,10 +259,10 @@ def sec3_3_1_2_3_ii(Cb, Cs, rx, ry, c_x, sc_x, E0, A, Lx, Kx, Lz, Kz, Cw, G0, J,
         none
     Tests
     -----
-        >>> 
+        >>> round(sec3_3_1_2_3_ii(Cb=1.0, Cs=1.0, rx=3.121, ry=1.073, c_x=0.820, sc_x=-1.371, E0=27000, A=1.551, Lx=16*12, Kx=1.0, Lz=16*12, Kz=1.0, Cw=23.468, G0=10500, J=0.005699, beta=4.567), 1)
+        1022.0
     '''
     
-    """
     # parametros para calculo r0
     x0 = -abs(c_x-sc_x)
     r0 = E_3_3_1_2_e9(rx=rx, ry=ry, x0=x0)
@@ -271,7 +271,7 @@ def sec3_3_1_2_3_ii(Cb, Cs, rx, ry, c_x, sc_x, E0, A, Lx, Kx, Lz, Kz, Cw, G0, J,
     sigma_t_eta = E_3_3_1_2_e8(E0=E0, Kt=Kz, Lt=Lz, r0=r0, A=A, Cw=Cw, G0=G0, J=J)
 
     Mc_eta = E_3_3_1_2_e5(Cb, Cs, r0, A, sigma_ex_eta, sigma_t_eta, beta)
-    return Mc_eta"""
+    return Mc_eta
 
     raise NotImplementedError
 
@@ -419,7 +419,8 @@ def E_3_3_1_2_e5(Cb, Cs, r0, A, sigma_ex_eta, sigma_t_eta, j):
         none
     Tests
     -----
-        >>> 
+        >>> round(E_3_3_1_2_e5(Cb=1.0, Cs=1.0, r0=3.961, A=1.551, sigma_ex_eta=70.41, sigma_t_eta=9.43, j=4.567), 1)
+        1022.0
     '''
     Mc_eta = Cs*Cb*A*sigma_ex_eta*(j + Cs*(j**2 + r0**2*sigma_t_eta/sigma_ex_eta)**0.5)
     return Mc_eta
@@ -590,16 +591,17 @@ def E_3_3_3_e2(fiMn, fiVn, Mu, Vu):
             ratio entre las resistencias requeridas y las correspondientes de diseno.
     Tests
     -----
-        none        
+        >>> round(E_3_3_3_e1(fiMn=80.16, fiVn=27.88, Mu=44.16, Vu=2.21), 2)
+        0.31
     '''
     comb = (Mu/fiMn)*0.6 + (Vu/fiVn)
     limit = 1.3
     ratio = comb/limit
     return ratio
 
-""" 
+ 
 ## 3.3.4 Web Crippling Strength
-def sec3_3_4(member):
+def sec3_3_4(self):
     '''Web Crippling Strength.
     Parameters
     ----------
@@ -612,10 +614,11 @@ def sec3_3_4(member):
         none
     Tests
     -----
-        >>> 
+        none
     '''
-    steel = member.steel
-    profile = member.profile
+    steel = self.member.steel
+    profile = self.member.profile
+    dpar = self.member.dP
 
     # Parametros
 
@@ -629,9 +632,9 @@ def sec3_3_4(member):
     k = FY/33/ct
     m = E_3_3_4_e22(t= t, units='US')
 
-    # N = 
+    N = dpar.N
     R = profile.r_out - t
-    # theta = 
+    theta = dpar.N_theta
 
     # Calculo de coeficientes
     C1 = E_3_3_4_e10(FY=FY, Ct=Ct, k=k)
@@ -675,7 +678,8 @@ def E_3_3_4_e1(t, C3, C4, Ctheta, h, N, Ct):
         
     Tests
     -----
-        none        
+        >>> round(E_3_3_4_e1(t=0.135, C3=1.258, C4=0.942, Ctheta=1.0, h=6.354, N=3.0, Ct=1.0), 2)
+        7.98
     '''
     f1 = t**2*C3*C4*Ctheta
     f2 = 331 - 0.61*h/t
@@ -712,7 +716,8 @@ def E_3_3_4_e3(N, t, FY, C6):
         
     Tests
     -----
-        none        
+        >>> round(E_3_3_4_e3(N=3.0, t=0.135, FY=50, C6=1+6.354/0.135/750), 2)
+        16.06
     '''
     f1 = 0.71 + 0.015*N/t
     f2 = t**2*FY*C6
@@ -731,7 +736,7 @@ def E_3_3_4_e4(t, C1, C2, Ctheta, h, N, Ct):
     Tests
     -----
         >>> round(E_3_3_4_e4(t=0.135, C1=1.343, C2=0.977, Ctheta=1.0, h=6.354, N=6.0, Ct=1.0), 2)
-        15.79
+        15.78
     '''
     f1 = t**2*C1*C2*Ctheta
     f2 = 538 - 0.74*h/t
@@ -749,7 +754,8 @@ def E_3_3_4_e5(N, t, FY, C5, m):
         
     Tests
     -----
-        none        
+        >>> round(E_3_3_4_e5(N=3.0, t=0.135, FY=50, C5=0.96, m=0.135/0.075), 2)
+        28.91
     '''
     f1 = 0.75 + 0.011*N/t
     f2 = t**2*FY*C5
@@ -768,7 +774,8 @@ def E_3_3_4_e6(t, C3, C4, Ctheta, h, N, Ct):
         
     Tests
     -----
-        none        
+        >>> round(E_3_3_4_e6(t=0.135, C3=1.34, C4=0.5, Ctheta=1.0, h=6.354, N=3.0, Ct=1.0), 2)
+        3.24
     '''
     f1 = t**2*C3*C4*Ctheta
     f2 = 244 - 0.57*h/t
@@ -776,7 +783,7 @@ def E_3_3_4_e6(t, C3, C4, Ctheta, h, N, Ct):
 
     return f1*f2*f3*Ct
 
-def E_3_3_4_e7(t, C3, C4, Ctheta, h, N, Ct):
+def E_3_3_4_e7(t, C8, FY, N, m):
     '''Ecuacion 3.3.4-7.
     Parameters
     ----------
@@ -786,7 +793,8 @@ def E_3_3_4_e7(t, C3, C4, Ctheta, h, N, Ct):
         
     Tests
     -----
-        none        
+        >>> round(E_3_3_4_e7(t=0.135, C8=0.91, FY=50.0, N=3.0, m=0.135/0.075), 2)
+        15.79
     '''
     f1 = t**2*FY*C8
     f2 = 0.64 + 0.31*m
@@ -804,7 +812,8 @@ def E_3_3_4_e8(t, C1, C2, Ctheta, h, N, Ct):
         
     Tests
     -----
-        none        
+        >>> round(E_3_3_4_e8(t=0.135, C1=1.343, C2=0.977, Ctheta=1.0, h=6.354, N=3.0, Ct=1.0), 2)
+        16.35
     '''
     f1 = t**2*C1*C2*Ctheta
     f2 = 771 - 2.26*h/t
@@ -812,7 +821,7 @@ def E_3_3_4_e8(t, C1, C2, Ctheta, h, N, Ct):
 
     return f1*f2*f3*Ct
 
-def E_3_3_4_e9(t, C3, C4, Ctheta, h, N, Ct):
+def E_3_3_4_e9(t, C7, FY, N, m):
     '''Ecuacion 3.3.4-9.
     Parameters
     ----------
@@ -822,13 +831,14 @@ def E_3_3_4_e9(t, C3, C4, Ctheta, h, N, Ct):
         
     Tests
     -----
-        none        
+        >>> round(E_3_3_4_e9(t=0.135, C7=0.98, FY=50.0, N=3.0, m=0.135/0.075), 2)
+        14.89
     '''
     f1 = t**2*FY*C7
     f2 = 0.82 - 0.15*m
     f3 = 15 + 3.25*(N/t)**0.5
 
-    return f1*f2*f3 """
+    return f1*f2*f3
 
 def Ct(units = 'SI'):
     '''Ct.
@@ -840,7 +850,8 @@ def Ct(units = 'SI'):
         
     Tests
     -----
-        none        
+        >>> Ct(units='US')
+        1.0
     '''
     if units == 'SI':
         return 6.9
@@ -929,7 +940,8 @@ def E_3_3_4_e14(k):
         
     Tests
     -----
-        none        
+        >>> round(E_3_3_4_e14(k=1.0), 2)
+        0.96
     '''
     C5 = (1.49 - 0.53*k)
     if C5 < 0.6: C5 = 0.6
@@ -945,7 +957,8 @@ def E_3_3_4_e15(h, t):
         
     Tests
     -----
-        none        
+        >>> round(E_3_3_4_e15(h=6.354, t=0.135), 2)
+        1.06
     '''
     if h/t <= 150:
         C6 = 1.0 + h/t/750
@@ -962,7 +975,8 @@ def E_3_3_4_e17(h, t, k):
         
     Tests
     -----
-        none        
+        >>> round(E_3_3_4_e17(h=6.354, t=0.08, k=1.0), 2)
+        0.98
     '''
     if h/t <= 66.5:
         C7 = 1/k
@@ -979,7 +993,8 @@ def E_3_3_4_e19(h, t, k):
         
     Tests
     -----
-        none        
+        >>> round(E_3_3_4_e19(h=6.354, t=0.135, k=1.0), 2)
+        0.91
     '''
     return (0.98 - h/t/665)/k
 
@@ -1023,7 +1038,8 @@ def E_3_3_4_e22(t, units='SI'):
         
     Tests
     -----
-        none        
+        >>> round(E_3_3_4_e22(t=0.135), 2)
+        0.07
     '''
     if units == 'SI':
         return t/1.91
@@ -1077,7 +1093,8 @@ def E_3_3_5_e2(Pu, fiPn, Mu, fiMn):
             ratio entre las resistencias requeridas y las correspondientes de diseno.
     Tests
     -----
-        none        
+        >>> round(E_3_3_5_e2(Pu=4.05, fiPn=11.05, Mu=44.16, fiMn=80.16), 2)
+        0.65
     '''
     comb = 0.82*Pu/fiPn + Mu/fiMn
     limit = 1.32
@@ -1241,7 +1258,7 @@ def E_3_4_3_e3(E0, K, L, r, eta):
 
 
 ## 3.5 Combined Axial Load and Bending
-def E_3_5_e1(Pu, fiPn, Mu_x, Mu_y, fiMn_x, fiMn_y, alpha_nx, alpha_ny, Cm_x = 0.85, Cm_y = 0.85):
+def E_3_5_e1(Pu, fiPn, Mu_x, Mu_y, fiMn_x, fiMn_y, alpha_nx, alpha_ny, Cm_x, Cm_y):
     '''Ecuacion de interaccion para carga axial y flexion. Caso Pu/fiPn > 0.15.
     Parameters
     ----------
@@ -1265,7 +1282,8 @@ def E_3_5_e1(Pu, fiPn, Mu_x, Mu_y, fiMn_x, fiMn_y, alpha_nx, alpha_ny, Cm_x = 0.
 
     Tests
     -----
-        >>> 
+        >>> round(E_3_5_e1(Pu=3.22, fiPn=10.97, Mu_x=0.0, Mu_y=6.44, fiMn_x=1.0, fiMn_y=36.36, alpha_nx=1.0, alpha_ny=0.707, Cm_x=1.0, Cm_y=1.0), 3)
+        0.544
     '''
     return Pu/fiPn + Cm_x*Mu_x/(fiMn_x*alpha_nx) + Cm_y*Mu_y/(fiMn_y*alpha_ny)
 
@@ -1289,7 +1307,8 @@ def E_3_5_e2(Pu, fiPn_0, Mu_x, Mu_y, fiMn_x, fiMn_y):
 
     Tests
     -----
-        >>> 
+        >>> round(E_3_5_e2(Pu=3.22, fiPn_0=45.58, Mu_x=0.0, Mu_y=6.44, fiMn_x=1.0, fiMn_y=36.36), 3)
+        0.248
     '''
     return Pu/fiPn_0 + Mu_x/fiMn_x + Mu_y/fiMn_y
 
@@ -1313,7 +1332,8 @@ def E_3_5_e3(Pu, fiPn, Mu_x, Mu_y, fiMn_x, fiMn_y):
 
     Tests
     -----
-        >>> 
+        >>> round(E_3_5_e3(Pu=3.22, fiPn=30.0, Mu_x=0.0, Mu_y=6.44, fiMn_x=1.0, fiMn_y=36.36), 3)
+        0.284
     '''
     return Pu/fiPn + Mu_x/fiMn_x + Mu_y/fiMn_y
 
@@ -1331,10 +1351,10 @@ def E_3_5_e4(Pu, Pe):
             factor de amplificacion.
     Tests
     -----
-        >>> round(E_3_5_e4(Pu=15, Pe=20), 1)
-        4.0
+        >>> round(E_3_5_e4(Pu=3.22, Pe=0.85*12.91), 3)
+        0.707
     '''
-    return 1/(1 - Pu/Pe)
+    return (1 - Pu/Pe)
 
 def E_3_5_e5(E0, Kb, Lb, Ib):
     '''Elastic Buckling Strength.

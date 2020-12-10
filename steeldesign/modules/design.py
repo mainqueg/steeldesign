@@ -152,6 +152,12 @@ class designParameters:
             Indica si el miembro soporta cargas puntuales para realizar chequeo segun 2.1.1-3 Shear Lag Effects
         Cb: float
             Factor de distribucion de momento. Valor por defecto 1.0. Si se espeficica Cb= 0 se calcula internamente.
+        Cm_x, Cm_y: float
+            coeficiente segun restriccion al movimiento de sus extremos.
+        N: float
+            longitud de la placa de apoyo donde se encuentran las reacciones o fuerzas concentradas | def : 0.0
+        N_theta: float
+            angulo entre el plano del alma de la seccion y la superficie de la placa de apoyo | def : 90.0
 
     Attributes
     ----------
@@ -172,7 +178,7 @@ class designParameters:
     ------
         En archivo
     '''
-    def __init__(self, Kx = 1.0, Ky = 1.0, Kz = 1.0, Lx = 0.0, Ly = 0.0, Lz = 0.0, cLoadFlag = True, Cb= 1.0):
+    def __init__(self, Kx = 1.0, Ky = 1.0, Kz = 1.0, Lx = 0.0, Ly = 0.0, Lz = 0.0, cLoadFlag = True, Cb= 1.0, Cm_x = 0.85, Cm_y = 0.85, N = 0.0, N_theta = 90.0):
         self.Kx = Kx
         self.Ky = Ky
         self.Kz = Kz
@@ -180,6 +186,10 @@ class designParameters:
         self.Ly = Ly
         self.Lz = Lz
         self.Cb = Cb
+        self.Cm_x = Cm_x
+        self.Cm_y = Cm_y
+        self.N = N
+        self.N_theta = N_theta
         self.cLoadFlag = cLoadFlag
 
 class member():
@@ -467,6 +477,8 @@ class ASCE_8_02:
         #                     f - FF*eta(f) = 0 (itero con eta_iter)
         FF = Mc_eta_LB/Sf
         f = eta_iter(FF=FF, mat=steel)
+        if f > steel.FY:
+            f = steel.FY    # limite de fluencia
         Sc, nEffAreas= self.s3_Se_effective(f)
 
         fiMn_LB, midC2 = E_3_3_1_2_e1(Sc=Sc, Mc=f*Sf, Sf=Sf)
@@ -631,6 +643,8 @@ class ASCE_8_02:
         Vn_eta = E_3_3_2_e1(E0=E0, t=t, h=h)
         FF = Vn_eta/Av
         tau = eta_iter(FF=FF, mat=steel)
+        if tau > FY_v:
+            tau = FY_v    # limite de fluencia en corte
         Vn = tau*Av
 
         fi = 0.85
@@ -896,6 +910,7 @@ class ASCE_8_02:
         dpar = self.member.dP
 
         E0 = steel.E0
+        FY = steel.FY
         Kx = dpar.Kx
         Ky = dpar.Ky
         Lx = dpar.Lx
@@ -903,8 +918,8 @@ class ASCE_8_02:
         Ix = profile.Ix
         Iy = profile.Iy
 
-        Cm_x = 0.85
-        Cm_y = 0.85
+        Cm_x = dpar.Cm_x
+        Cm_y = dpar.Cm_y
 
         Pe_x = E_3_5_e5(E0=E0, Kb=Kx, Lb=Lx, Ib=Ix)
         Pe_y = E_3_5_e5(E0=E0, Kb=Ky, Lb=Ly, Ib=Iy)
@@ -912,9 +927,15 @@ class ASCE_8_02:
         alpha_ny = E_3_5_e4(Pu=Pu, Pe=Pe_y)
 
         Ae = 1
-        fiPn_0 = E_3_4_e1(Fn=self.member.steel.FY, Ae=Ae)
-        raise NotImplementedError
+        fiPn_0 = E_3_4_e1(Fn=FY, Ae=Ae)
 
+        if Pu/fiPn > 0.15:
+            ratio_1 = E_3_5_e1(Pu=Pu, fiPn=fiPn, Mu_x=Mu_x, Mu_y=Mu_y, fiMn_x=fiMn_x, fiMn_y=fiMn_y, alpha_nx=alpha_nx, alpha_ny=alpha_ny, Cm_x=Cm_x, Cm_y=Cm_y)
+            ratio_2 = E_3_5_e2(Pu=Pu, fiPn_0=fiPn_0, Mu_x=Mu_x, Mu_y=Mu_y, fiMn_x=fiMn_x, fiMn_y=fiMn_y)
+            return ratio_1, ratio_2
+        else:
+            ratio_1 = E_3_5_e3(Pu=Pu, fiPn=fiPn, Mu_x=Mu_x, Mu_y=Mu_y, fiMn_x=fiMn_x, fiMn_y=fiMn_y)
+            return ratio_1
         
 
         
