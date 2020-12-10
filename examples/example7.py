@@ -7,7 +7,6 @@ for Cold-Formed Steel Structures Library. p122
 '''
 
 import steeldesign as sd
-from steeldesign.modules.functions import adjustNeutralAxis
 
 # creo perfil
 p1 = sd.c_profile(H= 7.0, B= 1.5, t= 0.135, r_out= (0.135+3/16) )
