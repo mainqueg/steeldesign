@@ -25,3 +25,12 @@ print('fiMn =', round(fiMn,2),'| Mn_no =', round(midC['Mn_no'],2), '| Mn_LB =', 
 # Valores de steeldesign:   fiMn = 78.38 | Mn_no = 111.90 | Mn_LB = 92.21
 
 # NOTA: Error tiene origen en el uso de eta_iter en lugar de los valores de tabla que usa la referencia. f_ref=42.12 f_eta_iter= 41.2
+
+print('\n3.3.2 Design Strength for Shear Only')
+fiVn, midC= analysis.s3_3_2()
+print('fiVn =', round(fiVn,2),'| vn =', round(midC['tau'],2))
+
+# Valores de referencia:    fiVn = 27.88 | vn = 38.24
+# Valores de steeldesign:   fiVn = 22.65 | vn = 31.06
+
+# NOTA: Error tiene origen en el uso de factor de plastificacion Et/E0 en lugar de Gs/G0.

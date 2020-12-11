@@ -9,7 +9,7 @@
 
 '''
 
-def eta_iter(FF, mat, s = 0):
+def eta_iter(FF, mat, s = 0, eq = 'B-5'):
     ''' A partir de la constante FF, se itera con un esquema de newton-rapson para 
     satisfacer la ecuacion f(s): s- FF*eta(s) = 0
 
@@ -21,6 +21,11 @@ def eta_iter(FF, mat, s = 0):
             Material del miembro
         s : float
             Tension incial de la iteracion. Por default s = 0.75*FY
+        eq : string
+                Ecuacion a usar en el calculo del factor de plasticidad
+                B-3 : sqrt(Et/E0)
+                B-4 : Es/E0
+                B-5 : Et/E0
 
     Tests
     -----
@@ -33,7 +38,7 @@ def eta_iter(FF, mat, s = 0):
     ds = mat.FY/5000 # delta s para calcular la derivada
     err = 0.1 # error tolerado porcentual
     iterr = 0 #inicializo el contador de iteraciones
-    eta = mat.eta(s) #inicializo eta
+    eta = mat.eta(s= s, eq= eq) #inicializo eta
     F = FF*eta
 
     # funcion para encontrar raices
@@ -42,7 +47,7 @@ def eta_iter(FF, mat, s = 0):
     # newton-rapson para encontrar raiz de fn
     while abs((F-s)/s*100) > err and iterr < 100:
         # diferencial de eta
-        eta_2 = mat.eta(s+ds)
+        eta_2 = mat.eta(s= s+ds, eq= eq)
         # diferencial de F
         F_2 = FF*eta_2
         # diferencial de fn
@@ -53,7 +58,7 @@ def eta_iter(FF, mat, s = 0):
         s = s - fn/dfn
 
         # actualizo valores, itero
-        eta = mat.eta(s)
+        eta = mat.eta(s= s, eq= eq)
         F = FF*eta
         fn = s - F
         iterr += 1

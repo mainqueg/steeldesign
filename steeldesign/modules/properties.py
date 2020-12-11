@@ -207,13 +207,18 @@ class steel():
         Es = B_1(self.FY, self.E0, self.offset, self.n, s)
         return Es
 
-    def eta(self, s):
-        ''' Factor de plasticidad a la tension s. Et/E0 Eq B-5
+    def eta(self, s, eq = 'B-5'):
+        ''' Factor de plasticidad a la tension s. 
 
         Parameters
         ----------
             s : float
                 Tension para el calculo
+            eq : string
+                Ecuacion a usar en el calculo
+                B-3 : sqrt(Et/E0)
+                B-4 : Es/E0 
+                B-5 : Et/E0
 
         Returns
         -------
@@ -228,7 +233,15 @@ class steel():
         -----
             En definicion de la clase
         '''
-        return self.Et(s) / self.E0
+        if eq == 'B-3':
+            return (self.Et(s) / self.E0)**0.5
+        elif eq == 'B-4':
+            return self.Es(s) / self.E0
+        elif eq == 'B-5':
+            return self.Et(s) / self.E0
+        else:
+            print('No se reconoce la ecuacion', eq )
+            raise Exception('>> Analisis abortado <<')
 
 class c_w_lps_profile():
     '''Perfil C con labios de refuerzos.

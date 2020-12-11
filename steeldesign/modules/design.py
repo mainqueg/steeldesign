@@ -795,30 +795,35 @@ class ASCE_8_02:
         steel = self.member.steel
         profile = self.member.profile
 
-        E0 = steel.E0
-        FY = steel.FY
+        web = profile.elements[2]
+        web['sec3.3.1.1']= {}
+        if web['name'] != 'web':
+            print('El elemento', 2, 'no corresponde al tipo 1:<web>. Reordenar los elemenentos en el perfil',profile.type)
+            raise Exception('>> Analisis abortado <<')
+        elif web['type'] != 'stiffned':
+            print('El elemento:', web['name'], 'del perfil:', profile.name, 'no tiene asignada una clasificacion reconocida:', web['type'])
+            raise Exception('>> Analisis abortado <<')
+
         t = profile.t
-        h = profile.H - 2*profile.r_out
+        h = web['w']
         Av = h*t    # Area del alma
 
         if FY_v == 0:
-            FY_v = 0.8*FY
+            FY_v = 0.8*steel.FY
 
         # asumo Vn = tau*Area
         # construyo ecuacion: tau - FF*eta(tau) = 0
         #                     FF = 4.84*E0*t**3/h/Area
-        Vn_eta = E_3_3_2_e1(E0=E0, t=t, h=h)
+        Vn_eta, _ = E_3_3_2_e1(E0=steel.E0, t=t, h=h)
         FF = Vn_eta/Av
-        tau = eta_iter(FF=FF, mat=steel)
-        Vn = tau*Av
+        tau = eta_iter(FF=FF, mat=steel, eq= 'B-5')
+        Vn, fiVn = E_3_3_2_e1(E0=steel.E0, t=t, h=h, eta= tau/FF)
 
-        fi = 0.85
-        fiVn = fi*Vn
         limit = 0.95*FY_v*h*t
         if fiVn > limit: fiVn = limit   # no puede superar fluencia del alma
 
-        midC= {'Shear_fi': fi, 'Vn': Vn, 'Av': Av}
-        return fi*Vn, midC
+        midC= {'Vn': Vn, 'Av': Av, 'tau': tau}
+        return fiVn, midC
 
 
     def s3_4(self):

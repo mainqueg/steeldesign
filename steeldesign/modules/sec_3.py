@@ -149,12 +149,12 @@ def sec3_3_1_2_eta(prof_type, E0, d, Iyc, L, rx, ry, c_x, sc_x, A, Lx, Kx, Ly, K
     Tests
     -----
         Example 8.1 - I-section w/unstiffened flanges
-        >>> round(sec3_3_1_2_eta(prof_type='I_builtup_cee', E0=27000, d=6.0, Iyc=0.172, L=4*12, rx=2.224, ry=0.564, c_x=0, sc_x=0, A=1.083, Lx=4*12, Kx=1.0, Ly=4*12, Ky=1.0, Lz=4*12, Kz=1.0, Cw=3.00, G0=10384.61, J=0.0037, beta=0.0, Cb=1.75), 2)
+        >>> round(sec3_3_1_2_eta(prof_type='I_builtup_cee', E0=27000, d=6.0, Iyc=0.172, L=4*12, rx=2.224, ry=0.564, c_x=0, sc_x=0, A=1.083, Lx=4*12, Kx=1.0, Ly=4*12, Ky=1.0, Lz=4*12, Kz=1.0, Cw=3.00, G0=10384.61, J=0.0037, j=0.0, Cb=1.75), 2)
         208.88
 
         Example 9.1 - C-section w/lateral buckling consideration
         En realidad el valor de ref es 326.54 pero sigma_ey en ref es 47.14 y en calculos es 47.37 (leve error en ref)
-        >>> round(sec3_3_1_2_eta(prof_type='cee', Cb=1.685, E0=27000, d=7.0, Iyc=0.204/2, L=2.5*12, rx=2.47, ry=0.40, c_x=0.217, sc_x=-0.417, A=1.284, Lx=2.5*12, Kx=1.0, Ly=2.5*12, Ky=1.0, Lz=2.5*12, Kz=1.0, Cw=1.819, G0=10500, J=0.0078, beta=0), 2)
+        >>> round(sec3_3_1_2_eta(prof_type='cee', Cb=1.685, E0=27000, d=7.0, Iyc=0.204/2, L=2.5*12, rx=2.47, ry=0.40, c_x=0.217, sc_x=-0.417, A=1.284, Lx=2.5*12, Kx=1.0, Ly=2.5*12, Ky=1.0, Lz=2.5*12, Kz=1.0, Cw=1.819, G0=10500, J=0.0078, j=0), 2)
         327.35
     '''    
     if prof_type in ['I_builtup_cee', 'I_builtup_cee_w_lps']:  # perfil I - aplica CASE I
@@ -169,7 +169,6 @@ def sec3_3_1_2_eta(prof_type, E0, d, Iyc, L, rx, ry, c_x, sc_x, A, Lx, Kx, Ly, K
         raise NotImplementedError
         
     return Mc_eta
-
 def sec3_3_1_2_3_i(Cb, rx, ry, c_x, sc_x, E0, A, Ly, Ky, Lz, Kz, Cw, G0, J):
     '''Lateral Buckling Strength. Singly symmetric sections bent about the axis of symmetry.
     Parameters
@@ -517,8 +516,8 @@ def E_3_3_1_2_e9(rx, ry, x0):
 
 
 ## 3.3.2 Strength for Shear Only
-def E_3_3_2_e1(E0, t, h):
-    '''Strength for Shear Only. Resistencia nominal al corte dividida por eta_shear.
+def E_3_3_2_e1(E0, t, h, eta= 1.0):
+    '''Strength for Shear Only. Resistencia nominal al corte dividida por eta_shear. Ecuation (3.3.2-1)
     Parameters
     ----------
         E0: float,
@@ -527,21 +526,28 @@ def E_3_3_2_e1(E0, t, h):
             espesor de la seccion.
         h: float,
             altura de la seccion.
+        eta : float
+            Factor de reduccion plastica, ratio Gs/G0
     Returns
     -------
-        Vn_eta: float,
-            resistencia nominal al corte dividida por eta_shear (para iterar).
+        Vn: float,
+            resistencia nominal al corte
+        fiVn : float
+            resistencia de diseño al corte
     Raises
     ------
         none
     Tests
     -----
         Example 9.1 - C-profile with LB consideration 
-        >>> round(E_3_3_2_e1(E0=27e3, t=0.135, h=6.354), 2)
-        21.25
+        >>> Vn, fiVn = E_3_3_2_e1(E0=27e3, t=0.135, h=6.354)
+        >>> print(round(Vn, 2),'|', round(fiVn, 2))
+        50.6 | 43.01
     '''
-    Vn_eta = 4.84*E0*t**3/h
-    return Vn_eta
+    fi = 0.85
+    Vn = 4.84*E0*t**3/h*eta
+    fiVn = fi*Vn
+    return Vn, fiVn
 
 
 ## 3.3.3 Strength for Combined Bending and Shear
@@ -565,7 +571,7 @@ def E_3_3_3_e1(fiMn, fiVn, Mu, Vu):
     -----
         Example 9.1 - C-profile with LB consideration 
         >>> round(E_3_3_3_e1(fiMn=80.16, fiVn=27.88, Mu=44.16, Vu=2.21), 2)
-        0.31 
+        0.31
     '''
     comb = (Mu/fiMn)**2 + (Vu/fiVn)**2
     limit = 1.0
