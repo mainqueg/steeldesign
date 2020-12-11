@@ -675,6 +675,7 @@ class ASCE_8_02:
         flange['sec3.3.1.1'].update({'Se': Se,'Ix': Ix, 'cy': cy})
 
         return Se, nEffAreas
+
     def s3_Se_effective_y(self, fFlange, Cs, origin, tol = 0.005, maxIter = 100):
         '''
         Parameters
@@ -782,6 +783,7 @@ class ASCE_8_02:
         flange[origin].update({'Sex': Sex,'Iy': Iy, 'cx': cx})
 
         return Sex, nEffAreas
+
 
     def s3_3_2(self, FY_v = 0):
         '''Design Strength for Shear Only. Shear Buckling.
