@@ -129,7 +129,8 @@ from .sec_3 import E_3_3_2_e1
 # Imports for Section 3.3.3
 from .sec_3 import E_3_3_3_e1, E_3_3_3_e2
 # Imports for Section 3.3.4
-
+from .sec_3 import E_3_3_4_e1, E_3_3_4_e2, E_3_3_4_e3, E_3_3_4_e4, E_3_3_4_e5, E_3_3_4_e6, E_3_3_4_e7, E_3_3_4_e8, E_3_3_4_e9, Ct
+from .sec_3 import E_3_3_4_e10, E_3_3_4_e11, E_3_3_4_e12, E_3_3_4_e13, E_3_3_4_e14, E_3_3_4_e15, E_3_3_4_e17, E_3_3_4_e19, E_3_3_4_e20, E_3_3_4_e21, E_3_3_4_e22
 # Imports for Section 3.4
 from .sec_3 import E_3_4_e1, E_3_4_2_e1, E_3_4_3_e1, E_3_4_3_e3
 # Imports for Section 3.5
@@ -838,6 +839,76 @@ class ASCE_8_02:
 
         midC= {'Vn': Vn, 'Av': Av, 'tau': tau}
         return fiVn, midC
+
+
+    ## 3.3.4 Web Crippling Strength
+    def sec3_3_4(self, units):
+        '''Web Crippling Strength.
+        Parameters
+        ----------
+            units: string,
+                SI para sistema internacional o US para sistema imperial.
+        Returns
+        -------
+            
+        Raises
+        ------
+            none
+        Tests
+        -----
+            none
+        '''
+        steel = self.member.steel
+        profile = self.member.profile
+        dpar = self.member.dP
+
+        # Parametros
+
+        fi = 0.70
+
+        FY = steel.FY
+        h = profile.H - 2*profile.r_out
+        t = profile.t
+
+        Ct = Ct(units=units)
+        k = E_3_3_4_e21(FY=FY, Ct=Ct)
+        m = E_3_3_4_e22(t=t, units=units)
+
+        N = dpar.N
+        R = profile.r_out - t
+        theta = dpar.N_theta
+
+        # Calculo de coeficientes
+        C1 = E_3_3_4_e10(FY=FY, Ct=Ct, k=k)
+        C2 = E_3_3_4_e11(R=R, t=t)
+        C3 = E_3_3_4_e12(FY=FY, Ct=Ct, k=k)
+        C4 = E_3_3_4_e13(R=R, t=t)
+        C5 = E_3_3_4_e14(k=k)
+        C6 = E_3_3_4_e15(h=h, t=t)
+        C7 = E_3_3_4_e17(h=h, t=t, k=k)
+        C8 = E_3_3_4_e19(h=h, t=t, k=k)
+        C_theta = E_3_3_4_e20(theta=theta)
+
+        ## Shapes Having Single Webs
+            # Stiffened or Partially Stiffened Flenges
+                # End Reaction
+        # if 
+        E_3_3_4_e1(t, C3, C4, Ctheta, h, N, Ct)
+                # Interior Reaction
+        E_3_3_4_e4(t, C1, C2, Ctheta, h, N, Ct)
+
+        # Unstiffened Flanges
+                # End Reaction
+        E_3_3_4_e2(t, C3, C4, Ctheta, h, N, Ct)
+                # Interior Reaction
+        E_3_3_4_e4(t, C1, C2, Ctheta, h, N, Ct)
+
+        ## I-sections or Similar Sections
+            # Stiffened, Partially Stiffened and Unstiffened Flanges
+                # End Reaction
+        E_3_3_4_e3(N, t, FY, C6)
+                # Interior Reaction
+        E_3_3_4_e5(N, t, FY, C5, m)
 
 
     def s3_4(self):
