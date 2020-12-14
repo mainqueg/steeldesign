@@ -31,6 +31,7 @@ fiVn, midC= analysis.s3_3_2()
 print('fiVn =', round(fiVn,2),'| vn =', round(midC['tau'],2))
 
 # Valores de referencia:    fiVn = 27.88 | vn = 38.24
-# Valores de steeldesign:   fiVn = 22.65 | vn = 31.06
+# Valores de steeldesign:   fiVn = 29.06 | vn = 39.86
 
-# NOTA: Error tiene origen en el uso de factor de plastificacion Et/E0 en lugar de Gs/G0.
+# NOTA: Error tiene origen en el uso de factor de plastificacion Es/E0 (B-4) en lugar de Gs/G0 (error no conservativo).
+# NOTA: Si se usa Et/E0 (B-5) en lugar de Gs/G0 sd da fiVn = 22.65 | vn = 31.06 (mayor error pero es conservativo).
