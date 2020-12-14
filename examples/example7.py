@@ -36,3 +36,13 @@ print('fiVn =', round(fiVn,2),'| vn =', round(midC['tau'],2))
 # NOTA: Error tiene origen en el uso de eta_iter en lugar de los valores de tabla que usa la referencia. f_ref=38.30 f_eta_iter= 38.27.
 # NOTA: Si se usa Es/E0 (B-4) en lugar de Gs/G0 sd da fiVn = 29.06 | vn = 39.86 (error no conservativo).
 # NOTA: Si se usa Et/E0 (B-5) en lugar de Gs/G0 sd da fiVn = 22.65 | vn = 31.06 (mayor error pero es conservativo).
+
+print('\n3.3.3 Strength for Combined Bending and Shear')
+Mu = 44.16
+Vu = 2.21
+print('Cargas: Mu = ', Mu, ' | Vu = ', Vu)
+ratio, state = analysis.s3_3_3(fiMn=fiMn, fiVn=fiVn, Mu=Mu, Vu=Vu)
+print('ratio = ', round(ratio,2), '| state : ', state)
+
+# Valores de referencia:    ratio = 0.31
+# Valores de steeldesign:   ratio = 0.32

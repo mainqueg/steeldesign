@@ -137,7 +137,7 @@ from .sec_3 import E_3_4_e1, E_3_4_2_e1, E_3_4_3_e1, E_3_4_3_e3
 from .sec_3 import E_3_5_e1, E_3_5_e2, E_3_5_e3, E_3_5_e4, E_3_5_e5
 from .appendix_B import B_2, B_1
 from .properties import c_w_lps_profile, c_profile, steel, I_builtup_c_profile
-from .functions import eta_iter, eta_iter_shear, adjustNeutralAxis, get_linear_stress
+from .functions import eta_iter, eta_iter_shear, adjustNeutralAxis, get_linear_stress, TableA12
 
 
 class designParameters:
@@ -306,6 +306,8 @@ class ASCE_8_02:
         if not member.dP:
             print ('Advertencia: El miembro', member.name, 'no tiene asignado parametros de diseño.')
 
+
+    ## 3.2 Dimensional Limits and Considerations
     def s2_1(self):
         '''Dimensional Limits and Considerations. 
         2.1.1 Flange Flat-Width-to-Thickness Considerations
@@ -375,7 +377,8 @@ class ASCE_8_02:
                 print('El elemento:',element['name'], 'del perfil:', profile.name, 'no tiene asignada una clasificacion reconocida:', element['type'])
                 raise Exception('>> Analisis abortado <<')
 
-
+    
+    ## 3.2 Tension Members
     def s3_2(self):
         '''Design Tensile Strength. Eq 3.2-1.
         Parameters
@@ -406,7 +409,9 @@ class ASCE_8_02:
 
         return fiTn, midC
 
-    
+
+    ## 3.2 Flexural Members
+    ## 3.3.1 Strength for Bending Only
     def s3_3_1(self, procedure= 'PI', localDistorsion = False):
         '''Design Flexural Strength. Bending Only. Smaller of Sections 3.3.1.1 and 3.3.1.2.
         Parameters
@@ -786,7 +791,8 @@ class ASCE_8_02:
         return Sex, nEffAreas
 
 
-    def s3_3_2(self, FY_v = 0):
+    ## 3.3.2 Strength for Shear Only
+    def s3_3_2(self, FY_v = 0, steel_type='1/4 Hard'):
         '''Design Strength for Shear Only. Shear Buckling.
         Parameters
         ----------
@@ -831,7 +837,7 @@ class ASCE_8_02:
         #                     FF = 4.84*E0*t**3/h/Area
         Vn_eta, _ = E_3_3_2_e1(E0=steel.E0, t=t, h=h)
         FF = Vn_eta/Av
-        tau = eta_iter_shear(FF=FF, mat=steel, s=steel.FY/2)
+        tau = eta_iter_shear(FF=FF, mat=steel, s=steel.FY/2, steel_type=steel_type)
         Vn, fiVn = E_3_3_2_e1(E0=steel.E0, t=t, h=h, eta= tau/FF)
 
         limit = 0.95*FY_v*h*t
@@ -841,8 +847,54 @@ class ASCE_8_02:
         return fiVn, midC
 
 
+    ## 3.3.3 Strength for Combined Bending and Shear
+    def s3_3_3(self, Mu, Vu, fiMn = 0, fiVn = 0):
+        '''Strength for Combined Bending and Shear.
+        Parameters
+        ----------
+            fiMn: float,
+                resistencia de diseno a la flexion.
+            fiVn: float,
+                resistencia de diseno al corte.
+            Mu: float,
+                resistencia requerida a la flexion. 
+            Vu: float,
+                resistencia requerida al corte.
+        Returns
+        -------
+            ratio: float,
+                ratio entre las resistencias requeridas y las correspondientes de diseno.
+        Raises
+        ------
+            none
+        Tests
+        -----
+            none
+        '''
+        if fiMn == 0:
+            fiMn = s3_3_1()
+
+        if fiVn == 0:
+            fiVn = s3_3_2()
+
+        bend = Mu/fiMn
+        shear = Vu/fiVn
+        if bend > 0.5 and shear > 0.7:
+            ratio = E_3_3_3_e2(fiMn, fiVn, Mu, Vu)
+            if ratio > 1.0:
+                state = 'Not Passed Eq 3.3.3-2'
+            else: state = 'Pass Eq 3.3.3-2'
+        else:
+            ratio = E_3_3_3_e1(fiMn, fiVn, Mu, Vu)
+            if ratio > 1.0:
+                state = 'Not Passed Eq 3.3.3-1'
+            else: state = 'Pass Eq 3.3.3-1'
+            
+        return ratio, state
+
+
     ## 3.3.4 Web Crippling Strength
-    def sec3_3_4(self, units):
+    def s3_3_4(self, units):
         '''Web Crippling Strength.
         Parameters
         ----------
