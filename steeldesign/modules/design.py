@@ -137,7 +137,7 @@ from .sec_3 import E_3_4_e1, E_3_4_2_e1, E_3_4_3_e1, E_3_4_3_e3
 from .sec_3 import E_3_5_e1, E_3_5_e2, E_3_5_e3, E_3_5_e4, E_3_5_e5
 from .appendix_B import B_2, B_1
 from .properties import c_w_lps_profile, c_profile, steel, I_builtup_c_profile
-from .functions import eta_iter, adjustNeutralAxis, get_linear_stress
+from .functions import eta_iter, eta_iter_shear, adjustNeutralAxis, get_linear_stress
 
 
 class designParameters:
@@ -831,7 +831,7 @@ class ASCE_8_02:
         #                     FF = 4.84*E0*t**3/h/Area
         Vn_eta, _ = E_3_3_2_e1(E0=steel.E0, t=t, h=h)
         FF = Vn_eta/Av
-        tau = eta_iter(FF=FF, mat=steel, eq= 'B-5')
+        tau = eta_iter_shear(FF=FF, mat=steel, s=steel.FY/2)
         Vn, fiVn = E_3_3_2_e1(E0=steel.E0, t=t, h=h, eta= tau/FF)
 
         limit = 0.95*FY_v*h*t

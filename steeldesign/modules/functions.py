@@ -8,6 +8,7 @@
         Devuelve el valor de tension en la coordenada indicada para una variacion lineal de tension
 
 '''
+import numpy as np
 
 def eta_iter(FF, mat, s = 0, eq = 'B-5'):
     ''' A partir de la constante FF, se itera con un esquema de newton-rapson para 
@@ -152,3 +153,101 @@ def get_linear_stress(fFlange, yCG, y):
     '''
     s= fFlange- fFlange/yCG*y
     return s
+
+def TableA12(tau, steel_type = '1/4 Hard'):
+    '''TABLE A-12. Plasticity Reduction Factors for Shear Strengths.
+    ----------
+        tau: float,
+            tension de corte.
+        steel_type: string,
+            tipo de acero.
+
+    Returns
+    -------
+        eta_shear: float,
+            relacion Gs/G0.
+
+    Tests
+    -----
+        >>> round(TableA12(tau=34.0, steel_type = '1/4 Hard'), 2)
+        0.74
+    '''
+    tableA12_1_4 = np.array(((0.0, 1.0),
+            (4.0, 1.0),
+            (8.0, 1.0),
+            (12.0, 1.0),
+            (16.0, 0.98),
+            (20.0, 0.95),
+            (24.0, 0.9),
+            (28.0, 0.85),
+            (32.0, 0.78),
+            (36.0, 0.7),
+            (40.0, 0.61),
+            (44.0, 0.51),
+    ))
+    tableA12_409 = np.array(((0.0, 1.0),
+            (4.0, 1.0),
+            (8.0, 1.0),
+            (12.0, 0.83),
+    ))
+    if steel_type == '1/4 Hard':
+        eta_shear = np.interp(tau, tableA12_1_4[:,0], tableA12_1_4[:,1] )
+    elif steel_type == '409':
+        eta_shear = np.interp(tau, tableA12_409[:,0], tableA12_409[:,1] )
+    else:
+        raise Exception('>> Definir tipo de acero. Analisis abortado <<')
+    return eta_shear
+
+def eta_iter_shear(FF, mat, s = 0, steel_type='1/4 Hard'):
+    ''' A partir de la constante FF, se itera con un esquema de newton-rapson para 
+    satisfacer la ecuacion f(s): s- FF*eta(s) = 0
+
+    Parameters
+    ----------
+        FF : float
+            Valor de la ecuacion para eta = 1
+        mat : <class steel>
+            Material del miembro
+        s : float
+            Tension incial de la iteracion. Por default s = 0.75*FY
+
+    Tests
+    -----
+        incluido en test generales
+    '''
+
+    # tension inicial para iterar
+    if not s:
+        s = mat.FY*0.75
+    ds = mat.FY/5000 # delta s para calcular la derivada
+    err = 0.1 # error tolerado porcentual
+    iterr = 0 #inicializo el contador de iteraciones
+    eta = TableA12(tau=s, steel_type=steel_type)
+ #inicializo eta
+    F = FF*eta
+
+    # funcion para encontrar raices
+    fn = s - F
+    
+    # newton-rapson para encontrar raiz de fn
+    while abs((F-s)/s*100) > err and iterr < 100:
+        # diferencial de eta
+        eta_2 = TableA12(tau=s+ds, steel_type=steel_type)
+        # diferencial de F
+        F_2 = FF*eta_2
+        # diferencial de fn
+        fn_2 = s+ds - F_2
+        # derivada  dfn/ds
+        dfn = (fn_2 - fn)/ds
+        # nuevo valor de s
+        s = s - fn/dfn
+
+        # actualizo valores, itero
+        eta = TableA12(tau=s, steel_type=steel_type)
+        F = FF*eta
+        fn = s - F
+        iterr += 1
+        #print(iterr, s, F, 100-(F-s)/s*100)
+    if abs((F-s)/s*100) > err:
+        print('Se excedieron las 100 iteraciones')
+    return F
