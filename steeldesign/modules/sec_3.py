@@ -169,6 +169,7 @@ def sec3_3_1_2_eta(prof_type, E0, d, Iyc, L, rx, ry, c_x, sc_x, A, Lx, Kx, Ly, K
         raise NotImplementedError
         
     return Mc_eta
+
 def sec3_3_1_2_3_i(Cb, rx, ry, c_x, sc_x, E0, A, Ly, Ky, Lz, Kz, Cw, G0, J):
     '''Lateral Buckling Strength. Singly symmetric sections bent about the axis of symmetry.
     Parameters
@@ -614,7 +615,8 @@ def E_3_3_4_e1(t, C3, C4, Ctheta, h, N, Ct):
         
     Returns
     -------
-        
+        Pn: float,
+            nominal web crippling strength.
     Tests
     -----
         >>> round(E_3_3_4_e1(t=0.135, C3=1.258, C4=0.942, Ctheta=1.0, h=6.354, N=3.0, Ct=1.0), 2)
@@ -633,7 +635,8 @@ def E_3_3_4_e2(t, C3, C4, Ctheta, h, N, Ct):
         
     Returns
     -------
-        
+        Pn: float,
+            nominal web crippling strength.
     Tests
     -----
         >>> round(E_3_3_4_e2(t=0.135, C3=1.258, C4=0.942, Ctheta=1.0, h=6.354, N=3.0, Ct=1.0), 2)
@@ -652,7 +655,8 @@ def E_3_3_4_e3(N, t, FY, C6):
         
     Returns
     -------
-        
+        Pn: float,
+            nominal web crippling strength.
     Tests
     -----
         >>> round(E_3_3_4_e3(N=3.0, t=0.135, FY=50, C6=1+6.354/0.135/750), 2)
@@ -671,7 +675,8 @@ def E_3_3_4_e4(t, C1, C2, Ctheta, h, N, Ct):
         
     Returns
     -------
-        
+        Pn: float,
+            nominal web crippling strength.
     Tests
     -----
         >>> round(E_3_3_4_e4(t=0.135, C1=1.343, C2=0.977, Ctheta=1.0, h=6.354, N=6.0, Ct=1.0), 2)
@@ -690,7 +695,8 @@ def E_3_3_4_e5(N, t, FY, C5, m):
         
     Returns
     -------
-        
+        Pn: float,
+            nominal web crippling strength.
     Tests
     -----
         >>> round(E_3_3_4_e5(N=3.0, t=0.135, FY=50, C5=0.96, m=0.135/0.075), 2)
@@ -710,7 +716,8 @@ def E_3_3_4_e6(t, C3, C4, Ctheta, h, N, Ct):
         
     Returns
     -------
-        
+        Pn: float,
+            nominal web crippling strength.
     Tests
     -----
         >>> round(E_3_3_4_e6(t=0.135, C3=1.34, C4=0.5, Ctheta=1.0, h=6.354, N=3.0, Ct=1.0), 2)
@@ -729,7 +736,8 @@ def E_3_3_4_e7(t, C8, FY, N, m):
         
     Returns
     -------
-        
+        Pn: float,
+            nominal web crippling strength.
     Tests
     -----
         >>> round(E_3_3_4_e7(t=0.135, C8=0.91, FY=50.0, N=3.0, m=0.135/0.075), 2)
@@ -748,7 +756,8 @@ def E_3_3_4_e8(t, C1, C2, Ctheta, h, N, Ct):
         
     Returns
     -------
-        
+        Pn: float,
+            nominal web crippling strength.
     Tests
     -----
         >>> round(E_3_3_4_e8(t=0.135, C1=1.343, C2=0.977, Ctheta=1.0, h=6.354, N=3.0, Ct=1.0), 2)
@@ -767,7 +776,8 @@ def E_3_3_4_e9(t, C7, FY, N, m):
         
     Returns
     -------
-        
+        Pn: float,
+            nominal web crippling strength.
     Tests
     -----
         >>> round(E_3_3_4_e9(t=0.135, C7=0.98, FY=50.0, N=3.0, m=0.135/0.075), 2)
@@ -779,7 +789,7 @@ def E_3_3_4_e9(t, C7, FY, N, m):
 
     return f1*f2*f3
 
-def Ct(units = 'SI'):
+def coeff_units(units = 'SI'):
     '''Ct.
     Parameters
     ----------
@@ -789,7 +799,7 @@ def Ct(units = 'SI'):
         
     Tests
     -----
-        >>> Ct(units='US')
+        >>> coeff_units(units='US')
         1.0
     '''
     if units == 'SI':
@@ -988,7 +998,7 @@ def E_3_3_4_e22(t, units='SI'):
 
 ## 3.3.5 Strength for Combined Bending and Web Crippling
 def E_3_3_5_e1(Pu, fiPn, Mu, fiMn):
-    '''Ecuacion de interaccion flexion-corte. Ecuacion 3.3.3-1.
+    '''Ecuacion de interaccion flexion-web crippling. Ecuacion 3.3.3-1.
     Parameters
     ----------
         fiMn: float,
@@ -1015,7 +1025,7 @@ def E_3_3_5_e1(Pu, fiPn, Mu, fiMn):
     return ratio
 
 def E_3_3_5_e2(Pu, fiPn, Mu, fiMn):
-    '''Ecuacion de interaccion flexion-corte. Ecuacion 3.3.3-1.
+    '''Ecuacion de interaccion flexion-web crippling. Ecuacion 3.3.3-1.
     Parameters
     ----------
         fiMn: float,

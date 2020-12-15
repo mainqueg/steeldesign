@@ -529,7 +529,7 @@ class c_profile():
     ---------
             Mismos que los parametros y se agregan:
         type : string
-            'c_w_lps'
+            'cee'
         rx, ry : float
             radio de giro del miembro | sqrt(I/A)
         c_x, c_y : float

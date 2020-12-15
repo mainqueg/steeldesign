@@ -129,8 +129,10 @@ from .sec_3 import E_3_3_2_e1
 # Imports for Section 3.3.3
 from .sec_3 import E_3_3_3_e1, E_3_3_3_e2
 # Imports for Section 3.3.4
-from .sec_3 import E_3_3_4_e1, E_3_3_4_e2, E_3_3_4_e3, E_3_3_4_e4, E_3_3_4_e5, E_3_3_4_e6, E_3_3_4_e7, E_3_3_4_e8, E_3_3_4_e9, Ct
+from .sec_3 import E_3_3_4_e1, E_3_3_4_e2, E_3_3_4_e3, E_3_3_4_e4, E_3_3_4_e5, E_3_3_4_e6, E_3_3_4_e7, E_3_3_4_e8, E_3_3_4_e9, coeff_units
 from .sec_3 import E_3_3_4_e10, E_3_3_4_e11, E_3_3_4_e12, E_3_3_4_e13, E_3_3_4_e14, E_3_3_4_e15, E_3_3_4_e17, E_3_3_4_e19, E_3_3_4_e20, E_3_3_4_e21, E_3_3_4_e22
+# Imports for Section 3.3.5
+from .sec_3 import E_3_3_5_e1, E_3_3_5_e2
 # Imports for Section 3.4
 from .sec_3 import E_3_4_e1, E_3_4_2_e1, E_3_4_3_e1, E_3_4_3_e3
 # Imports for Section 3.5
@@ -889,17 +891,21 @@ class ASCE_8_02:
             if ratio > 1.0:
                 state = 'Not Passed Eq 3.3.3-1'
             else: state = 'Pass Eq 3.3.3-1'
-            
+
         return ratio, state
 
 
     ## 3.3.4 Web Crippling Strength
-    def s3_3_4(self, units):
+    def s3_3_4(self, units, reaction, FlangeLoading = '1'):
         '''Web Crippling Strength.
         Parameters
         ----------
             units: string,
                 SI para sistema internacional o US para sistema imperial.
+            reaction: string,
+                vale 'end' o 'interior' y define si se trata de una carga interior o una de borde (apoyo).
+            tableA2_row: string,
+                vale '1' (default) o '2', y define si se utiliza la primera 1ra o 2da fila de la tabla A-2.
         Returns
         -------
             
@@ -916,19 +922,26 @@ class ASCE_8_02:
 
         # Parametros
 
+        midC = {}
         fi = 0.70
+        midC['fi'] = fi
 
         FY = steel.FY
         h = profile.H - 2*profile.r_out
         t = profile.t
 
-        Ct = Ct(units=units)
+        Ct =coeff_units(units=units)
         k = E_3_3_4_e21(FY=FY, Ct=Ct)
         m = E_3_3_4_e22(t=t, units=units)
 
         N = dpar.N
         R = profile.r_out - t
         theta = dpar.N_theta
+
+        # Limits
+        if N/t > 210 or N/h > 3.5 or R/t > 6.0:
+            print('No se satisfacen los requerimientos para aplicar la Tabla 2 - Seccion 3.3.4')
+            raise Exception('>> Analisis abortado <<')
 
         # Calculo de coeficientes
         C1 = E_3_3_4_e10(FY=FY, Ct=Ct, k=k)
@@ -939,30 +952,142 @@ class ASCE_8_02:
         C6 = E_3_3_4_e15(h=h, t=t)
         C7 = E_3_3_4_e17(h=h, t=t, k=k)
         C8 = E_3_3_4_e19(h=h, t=t, k=k)
-        C_theta = E_3_3_4_e20(theta=theta)
+        Ctheta = E_3_3_4_e20(theta=theta)
 
-        ## Shapes Having Single Webs
-            # Stiffened or Partially Stiffened Flenges
-                # End Reaction
-        # if 
-        E_3_3_4_e1(t, C3, C4, Ctheta, h, N, Ct)
-                # Interior Reaction
-        E_3_3_4_e4(t, C1, C2, Ctheta, h, N, Ct)
+        print(N,R,t,theta,k,m,h,Ct,C1,C2,C3,C4,C5,C6,C7,C8,Ctheta)
 
-        # Unstiffened Flanges
-                # End Reaction
-        E_3_3_4_e2(t, C3, C4, Ctheta, h, N, Ct)
-                # Interior Reaction
-        E_3_3_4_e4(t, C1, C2, Ctheta, h, N, Ct)
+        # Oppsing Loads Spaced > 1.5h
+        if FlangeLoading == '1':
 
-        ## I-sections or Similar Sections
-            # Stiffened, Partially Stiffened and Unstiffened Flanges
-                # End Reaction
-        E_3_3_4_e3(N, t, FY, C6)
-                # Interior Reaction
-        E_3_3_4_e5(N, t, FY, C5, m)
+            ## Shapes Having Single Webs
+                # Stiffened or Partially Stiffened Flanges
+            if profile.type == 'c_w_lps':
+                    # End Reaction
+                if reaction == 'end':
+                    Pn = E_3_3_4_e1(t=t, C3=C3, C4=C4, Ctheta=Ctheta, h=h, N=N, Ct=Ct)
+                    # Interior Reaction
+                elif reaction == 'interior':
+                    Pn = E_3_3_4_e4(t=t, C1=C1, C2=C2, Ctheta=Ctheta, h=h, N=N, Ct=Ct)
+                else:
+                    print('Definir si reaction es /end/ o /interior/')
+                    raise Exception('>> Analisis abortado <<')
 
+                # Unstiffened Flanges
+            elif profile.type == 'cee':
+                    # End Reaction
+                if reaction == 'end':
+                    Pn = E_3_3_4_e2(t=t, C3=C3, C4=C4, Ctheta=Ctheta, h=h, N=N, Ct=Ct)
+                    # Interior Reaction
+                elif reaction == 'interior':
+                    Pn = E_3_3_4_e4(t=t, C1=C1, C2=C2, Ctheta=Ctheta, h=h, N=N, Ct=Ct)
+                else:
+                    print('Definir si reaction es /end/ o /interior/')
+                    raise Exception('>> Analisis abortado <<')
 
+            ## I-sections or Similar Sections
+            elif profile.type == 'I_builtup_cee_wlps' or profile.type == 'I_builtup_cee':
+                t = t/2 # se calcula para cada alma individualmente
+
+                # Stiffened, Partially Stiffened and Unstiffened Flanges
+                    # End Reaction
+                if reaction == 'end':
+                    Pn = E_3_3_4_e3(N=N, t=t, FY=FY, C6=C6)*2
+                    # Interior Reaction
+                elif reaction == 'interior':
+                    Pn = E_3_3_4_e5(N=N, t=t, FY=FY, C5=C5, m=m)*2
+                else:
+                    print('Definir si reaction es /end/ o /interior/')
+                    raise Exception('>> Analisis abortado <<')
+            else:
+                print('Seccion no implementada para Seccion 3.3.4')
+                raise Exception('>> Analisis abortado <<')
+
+        # Oppsing Loads Spaced <= 1.5h
+        if FlangeLoading == '2':
+
+            ## Shapes Having Single Webs
+                # Stiffened or Partially Stiffened Flanges
+            if profile.type == 'c_w_lps' or profile.type == 'cee':
+                    # End Reaction and Unstiffened Flanges
+                if reaction == 'end':
+                    Pn = E_3_3_4_e6(t=t, C3=C3, C4=C4, Ctheta=Ctheta, h=h, N=N, Ct=Ct)
+                    # Interior Reaction
+                elif reaction == 'interior':
+                    Pn = E_3_3_4_e8(t=t, C1=C1, C2=C2, Ctheta=Ctheta, h=h, N=N, Ct=Ct)
+                else:
+                    print('Definir si reaction es /end/ o /interior/')
+                    raise Exception('>> Analisis abortado <<')
+
+            ## I-sections or Similar Sections
+            elif profile.type == 'I_builtup_cee_wlps' or profile.type == 'I_builtup_cee':
+                t = t/2 # se calcula para cada alma individualmente
+                # Stiffened, Partially Stiffened and Unstiffened Flanges
+                    # End Reaction
+                if reaction == 'end':
+                    Pn = E_3_3_4_e7(t=t, C8=C8, FY=FY, N=N, m=m)*2
+                    # Interior Reaction
+                elif reaction == 'interior':
+                    Pn = E_3_3_4_e9(t=t, C7=C7, FY=FY, N=N, m=m)*2
+                else:
+                    print('Definir si reaction es /end/ o /interior/')
+                    raise Exception('>> Analisis abortado <<')
+
+            else:
+                print('Seccion no implementada para Seccion 3.3.4')
+                raise Exception('>> Analisis abortado <<')
+
+        midC['Pn'] = Pn
+        return fi*Pn, midC
+
+    ## 3.3.5 Combined Bending and Web Crippling Strength
+    def s3_3_5(self, Pu, Mu, fiPn = 0, fiMn = 0):
+        '''Combined Bending and Web Crippling Strength for unreinforced webs
+        Parameters
+        ----------
+            fiMn: float,
+                resistencia de diseno a la flexion, cuando actua solo la flexion.
+            fiPn: float,
+                resistencia de diseno a una carga concentrada o reaccion, en ausencia de flexion segun seccion 3.3.4.
+            Mu: float,
+                resistencia requerida a la flexion. 
+            Pu: float,
+                resistencia requerida a una carga concentrada o reaccion, en ausencia de flexion.
+        Returns
+        -------
+            ratio: float,
+                ratio entre las resistencias requeridas y las correspondientes de diseno.
+        Tests
+            none
+        '''
+        steel = self.member.steel
+        profile = self.member.profile
+        dpar = self.member.dP
+
+        if fiMn == 0:
+            fiMn = s3_3_1()
+
+        if fiPn == 0:
+            fiPn = s3_3_4()
+
+        # Single Unreinforced Web
+        if profile.type == 'I_builtup_cee_wlps' or profile.type == 'I_builtup_cee':
+            ratio = E_3_3_5_e1(Pu=Pu, fiPn=fiPn, Mu=Mu, fiMn=fiMn)
+            if ratio > 1.0:
+                state = 'Not Passed Eq 3.3.5-1'
+            else: state = 'Pass Eq 3.3.5-1'
+
+        # Multiple Unreinforced Web
+        # Exception
+
+        elif profile.type == 'c_w_lps' or profile.type == 'cee':
+            ratio = E_3_3_5_e1(Pu=Pu, fiPn=fiPn, Mu=Mu, fiMn=fiMn)
+            if ratio > 1.0:
+                state = 'Not Passed Eq 3.3.5-2'
+            else: state = 'Pass Eq 3.3.5-2'
+
+        return ratio, state
+
+    
     def s3_4(self):
         '''Design axial strength. 
             
