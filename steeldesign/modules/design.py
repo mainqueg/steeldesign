@@ -118,6 +118,7 @@
 '''
 
 from math import pi
+import numpy as np
 from .sec_2 import sec2_1_1_c1,sec2_1_1_c3, sec2_2_1, sec2_3_1, sec2_3_2, sec2_4_2, sec2_2_2
 from .sec_3 import sec3_2
 # Imports for Section 3.3.1.1
@@ -284,10 +285,22 @@ class ASCE_8_02:
         
     Methods
     -------
+        s3_5() :
+            Combined Axial Load and Bending
         s3_4() : 
             Design axial strength
         s3_3_1() :
             Strength for Bending Only
+        s3_3_2() :
+            Strength for Shear Only
+        s3_3_3() :
+            Strength for Combined Bending and Shear
+        s3_3_4() :
+            Web Crippling Strength
+        s3_3_5() :
+            Strength for Combined Bending and Web Crippling
+        s3_2() :
+            Design Tensile Strength
         s3_FTB() : 
             Tension y Carga críticas de pandeo flexo-torsional
         s3_FB() : 
@@ -309,7 +322,7 @@ class ASCE_8_02:
             print ('Advertencia: El miembro', member.name, 'no tiene asignado parametros de diseño.')
 
 
-    ## 3.2 Dimensional Limits and Considerations
+    ## 2.1 Dimensional Limits and Considerations
     def s2_1(self):
         '''Dimensional Limits and Considerations. 
         2.1.1 Flange Flat-Width-to-Thickness Considerations
@@ -334,6 +347,7 @@ class ASCE_8_02:
         profile = self.member.profile
         elements = profile.elements
         
+        # 2.1.1 Flange Flat-Width-to-Thickness Considerations
         for key in elements.keys():
             element = elements[key]
             # condition i
@@ -379,7 +393,9 @@ class ASCE_8_02:
                 print('El elemento:',element['name'], 'del perfil:', profile.name, 'no tiene asignada una clasificacion reconocida:', element['type'])
                 raise Exception('>> Analisis abortado <<')
 
-    
+        # 2.1.2 Maximum Web Depth-to-Thickness Ratio
+
+
     ## 3.2 Tension Members
     def s3_2(self):
         '''Design Tensile Strength. Eq 3.2-1.
@@ -866,6 +882,8 @@ class ASCE_8_02:
         -------
             ratio: float,
                 ratio entre las resistencias requeridas y las correspondientes de diseno.
+            states: diccionario,
+                verificacion de las ecuaciones de interaccion.
         Raises
         ------
             none
@@ -881,18 +899,19 @@ class ASCE_8_02:
 
         bend = Mu/fiMn
         shear = Vu/fiVn
+        states = {}
         if bend > 0.5 and shear > 0.7:
             ratio = E_3_3_3_e2(fiMn, fiVn, Mu, Vu)
             if ratio > 1.0:
-                state = 'Not Passed Eq 3.3.3-2'
-            else: state = 'Pass Eq 3.3.3-2'
+                states['Eq 3.3.3-2'] = 'Not Pass'
+            else: states['Eq 3.3.3-2'] = 'Pass'
         else:
             ratio = E_3_3_3_e1(fiMn, fiVn, Mu, Vu)
             if ratio > 1.0:
-                state = 'Not Passed Eq 3.3.3-1'
-            else: state = 'Pass Eq 3.3.3-1'
+                states['Eq 3.3.3-1'] = 'Not Pass'
+            else: state['Eq 3.3.3-1'] = 'Pass'
 
-        return ratio, state
+        return ratio, states
 
 
     ## 3.3.4 Web Crippling Strength
@@ -1039,6 +1058,7 @@ class ASCE_8_02:
         midC['Pn'] = Pn
         return fi*Pn, midC
 
+
     ## 3.3.5 Combined Bending and Web Crippling Strength
     def s3_3_5(self, Pu, Mu, fiPn = 0, fiMn = 0):
         '''Combined Bending and Web Crippling Strength for unreinforced webs
@@ -1056,6 +1076,8 @@ class ASCE_8_02:
         -------
             ratio: float,
                 ratio entre las resistencias requeridas y las correspondientes de diseno.
+            states: diccionario,
+                verificacion de las ecuaciones de interaccion.
         Tests
             none
         '''
@@ -1069,12 +1091,13 @@ class ASCE_8_02:
         if fiPn == 0:
             fiPn = s3_3_4()
 
+        states = {}
         # Single Unreinforced Web
         if profile.type == 'I_builtup_cee_wlps' or profile.type == 'I_builtup_cee':
             ratio = E_3_3_5_e1(Pu=Pu, fiPn=fiPn, Mu=Mu, fiMn=fiMn)
             if ratio > 1.0:
-                state = 'Not Passed Eq 3.3.5-1'
-            else: state = 'Pass Eq 3.3.5-1'
+                states['Eq 3.3.5-1'] = 'Not Pass'
+            else: states['Eq 3.3.5-1'] = 'Pass'
 
         # Multiple Unreinforced Web
         # Exception
@@ -1082,58 +1105,13 @@ class ASCE_8_02:
         elif profile.type == 'c_w_lps' or profile.type == 'cee':
             ratio = E_3_3_5_e1(Pu=Pu, fiPn=fiPn, Mu=Mu, fiMn=fiMn)
             if ratio > 1.0:
-                state = 'Not Passed Eq 3.3.5-2'
-            else: state = 'Pass Eq 3.3.5-2'
+                states['Eq 3.3.5-2'] = 'Not Pass'
+            else: states['Eq 3.3.5-2'] = 'Pass'
 
-        return ratio, state
+        return ratio, states
 
     
-    def s3_4(self):
-        '''Design axial strength. 
-            
-            Ec 3.4-1: Tension menor de estados limites FB, TB, FTB multiplicada por factor de resistencia y area efectiva.
-        
-        Parameters
-        ----------
-            none
-        Returns
-        -------
-            fiPn : float
-                Resistencia axial de diseño
-            fiPno : float
-                Resistencia axial de diseño nominal (f=FY)
-            [Fn_FB, Fn_TB, Fn_FTB, Ae] : list of float
-                Fn_FB: Tension de pandeo flexional
-                Fn_TB: Tension de pandeo torsional
-                Fn_FTB: Tension de pandeo flexo-torsional
-                Ae: Area efectiva calculada a Fn
-        Raises
-        ------
-            none
-        Tests
-        -----
-            En archivo
-        '''
-        FY = self.member.steel.FY
-        ([Fn_FBx, _], [Fn_FBy, _]) = self.s3_FB()
-        (Fn_TB, _) = self.s3_TB()
-        (Fn_FTB, _) = self.s3_FTB()
-
-        Fn = min(Fn_FBx, Fn_FBy, Fn_TB, Fn_FTB)
-
-        Ae = self.s2_Ae_compMemb(Fn, origin= 'sec 3.4-fiPn')
-        fiPn = E_3_4_e1(Fn, Ae)
-
-        Ae_no = self.s2_Ae_compMemb(FY, origin= 'sec 3.4-fiPno')
-        fiPno = E_3_4_e1(FY, Ae_no)
-
-        midC = {'fiPno': fiPno, 'Pno': Ae_no*FY ,'Pn': Ae*Fn, 
-                'Fn_FBx': Fn_FBx, 'Fn_FBy': Fn_FBy, 'Fn_TB': Fn_TB, 'Fn_FTB':Fn_FTB,
-                'Fn': Fn, 'Ae': Ae, 'Ae_no': Ae_no}
-
-        return fiPn, midC
-
-
+    # Area efectiva para miembros a compresion calculado para una tension f
     def s2_Ae_compMemb(self, f, origin):
         '''Area efectiva para miembros a compresion, segun 2.2.1 (stiffned), 2.3.1 (unstiffned) y 2.4.2 (stiffned_w_slps)
         
@@ -1209,6 +1187,7 @@ class ASCE_8_02:
         return Ae
 
 
+    # Tension y Carga críticas de pandeo flexo-torsional
     def s3_FTB(self):
         '''Tensión y carga critica nominal de pandeo flexo-torsional.
 
@@ -1250,6 +1229,7 @@ class ASCE_8_02:
         Pn = Fn* profile.A
         return Fn, Pn
 
+    # Tension y Carga críticas de pandeo flexional
     def s3_FB(self):
         '''Tensión y carga critica nominal para pandeo a flexion en x e y.
 
@@ -1296,6 +1276,7 @@ class ASCE_8_02:
 
         return [Fnx, Pnx], [Fny, Pny]
 
+    # Tension y Carga críticas de pandeo torsional
     def s3_TB(self):
         '''Tensión y carga critica nominal para pandeo torsional.
 
@@ -1335,8 +1316,77 @@ class ASCE_8_02:
 
         return Fn, Pn
 
-    def s3_5(self, Pu, fiPn, Mu_x, Mu_y, fiMn_x, fiMn_y):
+
+    # 3.4 Concentrically Loaded Compression Members.
+    def s3_4(self):
+        '''Design axial strength. 
+            
+            Ec 3.4-1: Tension menor de estados limites FB, TB, FTB multiplicada por factor de resistencia y area efectiva.
+        
+        Parameters
+        ----------
+            none
+        Returns
+        -------
+            fiPn : float
+                Resistencia axial de diseño
+            fiPno : float
+                Resistencia axial de diseño nominal (f=FY)
+            [Fn_FB, Fn_TB, Fn_FTB, Ae] : list of float
+                Fn_FB: Tension de pandeo flexional
+                Fn_TB: Tension de pandeo torsional
+                Fn_FTB: Tension de pandeo flexo-torsional
+                Ae: Area efectiva calculada a Fn
+        Raises
+        ------
+            none
+        Tests
+        -----
+            En archivo
         '''
+        FY = self.member.steel.FY
+        ([Fn_FBx, _], [Fn_FBy, _]) = self.s3_FB()
+        (Fn_TB, _) = self.s3_TB()
+        (Fn_FTB, _) = self.s3_FTB()
+
+        Fn = min(Fn_FBx, Fn_FBy, Fn_TB, Fn_FTB)
+
+        Ae = self.s2_Ae_compMemb(Fn, origin= 'sec 3.4-fiPn')
+        fiPn = E_3_4_e1(Fn, Ae)
+
+        Ae_no = self.s2_Ae_compMemb(FY, origin= 'sec 3.4-fiPno')
+        fiPno = E_3_4_e1(FY, Ae_no)
+
+        midC = {'fiPno': fiPno, 'Pno': Ae_no*FY ,'Pn': Ae*Fn, 
+                'Fn_FBx': Fn_FBx, 'Fn_FBy': Fn_FBy, 'Fn_TB': Fn_TB, 'Fn_FTB':Fn_FTB,
+                'Fn': Fn, 'Ae': Ae, 'Ae_no': Ae_no}
+
+        return fiPn, midC
+
+
+    # 3.5 Combined Axial Load and Bending.
+    def s3_5(self, Pu, fiPn, Ae, Mu_x = 0, Mu_y = 0, fiMn_x = 0, fiMn_y = 0):
+        '''Combined Axial Load and Bending.
+        Parameters
+        ----------
+            Pu: float,
+                resistencia axial requerida a la compresion.
+            fiPn: float,
+                resistencia de diseno a la compresion.
+            Mu_x, Mu_y: float,
+                resistencias requeridas a la flexion.
+            fiMn_x, fiMn_y: float,
+                resistencias de diseno a la flexion.
+            Ae: float,
+                area efectiva.
+        Returns
+        -------
+            ratios: float,
+                ratios entre las resistencias requeridas y las correspondientes de diseno.
+            states: diccionario,
+                verificacion de las ecuaciones de interaccion.
+        Tests
+        -----
         '''
         # Parametros
         steel = self.member.steel
@@ -1351,7 +1401,6 @@ class ASCE_8_02:
         Ly = dpar.Ly
         Ix = profile.Ix
         Iy = profile.Iy
-
         Cm_x = dpar.Cm_x
         Cm_y = dpar.Cm_y
 
@@ -1360,19 +1409,35 @@ class ASCE_8_02:
         alpha_nx = E_3_5_e4(Pu=Pu, Pe=Pe_x)
         alpha_ny = E_3_5_e4(Pu=Pu, Pe=Pe_y)
 
-        Ae = 1
+        # Ae = 1
         fiPn_0 = E_3_4_e1(Fn=self.member.steel.FY, Ae=Ae)
-        if 1 == 1:
-            raise NotImplementedError
-        return Cm_x, Cm_y, alpha_nx, alpha_ny, fiPn_0 # para sacar los warnigs BORRAR
+        # if 1 == 1:
+        #     raise NotImplementedError
+        # return Cm_x, Cm_y, alpha_nx, alpha_ny, fiPn_0 # para sacar los warnigs BORRAR
 
+        ratios = np.zeros(3)
+        states = {}
         if Pu/fiPn > 0.15:
-            ratio_1 = E_3_5_e1(Pu=Pu, fiPn=fiPn, Mu_x=Mu_x, Mu_y=Mu_y, fiMn_x=fiMn_x, fiMn_y=fiMn_y, alpha_nx=alpha_nx, alpha_ny=alpha_ny, Cm_x=Cm_x, Cm_y=Cm_y)
-            ratio_2 = E_3_5_e2(Pu=Pu, fiPn_0=fiPn_0, Mu_x=Mu_x, Mu_y=Mu_y, fiMn_x=fiMn_x, fiMn_y=fiMn_y)
-            return ratio_1, ratio_2
+            ratios[0] = E_3_5_e1(Pu=Pu, fiPn=fiPn, Mu_x=Mu_x, Mu_y=Mu_y, fiMn_x=fiMn_x, fiMn_y=fiMn_y, alpha_nx=alpha_nx, alpha_ny=alpha_ny, Cm_x=Cm_x, Cm_y=Cm_y)
+            ratios[1] = E_3_5_e2(Pu=Pu, fiPn_0=fiPn_0, Mu_x=Mu_x, Mu_y=Mu_y, fiMn_x=fiMn_x, fiMn_y=fiMn_y)
+            # Verificacion de las ecuaciones de interaccion
+            if ratios[0] > 1.0: states['Eq 3.5-1'] = 'Not Pass'
+            else: states['Eq 3.5-1'] = 'Pass'
+            if ratios[1] > 1.0: states['Eq 3.5-2'] = 'Not Pass'
+            else: states['Eq 3.5-2'] = 'Pass'
         else:
-            ratio_1 = E_3_5_e3(Pu=Pu, fiPn=fiPn, Mu_x=Mu_x, Mu_y=Mu_y, fiMn_x=fiMn_x, fiMn_y=fiMn_y)
-            return ratio_1
+            ratios[2] = E_3_5_e3(Pu=Pu, fiPn=fiPn, Mu_x=Mu_x, Mu_y=Mu_y, fiMn_x=fiMn_x, fiMn_y=fiMn_y)
+            if ratios[2] > 1.0: states['Eq 3.5-3'] = 'Not Pass'
+            else: states['Eq 3.5-3'] = 'Pass'
+
+        return ratios, states
         
 
+    def s4_1(self):
+        '''
+        '''
+        # 4.1.1 I-Sections Composed of Two Channels
+
+
+        # 4.1.2 Spacing of Connections in Compression
         

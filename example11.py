@@ -48,11 +48,10 @@ Mu_x = 12.88
 Mu_y = 6.44
 Pu = 3.22
 print('Cargas: Mu_x = ', Mu_x,  ' | Mu_y = ', Mu_y, ' | Pu = ', Pu)
-ratios_3_5, states_3_5 = analysis.s3_5(Pu=Pu, fiPn=fiPn, Ae=midC_3_4['Ae_no'], Mu_x=Mu_x, Mu_y=Mu_y, fiMn_x=fiMn, fiMn_y=fiMny_plus)
+ratios_3_5, states_3_5 = analysis.s3_5(Pu=Pu, fiPn=fiPn, Ae=midC_3_4['Ae_no'], Mu_x=Mu_x, Mu_y=Mu_y, fiMn_x=46.26, fiMn_y=36.36)
 print('ratios = ', ratios_3_5, ' | state : ', states_3_5)
 
 # Valores de referencia:    ratios = 0.834 | 0.524
 # Valores de steeldesign:   ratios = 0.855 | 0.544
 
-# NOTA: En ambos casos el error viene dado por el termino en x, fiMn_x (6.4% error) tiene mas error que fiMn_y 
-# si uso los valores de ref para las resistencias a la flexion los ratios dan: 0.835 | 0.525
+# NOTA: En ambos casos el error viene dado por el termino en x, fiMn_x (6.4% error) tiene mas error que fiMn_y

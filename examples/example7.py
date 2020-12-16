@@ -46,21 +46,21 @@ print('\n3.3.3 Strength for Combined Bending and Shear')
 Mu = 44.16
 Vu = 2.21
 print('Cargas: Mu = ', Mu, ' | Vu = ', Vu)
-ratio_3_3_3, state = analysis.s3_3_3(fiMn=fiMn, fiVn=fiVn, Mu=Mu, Vu=Vu)
-print('ratio = ', round(ratio_3_3_3,2), '| state : ', state)
+ratio_3_3_3, state_3_3_3 = analysis.s3_3_3(fiMn=fiMn, fiVn=fiVn, Mu=Mu, Vu=Vu)
+print('ratio = ', round(ratio_3_3_3,2), '| state : ', state_3_3_3)
 
 # Valores de referencia:    ratio = 0.31
 # Valores de steeldesign:   ratio = 0.32
 
 
 print('\n3.3.4 Web Crippling Strength')
-fiPn, midC_WC = analysis.s3_3_4(units='US', reaction='end', FlangeLoading='1')
+fiPn_WC, midC_WC = analysis.s3_3_4(units='US', reaction='end', FlangeLoading='1')
 print('Pn = ', round(midC_WC['Pn'],2))
 
 # Valores de referencia:    Pn = 5.38 (N = 3.0)
 # Valores de steeldesign:   Pn = 5.38
 
-fiPn, midC_WC = analysis.s3_3_4(units='US', reaction='interior', FlangeLoading='1')
+fiPn_WC, midC_WC = analysis.s3_3_4(units='US', reaction='interior', FlangeLoading='1')
 print('Pn = ', round(midC_WC['Pn'],2))
 
 # Valores de referencia:    Pn = 15.79 (N = 6.0)
@@ -71,9 +71,8 @@ print('\n3.3.5 Combined Bending and Web Crippling Strength')
 Mu = 44.16
 Pu = 4.05
 print('Cargas: Mu = ', Mu, ' | Vu = ', Vu)
-ratio_3_3_5, state = analysis.s3_3_5(Pu=Pu, fiPn=fiPn, Mu=Mu, fiMn=fiMn)
-print('ratio = ', round(ratio_3_3_5,2), '| state : ', state)
+ratio_3_3_5, state_3_3_5 = analysis.s3_3_5(Pu=Pu, fiPn=fiPn_WC, Mu=Mu, fiMn=fiMn)
+print('ratio = ', round(ratio_3_3_5,2), '| state : ', state_3_3_5)
 
 # Valores de referencia:    ratio = 0.66
 # Valores de steeldesign:   ratio = 0.67
-

@@ -1207,7 +1207,7 @@ def E_3_4_3_e3(E0, K, L, r, eta):
 
 
 ## 3.5 Combined Axial Load and Bending
-def E_3_5_e1(Pu, fiPn, Mu_x, Mu_y, fiMn_x, fiMn_y, alpha_nx, alpha_ny, Cm_x, Cm_y):
+def E_3_5_e1(Pu, fiPn, alpha_nx, alpha_ny, Cm_x, Cm_y, Mu_x = 0, Mu_y = 0, fiMn_x = 0, fiMn_y = 0):
     '''Ecuacion de interaccion para carga axial y flexion. Caso Pu/fiPn > 0.15.
     Parameters
     ----------
@@ -1223,20 +1223,26 @@ def E_3_5_e1(Pu, fiPn, Mu_x, Mu_y, fiMn_x, fiMn_y, alpha_nx, alpha_ny, Cm_x, Cm_
             factores de amplificacion.
         Cm_x, Cm_y: float,
             coeficientes segun restriccion en la junta.
-    
     Returns
     -------
         ratio: float,
             ratio entre las resistencias requeridas y las correspondientes de diseno.
-
     Tests
     -----
         >>> round(E_3_5_e1(Pu=3.22, fiPn=10.97, Mu_x=0.0, Mu_y=6.44, fiMn_x=1.0, fiMn_y=36.36, alpha_nx=1.0, alpha_ny=0.707, Cm_x=1.0, Cm_y=1.0), 3)
         0.544
     '''
-    return Pu/fiPn + Cm_x*Mu_x/(fiMn_x*alpha_nx) + Cm_y*Mu_y/(fiMn_y*alpha_ny)
+    t1 = Pu/fiPn
+    t2 = 0
+    t3 = 0
+    if Mu_x != 0:
+        t2 = Cm_x*Mu_x/(fiMn_x*alpha_nx)
+    if Mu_y != 0:
+        t3 = Cm_y*Mu_y/(fiMn_y*alpha_ny)
+    print(t1,t2,t3)
+    return t1+t2+t3
 
-def E_3_5_e2(Pu, fiPn_0, Mu_x, Mu_y, fiMn_x, fiMn_y):
+def E_3_5_e2(Pu, fiPn_0, Mu_x = 0, Mu_y = 0, fiMn_x = 0, fiMn_y = 0):
     '''Ecuacion de interaccion para carga axial y flexion. Caso Pu/fiPn > 0.15.
     Parameters
     ----------
@@ -1259,7 +1265,15 @@ def E_3_5_e2(Pu, fiPn_0, Mu_x, Mu_y, fiMn_x, fiMn_y):
         >>> round(E_3_5_e2(Pu=3.22, fiPn_0=45.58, Mu_x=0.0, Mu_y=6.44, fiMn_x=1.0, fiMn_y=36.36), 3)
         0.248
     '''
-    return Pu/fiPn_0 + Mu_x/fiMn_x + Mu_y/fiMn_y
+    t1 = Pu/fiPn_0
+    t2 = 0
+    t3 = 0
+    if Mu_x != 0:
+        t2 = Mu_x/fiMn_x
+    if Mu_y != 0:
+        t3 = Mu_y/fiMn_y
+    print(t1,t2,t3)
+    return t1+t2+t3
 
 def E_3_5_e3(Pu, fiPn, Mu_x, Mu_y, fiMn_x, fiMn_y):
     '''Ecuacion de interaccion para carga axial y flexion. Caso Pu/fiPn <= 0.15.
@@ -1284,7 +1298,14 @@ def E_3_5_e3(Pu, fiPn, Mu_x, Mu_y, fiMn_x, fiMn_y):
         >>> round(E_3_5_e3(Pu=3.22, fiPn=30.0, Mu_x=0.0, Mu_y=6.44, fiMn_x=1.0, fiMn_y=36.36), 3)
         0.284
     '''
-    return Pu/fiPn + Mu_x/fiMn_x + Mu_y/fiMn_y
+    t1 = Pu/fiPn
+    t2 = 0
+    t3 = 0
+    if Mu_x != 0:
+        t2 = Mu_x/fiMn_x
+    if Mu_y != 0:
+        t3 = Mu_y/fiMn_y
+    return t1+t2+t3
 
 def E_3_5_e4(Pu, Pe):
     '''Magnification factor.
@@ -1303,7 +1324,7 @@ def E_3_5_e4(Pu, Pe):
         >>> round(E_3_5_e4(Pu=3.22, Pe=0.85*12.91), 3)
         0.707
     '''
-    return (1 - Pu/Pe)
+    return (1 - Pu/Pe/0.85)
 
 def E_3_5_e5(E0, Kb, Lb, Ib):
     '''Elastic Buckling Strength.

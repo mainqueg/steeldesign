@@ -22,7 +22,8 @@ def E_4_1_1_e1(L, r_cy, r_I):
             espaciado maximo entre soldaduras.
     Tests
     -----
-        >>> 
+        >>> round(E_4_1_1_e1(L=6*12, r_cy=0.4, r_I=0.6), 2)
+        24.0
     '''
     return L*r_cy/2/r_I 
 
@@ -41,11 +42,12 @@ def E_4_1_1_e2(L):
             espaciado maximo entre soldaduras.
     Tests
     -----
-        >>> 
+        >>> round(E_4_1_1_e2(L=6*12), 2)
+        12.0
     '''
     return L/6
 
-def E_4_1_1_e3(g, Ts, m, q)
+def E_4_1_1_e3(g, Ts, m, q):
     '''Limit for the maximun spacing of welds or connections for flexural members.
     Parameters
     ----------
@@ -66,7 +68,8 @@ def E_4_1_1_e3(g, Ts, m, q)
             limite de espaciado maximo entre soldaduras.
     Tests
     -----
-        >>> 
+        >>> round(E_4_1_1_e3(g=7.0, Ts=0.18, m=0.629, q=1.0), 2)
+        4.01
     '''
     return 2*g*Ts/m/q
 
@@ -93,7 +96,8 @@ def E_4_1_1_e4(B, t, Ix, d, D = 0):
             distancia entre el centro de corte de un perfil C al plano medio de su alma.
     Tests
     -----
-        >>> 
+        >>> round(E_4_1_1_e4(B=1.5, t=0.135, Ix=7.8329, d=7.0, D = 0), 3)
+        0.417
     '''
     if D == 0: alpha = 0
     else: alpha = 1
@@ -113,8 +117,8 @@ def E_4_1_1_e5(Pu, m, g):
             carga concentrada o reaccion.
         m: float,
             distancia entre el centro de corte de un perfil C al plano medio de su alma.
-        q: float,
-            factor de intensidad de carga.
+        g: float,
+            distancia vertical entre las lineas de conexiones mas cercanas a los topes superior e inferior.
     Raises
     ------
         none
@@ -124,7 +128,8 @@ def E_4_1_1_e5(Pu, m, g):
             resistencia de diseño de la conexion a la traccion.
     Tests
     -----
-        >>> 
+        >>> round(E_4_1_1_e5(Pu=4.05, m=0.629, g=7.0), 2)
+        0.18
     '''
     return Pu*m/2/g
 
@@ -149,24 +154,36 @@ def sec_4_1_2():
     raise NotImplementedError
 
 
-## Eq I1.2-1 - Slenderness
+## Eq I1.2-1 - Slenderness - Compression Members Composed of Two Sections in Contact
 
 # Note: this equation aplies when the buckling modes involve relative deformations that 
 # produce shear forces in the connectors between indivivual shapes
-def E_I_1_2_e1(slender_0, a, r):
+def E_I_1_2_e1(K, L, r, a, ri):
     '''Maximun permissible longitudinal spacing of welds or other connectors joining two channels.
     Parameters
     ----------
-
+        K,L: float,
+            longitud efectiva.
+        r: float,
+            radio de giro.
+        a: float,
+            espaciado entre soldaduras o bulones.
+        ri: float,
+            minimo radio de giro de la seccion individual del built-up.
     Raises
     ------
         none
-    
     Returns
     -------
-
+        slend_modif: float
+            esbeltez modificada.
     Tests
     -----
-        >>> 
+        >>> round(E_I_1_2_e1(K=1.0, L=6*12, r=0.6, a=18.0, ri=0.4), 2)
+        128.16
     '''
-    return ( slender_0**2 + (a/r)**2 )**0.5
+    slend = (K*L/r)
+    return ( slend**2 + (a/ri)**2 )**0.5
+
+#####################################################################################
+#####################################################################################
