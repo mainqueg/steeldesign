@@ -182,7 +182,7 @@ class designParameters:
     ------
         En archivo
     '''
-    def __init__(self, Kx = 1.0, Ky = 1.0, Kz = 1.0, Lx = 0.0, Ly = 0.0, Lz = 0.0, cLoadFlag = True, Cb= 1.0, Cm_x = 0.85, Cm_y = 0.85, N = 0.0, N_theta = 90.0):
+    def __init__(self, Kx = 1.0, Ky = 1.0, Kz = 1.0, Lx = 0.0, Ly = 0.0, Lz = 0.0, cLoadFlag = True, Cb= 1.0, Cm_x = 1.0, Cm_y = 1.0, N = 0.0, N_theta = 90.0):
         self.Kx = Kx
         self.Ky = Ky
         self.Kz = Kz

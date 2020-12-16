@@ -12,7 +12,7 @@ p1 = sd.c_w_lps_profile(H= 8.0, B= 3, D= 0.80, t= 0.105, r_out= ( 0.105+3/16) )
 # creo material
 s = sd.steel(FY= 50, E0= 27000, nu= 0.3, n= 4.58, offset= 0.002, name= 'SA301_1_4Hard')
 # design parameters (default)
-dp = sd.designParameters(Cm_x= 1.0, Cm_y= 1.0)
+dp = sd.designParameters()
 # creo un miembro
 m = sd.member(L= 16*12, profile= p1, steel= s, designParameters= dp)
 # creo el analisis
