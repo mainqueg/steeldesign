@@ -55,13 +55,13 @@ print('ratio = ', round(ratio_3_3_3,2), '| state : ', state_3_3_3)
 
 print('\n3.3.4 Web Crippling Strength')
 fiPn_WC, midC_WC = analysis.s3_3_4(units='US', reaction='end', FlangeLoading='1')
-print('Pn = ', round(midC_WC['Pn'],2))
+print('fiPn_WC = ', round(fiPn_WC,2), ' | Pn = ', round(midC_WC['Pn'],2))
 
 # Valores de referencia:    Pn = 5.38 (N = 3.0)
 # Valores de steeldesign:   Pn = 5.38
 
 fiPn_WC, midC_WC = analysis.s3_3_4(units='US', reaction='interior', FlangeLoading='1')
-print('Pn = ', round(midC_WC['Pn'],2))
+print('fiPn_WC = ', round(fiPn_WC,2), ' | Pn = ', round(midC_WC['Pn'],2))
 
 # Valores de referencia:    Pn = 15.79 (N = 6.0)
 # Valores de steeldesign:   Pn = 15.78

@@ -58,7 +58,7 @@ def E_4_1_1_e3(g, Ts, m, q):
         m: float,
             distancia entre el centro de corte de un perfil C al plano medio de su alma.
         q: float,
-            factor de intensidad de carga.
+            carga de diseño sobre la viga para determinar s_max.
     Raises
     ------
         none
@@ -124,8 +124,8 @@ def E_4_1_1_e5(Pu, m, g):
         none
     Returns
     -------
-        Ts: float,
-            resistencia de diseño de la conexion a la traccion.
+        Tr: float,
+            resistencia requerida de la conexion a la traccion.
     Tests
     -----
         >>> round(E_4_1_1_e5(Pu=4.05, m=0.629, g=7.0), 2)
@@ -135,23 +135,36 @@ def E_4_1_1_e5(Pu, m, g):
 
 
 ## 4.1.2 - Spacing of Connections in Compression Elements
-def sec_4_1_2():
+def sec_4_1_2(t_N, Et, f_s, w):
     '''
     Parameters
     ----------
-
+        t_N: float,
+            espesor del cover plate or sheet.
+        Et: float,
+            modulo de elasticidad tangente en compresion.
+        f_s: float,
+            tension de servicio sobre el cover plate or sheet.
+        w: float,
+            ancho plano del menor elemento no rigidizado en compresion tributario a la conexion.
     Raises
     ------
         none
-    
     Returns
     -------
-
+        s_maxs: string,
+            contiene los s_max segun condiciones (2) y (3).
     Tests
     -----
         >>> 
     '''
     raise NotImplementedError
+
+    s_maxs = np.zeros(2)
+    s_maxs[0] = 1.11*t_N*(Et/f_s)**0.5
+    s_maxs[1] = 3*w
+
+    return s_maxs
 
 
 ## Eq I1.2-1 - Slenderness - Compression Members Composed of Two Sections in Contact

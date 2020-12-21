@@ -138,6 +138,8 @@ from .sec_3 import E_3_3_5_e1, E_3_3_5_e2
 from .sec_3 import E_3_4_e1, E_3_4_2_e1, E_3_4_3_e1, E_3_4_3_e3
 # Imports for Section 3.5
 from .sec_3 import E_3_5_e1, E_3_5_e2, E_3_5_e3, E_3_5_e4, E_3_5_e5
+# Imports for Section 4.1
+from .sec_4 import E_4_1_1_e1, E_4_1_1_e2, E_4_1_1_e3, E_4_1_1_e4, E_4_1_1_e5, sec_4_1_2
 from .appendix_B import B_2, B_1
 from .properties import c_w_lps_profile, c_profile, steel, I_builtup_c_profile
 from .functions import eta_iter, eta_iter_shear, adjustNeutralAxis, get_linear_stress, TableA12
@@ -909,7 +911,7 @@ class ASCE_8_02:
             ratio = E_3_3_3_e1(fiMn, fiVn, Mu, Vu)
             if ratio > 1.0:
                 states['Eq 3.3.3-1'] = 'Not Pass'
-            else: state['Eq 3.3.3-1'] = 'Pass'
+            else: states['Eq 3.3.3-1'] = 'Pass'
 
         return ratio, states
 
@@ -973,7 +975,7 @@ class ASCE_8_02:
         C8 = E_3_3_4_e19(h=h, t=t, k=k)
         Ctheta = E_3_3_4_e20(theta=theta)
 
-        print(N,R,t,theta,k,m,h,Ct,C1,C2,C3,C4,C5,C6,C7,C8,Ctheta)
+        # print(N,R,t,theta,k,m,h,Ct,C1,C2,C3,C4,C5,C6,C7,C8,Ctheta)
 
         # Oppsing Loads Spaced > 1.5h
         if FlangeLoading == '1':
@@ -1433,11 +1435,96 @@ class ASCE_8_02:
         return ratios, states
         
 
-    def s4_1(self):
+    # 4.1.1 I-Sections Composed of Two Channels
+    def s4_1_1(self, member_type, member_C, q, Ts, Pu = 0, g = 0):
+        '''Built-Up Sections. I-Sections Composed of Two Channels.
+        Parameters
+        ----------
+            member_type: string,
+                especifica si el miembro esta sometido a comepresion o flexion.
+                | igual a: 'compression member' o 'flexural member' |
+            member_C: class member,
+                Perfil-C que forma el built-up de perfil-I configurado con profile.
+            Pu: float,
+                carga concentrada o reaccion. Solo definir si member_type es 'flexural member'
+            g: float,
+                distancia vertical entre las lineas de conexiones mas cercanas a los topes superior e inferior.
+                | por default g = altura del perfil |
+            q: float,
+                carga de diseño sobre la viga para determinar s_max:
+                    1. Para carga concentrada o reaccion q es la carga sobre la longitud del soporte (N).
+                    2. Para carga distribuida q es 3 veces la misma.
+            Ts: float,
+                resistencia disponible de la conexion a traccion.
+        Returns
+        -------
+            s_max: float,
+                espaciado maximo entre soldaduras u otro tipo de conectores.
+        Raises
+        ------
+            none
+        Tests
+        -----
+            none
         '''
-        '''
-        # 4.1.1 I-Sections Composed of Two Channels
+        L = self.member.L
+        if g == 0: g = self.profile.H
 
+        if member_type == 'compression member':
+            r_cy = member_C.profile.ry
+            r_I = self.profile.ry
+            s_max = E_4_1_1_e1(L=L, r_cy=r_cy, r_I=r_I)
 
-        # 4.1.2 Spacing of Connections in Compression
+        elif member_type == 'flexural member':
+            s_max = E_4_1_1_e2(L=L)
+
+            profile = self.profile
+            B = profile.B
+            t = profile.t
+            Ix = member_C.profile.Ix
+            d = profile.H
+            try: D = self.profile.D
+            except: D = 0
+            m = E_4_1_1_e4(B=B, t=t, Ix=Ix, d=d, D=D)
+            
+            if self.member.dP.N < s_max: q = E_4_1_1_e5(Pu=Pu, m=m, g=g)
+
+            limit = E_4_1_1_e3(g=g, Ts=Ts, m=m, q=q)
+            if s_max > limit: s_max = limit
         
+        else:
+            print('No se especifica si el member es |compression member| o |flexural member|')
+            raise Exception('>> Analisis abortado <<')
+
+        return s_max
+
+    # 4.1.2 Spacing of Connections in Compression
+    def s4_1_2(self, t_N, f_s):
+        '''Built-Up Sections. Spacing of Connections in Compression.
+        Parameters
+        ----------
+            t_N: float,
+                espesor del cover plate or sheet.
+            f_s: float,
+                tension de servicio sobre el cover plate or sheet.
+        Returns
+        -------
+            s_max: float,
+                espaciado maximo entre soldaduras u otro tipo de conectores.
+        Raises
+        ------
+            none
+        Tests
+        -----
+            none
+        '''
+        Et = self.steel.Et(s=f_s)
+        # w = 
+        [s_max_1, s_max_2] = sec_4_1_2(t_N=t_N, Et=Et, f_s=f_s, w=w)
+        E0 = self.steel.E0
+        FY = self.steel.FY
+        if w/t < 0.5*(E0/FY)**0.5:  s_min = 1.03*t*(E0/FY)**0.5
+        else:    s_min = 1.24*t*(E0/FY)**0.5
+        if s_max_2 < s_min: s_max_2 = s_min
+
+        return min(s_max_1, s_max_2)
