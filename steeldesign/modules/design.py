@@ -122,7 +122,7 @@ import numpy as np
 from .sec_2 import sec2_1_1_c1,sec2_1_1_c3, sec2_2_1, sec2_3_1, sec2_3_2, sec2_4_2, sec2_2_2
 from .sec_3 import sec3_2
 # Imports for Section 3.3.1.1
-from .sec_3 import sec3_3_1_1, E_3_3_1_1_e1, LocalDistorsion
+from .sec_3 import sec3_3_1_1, E_3_3_1_1_e1, LocalDistorsion, E_3_3_1_1_e5, E_3_3_1_1_e6, E_3_3_1_1_e7, E_3_3_1_1_e8, E_3_3_1_1_e9
 # Imports for Section 3.3.1.2
 from .sec_3 import sec3_3_1_2_eta, sec3_3_1_2_3_i, E_3_3_1_2_e1, E_3_3_1_2_e2, E_3_3_1_2_e4, E_3_3_1_2_e6, E_3_3_1_2_e8, E_3_3_1_2_e9
 # Imports for Section 3.3.2
@@ -432,16 +432,27 @@ class ASCE_8_02:
 
     ## 3.2 Flexural Members
     ## 3.3.1 Strength for Bending Only
-    def s3_3_1(self, procedure= 'PI', localDistorsion = False):
+    def s3_3_1(self, procedure= 'PI', localDistorsion = False, LD_cond = 'i', stress_grad_web = False, stress_grad_web = False):
         '''Design Flexural Strength. Bending Only. Smaller of Sections 3.3.1.1 and 3.3.1.2.
         Parameters
         ----------
-            procedure : string
-                Indica el procedimiento a aplicar segun 3.3.1.1 
+            procedure : string,
+                Indica el procedimiento a aplicar segun 3.3.1.1
                     PI: 1. Procedure I—Based on Initiation of Yielding
                     PII: 2. Procedure II—Based on Inelastic Reserve Capacity
-            localDistorsion: bool
+            localDistorsion: bool,
                 determina si se consideran distorsiones locales para la resistencia a la flexion nominal (3.3.1.1-3 [CASE III]).
+            LD_cond: string,
+                Indica si se usa la condicion
+                    3.3.1.1-3-i: pequeñas casi imperceptibles distorsiones locales son aceptadas.
+                    3.3.1.1-3-ii: no se permiten distorsiones locales algunas.
+            stress_grad_flange: bool,
+                determina si el ala esta sometido a gradiente de tension o no.
+            stress_grad_web: bool,
+                determina si el alma esta sometido a gradiente de tension o no.
+
+            comp_element: string,
+                indica si el elemento al cual se le restringen las distorsiones locales esta rigidizado o no.
         Returns
         -------
             fiMn : float
@@ -480,16 +491,17 @@ class ASCE_8_02:
             Sex, nEffAreas = self.s3_Se_effective(fFlange= steel.FY)
             fiMn_no, midC = sec3_3_1_1(FY=steel.FY, Se=Sex, procedure=procedure, comp_flange=comp_flange)
             midC['nEffAreas-3.3.1.1'] = nEffAreas
+        
         elif procedure == 'PII':
             print('Seccion 3.3.1.1 - Procedimiento II no implementado.')
             raise NotImplementedError
+
+        elif localDistorsion:
+            fiMld = s3_3_1_1_LD(LD_cond = 'i', stress_grad_web = False, stress_grad_web = False)
+            
         else:
             print('Prodedimiento',procedure,'no roconocido en Section 3.1.1')
             raise Exception('>> Analisis abortado <<')
-
-        if localDistorsion:
-            print('Seccion 3.3.1.1 - Local Distortion Consideration no implementado.')
-            raise NotImplementedError
 
         # Section 3.3.1.2 - Lateral Buckling Strength
         Sf = profile.Sx
@@ -545,10 +557,6 @@ class ASCE_8_02:
         -----
             En archivo
         '''
-        if localDistorsion:
-            print('Seccion 3.3.1.1 - Local Distortion Consideration no implementado.')
-            raise NotImplementedError
-
         steel = self.member.steel
         profile = self.member.profile
         elements = self.member.profile.elements
@@ -581,12 +589,115 @@ class ASCE_8_02:
             fiMny_minus = 'N/A'
 
             return fiMny_plus, fiMny_minus, midC
+
         elif procedure == 'PII':
             print('Seccion 3.3.1.1 - Procedimiento II no implementado.')
+            raise NotImplementedError
+        elif localDistorsion:
+            print('Seccion 3.3.1.1 - Local Distortion Consideration no implementado.')
             raise NotImplementedError
         else:
             print('Prodedimiento',procedure,'no roconocido en Section 3.1.1')
             raise Exception('>> Analisis abortado <<')
+    
+    def s3_3_1_1_LD(self, LD_cond = 'i', stress_grad_web = False, stress_grad_web = False):
+        '''Nominal Section Strength. Local Distorsion Consideration. Equation 3.3.1.1-4.
+        Parameters
+        ----------
+            LD_cond: string,
+                Indica si se usa la condicion
+                    3.3.1.1-3-i: pequeñas casi imperceptibles distorsiones locales son aceptadas.
+                    3.3.1.1-3-ii: no se permiten distorsiones locales algunas.
+            stress_grad_flange: bool,
+                determina si el ala esta sometido a gradiente de tension o no.
+            stress_grad_web: bool,
+                determina si el alma esta sometido a gradiente de tension o no.
+        Returns
+        -------
+            fiMld: float,
+                resistencia de diseño a la flexion considerando distorsiones locales.
+        Raises
+        ------
+            none
+        Tests
+        -----
+            none
+        '''
+        steel = self.member.steel
+        profile = self.member.profile
+        elements = self.member.profile.elements
+        dp = self.member.dP
+        Sf = profile.Sx
+        flange = {}
+        web = {}
+        
+        for element in elements.values():
+            if element['name'] == 'flange':
+                if element['type'] == 'stiffned_w_slps': 
+                    flange['cond'] = 'STIFF'
+                    if not stress_grad_flange:
+                        _, midC = sec2_4_2(E0=steel.E0, f=steel.FY, w=profile.B-2*profile.r_out, t=profile.t, 
+                                                d=profile.D-profile.r_out, r_out=profile.r_out)
+                    else: 
+                        raise NotImplementedError
+                    flange['k'] = midC['k']
+                elif element['type'] == 'unstiffned': 
+                    flange['cond'] = 'UNSTIFF'
+                    if not stress_grad_flange:
+                        flange['k'] = 0.5
+                    else: 
+                        raise NotImplementedError
+            if element['name'] == 'web'
+                web['cond'] = 'STIFF'
+                if not stress_grad_web:
+                    web['k'] = 4.0
+                else: 
+                    raise NotImplementedError
+
+        flange['Fcr'] = E_3_3_1_1_e9(k=flange['k'], E0=steel.E0, w=profile.B-2*profile.r_out, t=profile.t)
+        web['Fcr'] = E_3_3_1_1_e9(k=web['k'], E0=steel.E0, w=profile.H-2*profile.r_out, t=profile.t)
+
+        if LD_cond == 'i':
+            if flange['cond'] == 'STIFF' or web['cond'] == 'STIFF':
+                flange['Fcr'] = eta_iter(FF=flange['Fcr'], mat=steel, eq='B-3')
+                flange['fb'] = E_3_3_1_1_e5(Fcr=flange['Fcr'])
+                web['Fcr'] = eta_iter(FF=web['Fcr'], mat=steel, eq='B-3')
+                web['fb'] = E_3_3_1_1_e5(Fcr=web['Fcr'])
+
+            elif flange['cond'] == 'UNSTIFF' or web['cond'] == 'UNSTIFF':
+                flange['Fcr'] = eta_iter(FF=flange['Fcr'], mat=steel, eq='B-4')
+                flange['fb'] = E_3_3_1_1_e6(Fcr=flange['Fcr'])
+                web['Fcr'] = eta_iter(FF=web['Fcr'], mat=steel, eq='B-4')
+                web['fb'] = E_3_3_1_1_e6(Fcr=web['Fcr'])
+            else:
+                print('Condicion de rigidizacion del elemento |comp_element| no aceptada')
+                raise Exception('>> Analisis abortado <<')
+        
+        elif LD_cond == 'ii':
+            if flange['cond'] == 'STIFF' or web['cond'] == 'STIFF':
+                flange['Fcr'] = eta_iter(FF=flange['Fcr'], mat=steel, eq='B-3')
+                flange['fb'] = E_3_3_1_1_e7(Fcr=flange['Fcr'])
+                web['Fcr'] = eta_iter(FF=web['Fcr'], mat=steel, eq='B-3')
+                web['fb'] = E_3_3_1_1_e7(Fcr=web['Fcr'])
+
+            elif flange['cond'] == 'UNSTIFF' or web['cond'] == 'UNSTIFF':
+                flange['Fcr'] = eta_iter(FF=flange['Fcr'], mat=steel, eq='B-4')
+                flange['fb'] = E_3_3_1_1_e8(Fcr=flange['Fcr'])
+                web['Fcr'] = eta_iter(FF=web['Fcr'], mat=steel, eq='B-4')
+                web['fb'] = E_3_3_1_1_e8(Fcr=web['Fcr'])
+            else:
+                print('Condicion de rigidizacion del elemento |comp_element| no aceptada')
+                raise Exception('>> Analisis abortado <<')
+
+        else:
+            print('Condicion |LD_cond| no aceptada ')
+            raise Exception('>> Analisis abortado <<')
+    
+        flange['fiMld'], midC = LocalDistorsion(Sf=Sf, fb=flange['fb'])
+        web['fiMld'], midC = LocalDistorsion(Sf=Sf, fb=web['fb'])
+        midC.update(flange)
+        midC.update(web)
+        return min(flange['fiMld'], web['fiMld']), midC
 
     def s3_Se_effective(self, fFlange, tol = 0.005, maxIter = 100):
         '''

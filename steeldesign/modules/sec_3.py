@@ -34,7 +34,7 @@ def sec3_2(An, FY):
 
 ## 3.3 Flexural Memebers
 ## 3.3.1 Strength for Bending Only
-def sec3_3_1_1(FY, Se, procedure = 'PI', comp_flange = 'UNSTIFF', localDistorsion= False):
+def sec3_3_1_1(FY, Se, procedure = 'PI', comp_flange = 'UNSTIFF', localDistorsion= False, Sf = 0, fb = 0):
     '''Strength for Bending Only. Nominal Section Strength.
     Parameters
     ----------
@@ -75,22 +75,30 @@ def sec3_3_1_1(FY, Se, procedure = 'PI', comp_flange = 'UNSTIFF', localDistorsio
         raise NotImplementedError
 
     if localDistorsion:     # Local Distorsion Considerations
-        Mld, midC = LocalDistorsion()
-        midC['Mld']= Mld
+        Mld, midC = LocalDistorsion(Sf, fb)
+        midC['Mld'] = Mld
 
     midC.update({'Mn_no': Mn, 'fi_no': fi})
     fiMn = fi*Mn
 
     return fiMn, midC
 
-def LocalDistorsion():
-    '''Nominal Section Strength. Local Distorsion Consideration.
+def LocalDistorsion(Sf, fb):
+    '''Nominal Section Strength. Local Distorsion Consideration. Equation 3.3.1.1-4.
     Parameters
     ----------
-        none
+        Sf: float,
+            modulo elastico de la seccion completa sin reduccion.
+        fb: float,
+            tension de compresion admisible para distorision local.
     Returns
     -------
-        none
+        fiMld: float,
+            resistencia de diseño a la flexion segun distorsion local.
+        midC : dict
+            Mld: resistencia nominal a la flexion segun distorsion local.
+            fi: factor de diseño.
+            fb: tension de compresion admisible para distorision local.
     Raises
     ------
         none
@@ -98,7 +106,11 @@ def LocalDistorsion():
     -----
         >>> 
     '''
-    raise NotImplementedError
+    midC = {}
+    midC['fb'] = fb
+    midC['fi'] = 1.0
+    midC['Mld'] = Sf*fb
+    return Sf*fb
 
 
 def sec3_3_1_2_eta(prof_type, E0, d, Iyc, L, rx, ry, c_x, sc_x, A, Lx, Kx, Ly, Ky, Lz, Kz, Cw, G0, J, j, Cb):
@@ -298,6 +310,108 @@ def E_3_3_1_1_e1(Se, FY):
     '''
     Mn = Se*FY
     return Mn
+
+def E_3_3_1_1_e5(Fcr):
+    '''Permissible compressive stress for local distortion.
+    Parameters
+    ----------
+        Fcr: float,
+            tension critica de pandeo.
+    Returns
+    -------
+        fb: float,
+            tension de compresion admisible para distorision local.
+    Raises
+    ------
+        none
+    Tests
+    -----
+        none
+    '''
+    return 1.2*Fcr
+
+def E_3_3_1_1_e6(Fcr):
+    '''Permissible compressive stress for local distortion.
+    Parameters
+    ----------
+        Fcr: float,
+            tension critica de pandeo.
+    Returns
+    -------
+        fb: float,
+            tension de compresion admisible para distorision local.
+    Raises
+    ------
+        none
+    Tests
+    -----
+        none
+    '''
+    return Fcr
+
+def E_3_3_1_1_e7(Fcr):
+    '''Permissible compressive stress for local distortion.
+    Parameters
+    ----------
+        Fcr: float,
+            tension critica de pandeo.
+    Returns
+    -------
+        fb: float,
+            tension de compresion admisible para distorision local.
+    Raises
+    ------
+        none
+    Tests
+    -----
+        none
+    '''
+    return 0.9*Fcr
+
+def E_3_3_1_1_e8(Fcr):
+    '''Permissible compressive stress for local distortion.
+    Parameters
+    ----------
+        Fcr: float,
+            tension critica de pandeo.
+    Returns
+    -------
+        fb: float,
+            tension de compresion admisible para distorision local.
+    Raises
+    ------
+        none
+    Tests
+    -----
+        none
+    '''
+    return 0.75*Fcr
+
+def E_3_3_1_1_e9(k, E0, w, t, eta = 1):
+    '''Critical Buckling Stress.
+    Parameters
+    ----------
+        k: float,
+            coeficiente de pandeo para placas, segun Seccion 2.
+        E0: float,
+            modulo de elasticidad inicial.
+        w: float,
+            ancho plano de elemento.
+        t: float,
+            espesor del elemento.
+    Returns
+    -------
+        Fcr: float,
+            tension critica de pandeo.
+    Raises
+    ------
+        none
+    Tests
+    -----
+        >>>
+    '''
+    Fcr_eta = pi**2*k*eta*E0/(12*0.91*(w/t)**2)
+    return Fcr_eta
 
 
 def E_3_3_1_2_e1(Sc, Mc, Sf):

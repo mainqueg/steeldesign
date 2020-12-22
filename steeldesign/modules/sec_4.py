@@ -158,8 +158,6 @@ def sec_4_1_2(t_N, Et, f_s, w):
     -----
         >>> 
     '''
-    raise NotImplementedError
-
     s_maxs = np.zeros(2)
     s_maxs[0] = 1.11*t_N*(Et/f_s)**0.5
     s_maxs[1] = 3*w

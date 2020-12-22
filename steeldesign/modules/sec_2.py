@@ -416,8 +416,6 @@ def sec2_4_2(E0, f, w, t, d, r_out, theta = 90,  stiff = 'SL'):
             espesor del elemento.
         d: float,
             ancho del rigidizador sin tener en cuenta la curvatura (ver figura 5 - ASCE 8).
-        ds_prima: float,
-            ancho efectivo del rigidizador calculado segun seccion 2.3.1 (ver figura 5 - ASCE 8).
         r_out: float,
             radio externo de la curvatura del rigidizador.
         theta: float,
