@@ -106,10 +106,6 @@ def LocalDistorsion(Sf, fb):
     -----
         >>> 
     '''
-    midC = {}
-    midC['fb'] = fb
-    midC['fi'] = 1.0
-    midC['Mld'] = Sf*fb
     return Sf*fb
 
 

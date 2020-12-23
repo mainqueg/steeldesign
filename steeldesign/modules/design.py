@@ -487,17 +487,17 @@ class ASCE_8_02:
                 elif element['type'] == 'unstiffned':
                     comp_flange = 'UNSTIFF'
 
-        if procedure == 'PI':    
+        if localDistorsion:
+            fiMn_no, midC2 = self.s3_3_1_1_LD(LD_cond = 'i', stress_grad_flange = False, stress_grad_web = False)
+            
+        elif procedure == 'PI':    
             Sex, nEffAreas = self.s3_Se_effective(fFlange= steel.FY)
-            fiMn_no, midC = sec3_3_1_1(FY=steel.FY, Se=Sex, procedure=procedure, comp_flange=comp_flange)
-            midC['nEffAreas-3.3.1.1'] = nEffAreas
+            fiMn_no, midC2 = sec3_3_1_1(FY=steel.FY, Se=Sex, procedure=procedure, comp_flange=comp_flange)
+            midC2['nEffAreas-3.3.1.1'] = nEffAreas
         
         elif procedure == 'PII':
             print('Seccion 3.3.1.1 - Procedimiento II no implementado.')
             raise NotImplementedError
-
-        elif localDistorsion:
-            fiMld = s3_3_1_1_LD(LD_cond = 'i', stress_grad_flange = False, stress_grad_web = False)
             
         else:
             print('Prodedimiento',procedure,'no roconocido en Section 3.1.1')
@@ -519,11 +519,11 @@ class ASCE_8_02:
             f = steel.FY    # limite de fluencia
         Sc, nEffAreas= self.s3_Se_effective(f)
 
-        fiMn_LBx, midC2 = E_3_3_1_2_e1(Sc=Sc, Mc=f*Sf, Sf=Sf)
+        fiMn_LBx, midC = E_3_3_1_2_e1(Sc=Sc, Mc=f*Sf, Sf=Sf)
 
         # Defino que resistencia controla
         fiMnx = min(fiMn_no, fiMn_LBx)
-        midC.update(midC2)  # merge entre los diccionarios
+        midC.update(midC2)    # merge entre los diccionarios
         midC.update({'nEffAreas-3.3.1.2': nEffAreas,'fiMn_LBx': fiMn_LBx, 'fiMn_no': fiMn_no})
 
         return fiMnx, midC
@@ -838,6 +838,12 @@ class ASCE_8_02:
         -------
             fiMld: float,
                 resistencia de diseño a la flexion considerando distorsiones locales.
+            midC: dict
+                cond_flange, cond_web: condiciones de rigidez.
+                Fcr_flange, Fcr_web: tensiones criticas de pandeo.
+                k_flange, k_web: coeficientes de pandeo.
+                fb_flange, fb_web: tensiones permisibles de compresion para distorsiones locales.
+                fiMld_flange, fiMld_web: resistencias de diseño a la flexion considerando distorsiones locales.
         Raises
         ------
             none
@@ -848,7 +854,6 @@ class ASCE_8_02:
         steel = self.member.steel
         profile = self.member.profile
         elements = self.member.profile.elements
-        dp = self.member.dP
         Sf = profile.Sx
         flange = {}
         web = {}
@@ -856,37 +861,37 @@ class ASCE_8_02:
         for element in elements.values():
             if element['name'] == 'flange':
                 if element['type'] == 'stiffned_w_slps': 
-                    flange['cond'] = 'STIFF'
+                    flange['cond_flange'] = 'STIFF'
                     if not stress_grad_flange:
                         _, midC = sec2_4_2(E0=steel.E0, f=steel.FY, w=profile.B-2*profile.r_out, t=profile.t, 
                                                 d=profile.D-profile.r_out, r_out=profile.r_out)
                     else: 
                         raise NotImplementedError
-                    flange['k'] = midC['k']
+                    flange['k_flange'] = midC['k']
                 elif element['type'] == 'unstiffned': 
-                    flange['cond'] = 'UNSTIFF'
+                    flange['cond_flange'] = 'UNSTIFF'
                     if not stress_grad_flange:
-                        flange['k'] = 0.5
+                        flange['k_flange'] = 0.5
                     else: 
                         raise NotImplementedError
             if element['name'] == 'web':
-                web['cond'] = 'STIFF'
+                web['cond_web'] = 'STIFF'
                 if not stress_grad_web:
-                    web['k'] = 4.0
+                    web['k_web'] = 4.0
                 else: 
                     raise NotImplementedError
 
-        flange['Fcr_flange'] = E_3_3_1_1_e9(k=flange['k'], E0=steel.E0, w=profile.B-2*profile.r_out, t=profile.t)
-        web['Fcr_web'] = E_3_3_1_1_e9(k=web['k'], E0=steel.E0, w=profile.H-2*profile.r_out, t=profile.t)
+        flange['Fcr_flange'] = E_3_3_1_1_e9(k=flange['k_flange'], E0=steel.E0, w=profile.B-2*profile.r_out, t=profile.t)
+        web['Fcr_web'] = E_3_3_1_1_e9(k=web['k_web'], E0=steel.E0, w=profile.H-2*profile.r_out, t=profile.t)
 
         if LD_cond == 'i':
-            if flange['cond'] == 'STIFF' or web['cond'] == 'STIFF':
+            if flange['cond_flange'] == 'STIFF' or web['cond_web'] == 'STIFF':
                 flange['Fcr_flange'] = eta_iter(FF=flange['Fcr_flange'], mat=steel, eq='B-3')
                 flange['fb_flange'] = E_3_3_1_1_e5(Fcr=flange['Fcr_flange'])
                 web['Fcr_web'] = eta_iter(FF=web['Fcr_web'], mat=steel, eq='B-3')
                 web['fb_web'] = E_3_3_1_1_e5(Fcr=web['Fcr_web'])
 
-            elif flange['cond'] == 'UNSTIFF' or web['cond'] == 'UNSTIFF':
+            elif flange['cond_flange'] == 'UNSTIFF' or web['cond_web'] == 'UNSTIFF':
                 flange['Fcr_flange'] = eta_iter(FF=flange['Fcr_flange'], mat=steel, eq='B-4')
                 flange['fb_flange'] = E_3_3_1_1_e6(Fcr=flange['Fcr_flange'])
                 web['Fcr_web'] = eta_iter(FF=web['Fcr_web'], mat=steel, eq='B-4')
@@ -896,13 +901,13 @@ class ASCE_8_02:
                 raise Exception('>> Analisis abortado <<')
         
         elif LD_cond == 'ii':
-            if flange['cond'] == 'STIFF' or web['cond'] == 'STIFF':
+            if flange['cond_flange'] == 'STIFF' or web['cond_web'] == 'STIFF':
                 flange['Fcr_flange'] = eta_iter(FF=flange['Fcr_flange'], mat=steel, eq='B-3')
                 flange['fb_flange'] = E_3_3_1_1_e7(Fcr=flange['Fcr_flange'])
                 web['Fcr_web'] = eta_iter(FF=web['Fcr_web'], mat=steel, eq='B-3')
                 web['fb_web'] = E_3_3_1_1_e7(Fcr=web['Fcr_web'])
 
-            elif flange['cond'] == 'UNSTIFF' or web['cond'] == 'UNSTIFF':
+            elif flange['cond_flange'] == 'UNSTIFF' or web['cond_web'] == 'UNSTIFF':
                 flange['Fcr_flange'] = eta_iter(FF=flange['Fcr_flange'], mat=steel, eq='B-4')
                 flange['fb_flange'] = E_3_3_1_1_e8(Fcr=flange['Fcr_flange'])
                 web['Fcr_web'] = eta_iter(FF=web['Fcr_web'], mat=steel, eq='B-4')
@@ -914,14 +919,20 @@ class ASCE_8_02:
         else:
             print('Condicion |LD_cond| no aceptada ')
             raise Exception('>> Analisis abortado <<')
+
+        if flange['fb_flange'] > steel.FY: flange['fb_flange'] = steel.FY
+        if web['fb_web'] > steel.FY: web['fb_web'] = steel.FY
     
-        flange['fiMld'], _ = LocalDistorsion(Sf=Sf, fb=flange['fb_flange'])
-        web['fiMld'], _ = LocalDistorsion(Sf=Sf, fb=web['fb_web'])
+        fiMld_f = LocalDistorsion(Sf=Sf, fb=flange['fb_flange'])
+        fiMld_w = LocalDistorsion(Sf=Sf, fb=web['fb_web'])
         midC = {}
+        midC['fi'] = 1.0
+        midC['fiMld_flange'] = fiMld_f
+        midC['fiMld_web'] = fiMld_w
         midC.update(flange)
         midC.update(web)
         
-        return min(flange['fiMld'], web['fiMld']), midC
+        return min(fiMld_f, fiMld_w), midC
 
     ## 3.3.2 Strength for Shear Only
     def s3_3_2(self, FY_v = 0, steel_type='1/4 Hard'):
@@ -1041,7 +1052,11 @@ class ASCE_8_02:
                 vale '1' (default) o '2', y define si se utiliza la primera 1ra o 2da fila de la tabla A-2.
         Returns
         -------
-            
+            fi*Pn: float,
+                resistencia de diseño al web crippling.
+            midC: dictionary,
+                fi: factor de diseño.
+                Pn: resistencia nominal.
         Raises
         ------
             none
