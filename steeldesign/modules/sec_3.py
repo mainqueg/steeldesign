@@ -326,7 +326,8 @@ def E_3_3_1_1_e5(Fcr):
         none
     Tests
     -----
-        none
+        >>> round(E_3_3_1_1_e5(Fcr=50), 1)
+        60.0
     '''
     return 1.2*Fcr
 
@@ -345,7 +346,8 @@ def E_3_3_1_1_e6(Fcr):
         none
     Tests
     -----
-        none
+        >>> round(E_3_3_1_1_e6(Fcr=50), 1)
+        50
     '''
     return Fcr
 
@@ -364,7 +366,8 @@ def E_3_3_1_1_e7(Fcr):
         none
     Tests
     -----
-        none
+        >>> round(E_3_3_1_1_e7(Fcr=50), 1)
+        45.0
     '''
     return 0.9*Fcr
 
@@ -383,7 +386,8 @@ def E_3_3_1_1_e8(Fcr):
         none
     Tests
     -----
-        none
+        >>> round(E_3_3_1_1_e8(Fcr=50), 1)
+        37.5
     '''
     return 0.75*Fcr
 
@@ -408,7 +412,8 @@ def E_3_3_1_1_e9(k, E0, w, t, eta = 1):
         none
     Tests
     -----
-        >>>
+        >>> round(E_3_3_1_1_e9(k=4.0, E0=20000, w=7.415, t=0.105), 2)
+        14.5
     '''
     Fcr_eta = pi**2*k*eta*E0/(12*0.91*(w/t)**2)
     return Fcr_eta
@@ -1353,7 +1358,7 @@ def E_3_5_e1(Pu, fiPn, alpha_nx, alpha_ny, Cm_x, Cm_y, Mu_x = 0, Mu_y = 0, fiMn_
         t2 = Cm_x*Mu_x/(fiMn_x*alpha_nx)
     if Mu_y != 0:
         t3 = Cm_y*Mu_y/(fiMn_y*alpha_ny)
-    print(t1,t2,t3)
+    
     return t1+t2+t3
 
 def E_3_5_e2(Pu, fiPn_0, Mu_x = 0, Mu_y = 0, fiMn_x = 0, fiMn_y = 0):
@@ -1386,7 +1391,7 @@ def E_3_5_e2(Pu, fiPn_0, Mu_x = 0, Mu_y = 0, fiMn_x = 0, fiMn_y = 0):
         t2 = Mu_x/fiMn_x
     if Mu_y != 0:
         t3 = Mu_y/fiMn_y
-    print(t1,t2,t3)
+    
     return t1+t2+t3
 
 def E_3_5_e3(Pu, fiPn, Mu_x, Mu_y, fiMn_x, fiMn_y):
@@ -1435,10 +1440,11 @@ def E_3_5_e4(Pu, Pe):
             factor de amplificacion.
     Tests
     -----
-        >>> round(E_3_5_e4(Pu=3.22, Pe=0.85*12.91), 3)
+        >>> round(E_3_5_e4(Pu=3.22, Pe=12.91), 3)
         0.707
     '''
-    return (1 - Pu/Pe/0.85)
+    fi = 0.85
+    return (1 - Pu/(fi*Pe))
 
 def E_3_5_e5(E0, Kb, Lb, Ib):
     '''Elastic Buckling Strength.
