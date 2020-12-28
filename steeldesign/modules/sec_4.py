@@ -169,8 +169,8 @@ def sec_4_1_2(t_N, Et, f_s, w):
 
 # Note: this equation aplies when the buckling modes involve relative deformations that 
 # produce shear forces in the connectors between indivivual shapes
-def E_I_1_2_e1(K, L, r, a, ri):
-    '''Maximun permissible longitudinal spacing of welds or other connectors joining two channels.
+def slend_modif(K, L, r, a, ri):
+    '''Maximun permissible longitudinal spacing of welds or other connectors joining two channels. Eq I1.2-1 AISI S100-16.
     Parameters
     ----------
         K,L: float,

@@ -139,7 +139,7 @@ from .sec_3 import E_3_4_e1, E_3_4_2_e1, E_3_4_3_e1, E_3_4_3_e3
 # Imports for Section 3.5
 from .sec_3 import E_3_5_e1, E_3_5_e2, E_3_5_e3, E_3_5_e4, E_3_5_e5
 # Imports for Section 4.1
-from .sec_4 import E_4_1_1_e1, E_4_1_1_e2, E_4_1_1_e3, E_4_1_1_e4, E_4_1_1_e5, sec_4_1_2
+from .sec_4 import E_4_1_1_e1, E_4_1_1_e2, E_4_1_1_e3, E_4_1_1_e4, E_4_1_1_e5, sec_4_1_2, slend_modif
 from .appendix_B import B_2, B_1
 from .properties import c_w_lps_profile, c_profile, steel, I_builtup_c_profile
 from .functions import eta_iter, eta_iter_shear, adjustNeutralAxis, get_linear_stress, TableA12
