@@ -863,7 +863,9 @@ class ASCE_8_02:
                 if element['type'] == 'stiffned_w_slps': 
                     flange['cond_flange'] = 'STIFF'
                     if not stress_grad_flange:
-                        _, midC = sec2_4_2(E0=steel.E0, f=steel.FY, w=profile.B-2*profile.r_out, t=profile.t, 
+                        # Asumo conservativamente f igual a 50% de FY en el flange 
+                        # (deberia usar la tension a la que esta sometida)
+                        _, midC = sec2_4_2(E0=steel.E0, f=steel.FY*0.5, w=profile.B-2*profile.r_out, t=profile.t, 
                                                 d=profile.D-profile.r_out, r_out=profile.r_out)
                     else: 
                         raise NotImplementedError
@@ -931,6 +933,7 @@ class ASCE_8_02:
         midC['fiMld_web'] = fiMld_w
         midC.update(flange)
         midC.update(web)
+        print(fiMld_f, fiMld_w)
         
         return min(fiMld_f, fiMld_w), midC
 
