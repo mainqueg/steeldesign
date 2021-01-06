@@ -136,7 +136,7 @@ def TABLE1(L, wf):
     r = np.interp(L/wf, table1[::-1,0], table1[::-1,1] )
     return r
 
-def sec2_1_2(h, t, reinforced = 'NO', condition = 'i'):
+def sec2_1_2(h, t, reinforced = False, condition = 'i'):
 
     '''Maximum Web Depth-to-Thickness Ratio.
     Parameters
@@ -165,8 +165,8 @@ def sec2_1_2(h, t, reinforced = 'NO', condition = 'i'):
 
     ratio = h/t
 
-    if reinforced == 'NO': ratio_adm = 200
-    if reinforced == 'YES':
+    if not reinforced: ratio_adm = 200
+    else:
         if condition == 'i': ratio_adm = 260
         if condition == 'ii': ratio_adm = 300
 

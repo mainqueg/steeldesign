@@ -308,7 +308,7 @@ class c_w_lps_profile():
     save = commonMethods.save
     load = commonMethods.load
 
-    def __init__(self, H, B, D, t, r_out, name = ''):
+    def __init__(self, H, B, D, t, r_out, name = '', web_reinforced = False):
         self.type = 'c_w_lps'
         self.B = B
         self.D = D
@@ -316,7 +316,7 @@ class c_w_lps_profile():
         self.t = t
         self.r_out= r_out
         self.elements= {
-            2: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
+            2: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out, 'reinforced': web_reinforced},
             1: {'name': 'flange', 'type': 'stiffned_w_slps', 'w': B-2*r_out, 'wf': B-t+D},
             3: {'name': 'lip', 'type': 'unstiffned', 'w': D-r_out},
             }
@@ -433,7 +433,7 @@ class c_w_lps_profile_half():
     save = commonMethods.save
     load = commonMethods.load
 
-    def __init__(self, H, B, D, t, r_out, name = ''):
+    def __init__(self, H, B, D, t, r_out, name = '', web_reinforced = False):
         self.type = 'c_w_lps_half'
         self.B = B
         self.D = D
@@ -441,7 +441,7 @@ class c_w_lps_profile_half():
         self.t = t
         self.r_out= r_out
         self.elements= {
-            2: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
+            2: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out, 'reinforced': web_reinforced},
             1: {'name': 'flange', 'type': 'stiffned_w_slps', 'w': B-2*r_out, 'wf': B-t+D},
             3: {'name': 'lip', 'type': 'unstiffned', 'w': D-r_out},
             }
@@ -577,7 +577,7 @@ class c_profile():
     save = commonMethods.save
     load = commonMethods.load
 
-    def __init__(self, H, B, t, r_out, name = ''):
+    def __init__(self, H, B, t, r_out, name = '', web_reinforced = False):
         self.type = 'cee'
         self.B = B
         self.H = H
@@ -585,7 +585,7 @@ class c_profile():
         self.r_out= r_out
         self.elements = {
             1: {'name': 'flange', 'type': 'unstiffned', 'w': B - r_out, 'wf': B-t},
-            2: {'name': 'web', 'type': 'stiffned', 'w': H - 2*r_out},
+            2: {'name': 'web', 'type': 'stiffned', 'w': H - 2*r_out, 'reinforced': web_reinforced},
             }
                 
         # nombre para la seccion
@@ -764,7 +764,7 @@ class I_builtup_c_w_lps_profile():
     save = commonMethods.save
     load = commonMethods.load
 
-    def __init__(self, H, B, D, t, r_out, s = 0.0, name = '', wld_factor = 0.0, mesh_div = 4.0):
+    def __init__(self, H, B, D, t, r_out, s = 0.0, name = '', web_reinforced = False, wld_factor = 0.0, mesh_div = 4.0):
         self.type = 'I_builtup_cee_w_lps'
         self.B = B
         self.D = D
@@ -776,7 +776,7 @@ class I_builtup_c_w_lps_profile():
         self.mesh_size = t/mesh_div
         self.elements= {
             1: {'name': 'flange', 'type': 'stiffned_w_slps', 'w': B-2*r_out, 'wf': B-t+D},
-            2: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
+            2: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out, 'reinforced': web_reinforced},
             3: {'name': 'lip', 'type': 'unstiffned', 'w': D-r_out},
             }
         
@@ -980,7 +980,7 @@ class I_builtup_c_profile():
     save = commonMethods.save
     load = commonMethods.load
 
-    def __init__(self, H, B, t, r_out, s = 0.0, name = '', wld_factor = 0.0, mesh_div = 4.0):
+    def __init__(self, H, B, t, r_out, s = 0.0, name = '', web_reinforced = False, wld_factor = 0.0, mesh_div = 4.0):
         self.type = 'I_builtup_cee'
         self.B = B
         self.H = H
@@ -991,7 +991,7 @@ class I_builtup_c_profile():
         self.mesh_size = t/mesh_div
         self.elements = {
             1: {'name': 'flange', 'type': 'unstiffned', 'w': B-r_out, 'wf': B-t},
-            2: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out},
+            2: {'name': 'web', 'type': 'stiffned', 'w': H-2*r_out, 'reinforced': web_reinforced},
             }
                 
         # nombre para la seccion

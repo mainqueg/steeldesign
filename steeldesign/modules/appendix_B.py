@@ -70,41 +70,6 @@ def B_2(FY, E0, offset, n, s):
     Et = E0*FY/(FY+offset*n*E0* (s/FY)**(n-1))
     return Et   
 
-
-def B_1(FY, E0, offset, n, s):
-    '''Modulo elasticidad secante segun Eq B-1
-
-    Parameters
-    ----------
-    E0 : float
-        Modulo elasticidad inicial
-    FY : float
-        Tension de fluencia con una deformacion permanente de offset
-    offset : float
-        Valor de deformacion permanente a la que se obtuvo FY
-    n : float
-        Exponente de Ramberg-Osgood
-    s : float
-        Tension a la que se debe determinar Es
-
-    Returns
-    ----------
-    float
-        Modulo secante Es para la tension s
-
-    Raises
-    ------
-    none
-
-    Tests
-    -----
-    >>> round( B_1(344.8, 186200,  0.002, 4.58, 159.3), 2)
-    174334.98
-
-    '''
-    Es = E0 / (1 + offset*E0* ( s**(n-1)/(FY**n)) )
-    return Es
-
 def TableA12(tau):
     '''Coeficiente de plasticidad para pandeo de columnas o LTB de vigas, segun Eq B-5.
 

@@ -156,17 +156,16 @@ def get_linear_stress(fFlange, yCG, y):
 
 def TableA12(tau, steel_type = '1/4 Hard'):
     '''TABLE A-12. Plasticity Reduction Factors for Shear Strengths.
+    Parameters
     ----------
         tau: float,
             tension de corte.
         steel_type: string,
             tipo de acero.
-
     Returns
     -------
         eta_shear: float,
             relacion Gs/G0.
-
     Tests
     -----
         >>> round(TableA12(tau=34.0, steel_type = '1/4 Hard'), 2)

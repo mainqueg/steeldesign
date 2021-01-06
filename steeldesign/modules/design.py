@@ -119,7 +119,15 @@
 
 from math import pi
 import numpy as np
-from .sec_2 import sec2_1_1_c1,sec2_1_1_c3, sec2_2_1, sec2_3_1, sec2_3_2, sec2_4_2, sec2_2_2
+# Imports for Section 2.1
+from .sec_2 import sec2_1_1_c1, sec2_1_1_c3, sec2_1_2, TABLE1
+# Imports for Section 2.2
+from .sec_2 import sec2_2_1, E_2_2_1_e3, E_2_2_1_e4, sec2_2_2
+# Imports for Section 2.3
+from .sec_2 import sec2_3_1, sec2_3_2
+# Imports for Section 2.4
+from .sec_2 import sec2_4_2, E_2_4_e1, E_2_4_e2, E_2_4_e3, sec2_4_2_CASEI, sec2_4_2_CASEII, sec2_4_2_CASEIII, E_2_4_2_CASES
+
 from .sec_3 import sec3_2
 # Imports for Section 3.3.1.1
 from .sec_3 import sec3_3_1_1, E_3_3_1_1_e1, LocalDistorsion, E_3_3_1_1_e5, E_3_3_1_1_e6, E_3_3_1_1_e7, E_3_3_1_1_e8, E_3_3_1_1_e9
@@ -138,6 +146,7 @@ from .sec_3 import E_3_3_5_e1, E_3_3_5_e2
 from .sec_3 import E_3_4_e1, E_3_4_2_e1, E_3_4_3_e1, E_3_4_3_e3
 # Imports for Section 3.5
 from .sec_3 import E_3_5_e1, E_3_5_e2, E_3_5_e3, E_3_5_e4, E_3_5_e5
+
 # Imports for Section 4.1
 from .sec_4 import E_4_1_1_e1, E_4_1_1_e2, E_4_1_1_e3, E_4_1_1_e4, E_4_1_1_e5, sec_4_1_2, slend_modif
 from .appendix_B import B_2, B_1
@@ -287,6 +296,8 @@ class ASCE_8_02:
         
     Methods
     -------
+        s2_1():
+            Dimensional Limits and Considerations
         s3_5() :
             Combined Axial Load and Bending
         s3_4() : 
@@ -301,6 +312,10 @@ class ASCE_8_02:
             Web Crippling Strength
         s3_3_5() :
             Strength for Combined Bending and Web Crippling
+        s3_4() :
+            Concentrically Loaded Compression Members
+        s3_5() :
+            Combined Axial Load and Bending
         s3_2() :
             Design Tensile Strength
         s3_FTB() : 
@@ -311,7 +326,10 @@ class ASCE_8_02:
             Tension y Carga críticas de pandeo torsional
         s2_Ae_compMemb(f) :
             Area efectiva para miembros a compresion calculado para una tension f
-
+        s4_1_1() :
+            I-Sections Composed of Two Channels
+        s4_1_2() :
+            Spacing of Connections in Compression
     '''
 
     def __init__(self, member):
@@ -332,7 +350,6 @@ class ASCE_8_02:
             2.1.1-2 Flange Curling NOT IMPLEMENTED
             2.1.1-3 Shear Lag Effects—Unusually Short Spans Supporting Concentrated Loads
         2.1.2 Maximum Web Depth-to-Thickness Ratio
-
         Parameters
         ----------
             none
@@ -359,7 +376,7 @@ class ASCE_8_02:
                 element['ratio_1']= midC['ratio_1']
                 element['condition']= 'i'
                 if element['ratio_1'] > element['ratioAdm_1']:
-                    print('El elemento:',key , element['name'],'del perfil:',profile.name, 'excede los limites la clausula 2.2.1-1')
+                    print('El elemento:',key , element['name'],'del perfil:',profile.name, 'excede los limites de clausula 2.2.1-1')
                     raise Exception('>> Analisis abortado <<')
                 # 2.1.1-3 Shear Lag Effects - Flanges
                 if element['name'] == 'flange' and self.member.dP.cLoadFlag:
@@ -374,7 +391,7 @@ class ASCE_8_02:
                 element['ratio_1']= midC['ratio_1']
                 element['condition']= 'ii'
                 if element['ratio_1'] > element['ratioAdm_1']:
-                    print('El elemento:',key , element['name'],'del perfil:',profile.name, 'excede los limites la clausula 2.2.1-1')
+                    print('El elemento:',key , element['name'],'del perfil:',profile.name, 'excede los limites de clausula 2.2.1-1')
                     raise Exception('>> Analisis abortado <<')
             # condition iii
             elif element['type'] == 'unstiffned' or (element['type'] == 'stiffned_w_slps' and element['Is']<element['Ia']):
@@ -383,7 +400,7 @@ class ASCE_8_02:
                 element['ratio_1']= midC['ratio_1']
                 element['condition']= 'iii'
                 if element['ratio_1'] > element['ratioAdm_1']:
-                    print('El elemento:',key , element['name'],'del perfil:',profile.name, 'excede los limites la clausula 2.2.1-1')
+                    print('El elemento:',key , element['name'],'del perfil:',profile.name, 'excede los limites de clausula 2.2.1-1')
                     raise Exception('>> Analisis abortado <<')
                 # 2.1.1-3 Shear Lag Effects - Flanges
                 if element['name'] == 'flange' and self.member.dP.cLoadFlag:
@@ -396,7 +413,19 @@ class ASCE_8_02:
                 raise Exception('>> Analisis abortado <<')
 
         # 2.1.2 Maximum Web Depth-to-Thickness Ratio
-
+        for key in elements.keys():
+            element = elements[key]
+            if element['name'] == 'web':
+                # condition 1 - unreinforced webs
+                if element['reinforced'] == False:
+                    ratio_adm_web, midC = sec2_1_2(w=element['w'], t=profile.t)
+                    midC['ratio adm web'] = ratio_adm_web
+                    if midC['ratio h/t'] > ratio_adm_web:
+                        print('El elemento:',key , element['name'],'del perfil:',profile.name, 'excede los limites de clausula 2.2.2-1')
+                        raise Exception('>> Analisis abortado <<')
+                # condition 2 - webs with transverse stiffeners
+                raise NotImplementedError('>>Analisis Abortado<<')
+    
 
     ## 3.2 Tension Members
     def s3_2(self):
@@ -430,7 +459,7 @@ class ASCE_8_02:
         return fiTn, midC
 
 
-    ## 3.2 Flexural Members
+    ## 3.3 Flexural Members
     ## 3.3.1 Strength for Bending Only
     def s3_3_1(self, procedure= 'PI', localDistorsion = False, LD_cond = 'i', stress_grad_flange = False, stress_grad_web = False):
         '''Design Flexural Strength. Bending Only. Smaller of Sections 3.3.1.1 and 3.3.1.2.
@@ -937,6 +966,7 @@ class ASCE_8_02:
         
         return min(fiMld_f, fiMld_w), midC
 
+
     ## 3.3.2 Strength for Shear Only
     def s3_3_2(self, FY_v = 0, steel_type='1/4 Hard'):
         '''Design Strength for Shear Only. Shear Buckling.
@@ -1243,10 +1273,9 @@ class ASCE_8_02:
         return ratio, states
 
     
-    # Area efectiva para miembros a compresion calculado para una tension f
+    ## Area efectiva para miembros a compresion calculado para una tension f
     def s2_Ae_compMemb(self, f, origin):
-        '''Area efectiva para miembros a compresion, segun 2.2.1 (stiffned), 2.3.1 (unstiffned) y 2.4.2 (stiffned_w_slps)
-        
+        '''Area efectiva para miembros a compresion, segun 2.2.1 (stiffned), 2.3.1 (unstiffned) y 2.4.2 (stiffned_w_slps).
         Parameters
         ----------
             f : float
@@ -1319,7 +1348,84 @@ class ASCE_8_02:
         return Ae
 
 
-    # Tension y Carga críticas de pandeo flexo-torsional
+    ## Area efectiva para miembros a flexion calculada para una tension f
+    def s2_Ae_flexMemb(self, f1, f2, origin):
+        '''Area efectiva para miembros a flexion, segun 2.2.2 (stiffned) y 2.3.2 (unstiffned).
+        Parameters
+        ----------
+            f1 : float
+                maxima tension de compresion sobre el elemento (ver figura 2 - ASCE 8). compresion (+), traccion (-)
+            f2 : float
+                minima tension sobre el elemento (traccion o compresion)
+            origin : string
+                Label para almacenar los midC
+        Returns
+        -------
+            Ae : float
+                Area efectiva a la tension f
+        Raises
+        ------
+            none
+        Tests
+        -----
+            En archivo
+        '''
+        profile= self.member.profile
+        # inicio con el area neta
+        Ae = profile.A
+        elements = profile.elements
+        t= profile.t
+        E0= self.member.steel.E0
+
+        if profile.type in ['I_builtup_cee', 'I_builtup_cee_w_lps']:
+            nEf= 4.0
+        elif profile.type in ['cee', 'c_w_lps']:
+            nEf= 2.0
+        else:
+            print('Seccion del tipo', profile.type,'no implementada en analisis 3.3.1 Se effecivo')
+            raise NotImplementedError
+
+        for element in elements.values():
+            if element['type'] == 'stiffned':
+                element[origin]= {}
+                b, midC = sec2_2_2(w= element['w'], t= t, f1= f1, f2= f2 E= E0)
+                element[origin].update({'b':b,'rho': midC['rho'],'esbeltez': midC['esbeltez']})
+                element[origin]['A_'] = (element['w'] - b)*t
+            elif element['type'] == 'unstiffned' and element['name'] != 'lip':
+                element[origin]= {}
+                b, midC = sec2_3_2(w= element['w'], t= t, f3= f1, E= E0)
+                element[origin].update({'b':b,'rho': midC['rho'],'esbeltez': midC['esbeltez']})
+                element[origin]['A_'] = (element['w'] - b)*t*nEf
+            elif element['type'] == 'stiffned_w_slps':
+                element[origin]= {}
+                if elements[3]['name'] == 'lip':
+                    d = elements[3]['w']
+                    lip = elements[3]
+                    lip[origin]= {}
+                else:
+                    print('El elemento',3, 'no corresponde al tipo <lip>. Reordenar los elemenentos en el perfil',profile.type)
+                    raise Exception('>> Analisis abortado <<')
+                b, midC = sec2_4_2(E0=E0, f = f, w= element['w'], t= t, d=d, r_out= profile.r_out)
+                element[origin].update(midC)
+                element[origin]['b']= b
+                element[origin]['A_'] = (element['w'] - b)*t*nEf
+
+                #lip
+                b, midC = sec2_3_1(w= lip['w'], t= t, f= f, E= E0)
+                lip[origin].update(midC)
+                lip[origin]['b']= b
+                if element[origin]['ds'] < b: # ancho efectivo del lip (ver definicion ds en 2.4)
+                    lip[origin]['b'] = element[origin]['ds']
+                lip[origin]['A_'] = (lip['w'] - lip[origin]['b'])*t*nEf
+            elif element['name'] != 'lip':
+                print('El elemento:',element['name'], 'del perfil:',profile.name, 'no tiene asignada una clasificacion reconocida:', element['type'])
+                raise Exception('>> Analisis abortado <<')
+
+            Ae =  Ae - element[origin]['A_']
+        return Ae
+
+
+    ## Tension y Carga críticas de pandeo flexo-torsional
     def s3_FTB(self):
         '''Tensión y carga critica nominal de pandeo flexo-torsional.
 
@@ -1361,7 +1467,8 @@ class ASCE_8_02:
         Pn = Fn* profile.A
         return Fn, Pn
 
-    # Tension y Carga críticas de pandeo flexional
+
+    ## Tension y Carga críticas de pandeo flexional
     def s3_FB(self):
         '''Tensión y carga critica nominal para pandeo a flexion en x e y.
 
@@ -1408,7 +1515,8 @@ class ASCE_8_02:
 
         return [Fnx, Pnx], [Fny, Pny]
 
-    # Tension y Carga críticas de pandeo torsional
+
+    ## Tension y Carga críticas de pandeo torsional
     def s3_TB(self):
         '''Tensión y carga critica nominal para pandeo torsional.
 
@@ -1449,7 +1557,7 @@ class ASCE_8_02:
         return Fn, Pn
 
 
-    # 3.4 Concentrically Loaded Compression Members.
+    ## 3.4 Concentrically Loaded Compression Members.
     def s3_4(self):
         '''Design axial strength. 
             
@@ -1496,7 +1604,7 @@ class ASCE_8_02:
         return fiPn, midC
 
 
-    # 3.5 Combined Axial Load and Bending.
+    ## 3.5 Combined Axial Load and Bending.
     def s3_5(self, Pu, fiPn, Ae, Mu_x = 0, Mu_y = 0, fiMn_x = 0, fiMn_y = 0):
         '''Combined Axial Load and Bending.
         Parameters
@@ -1565,7 +1673,7 @@ class ASCE_8_02:
         return ratios, states
         
 
-    # 4.1.1 I-Sections Composed of Two Channels
+    ## 4.1.1 I-Sections Composed of Two Channels
     def s4_1_1(self, member_type, member_C, q, Ts, Pu = 0, g = 0):
         '''Built-Up Sections. I-Sections Composed of Two Channels.
         Parameters
@@ -1628,7 +1736,8 @@ class ASCE_8_02:
 
         return s_max
 
-    # 4.1.2 Spacing of Connections in Compression
+
+    ## 4.1.2 Spacing of Connections in Compression
     def s4_1_2(self, t_N, f_s):
         '''Built-Up Sections. Spacing of Connections in Compression.
         Parameters
@@ -1653,7 +1762,7 @@ class ASCE_8_02:
         [s_max_1, s_max_2] = sec_4_1_2(t_N=t_N, Et=Et, f_s=f_s, w=w)
         E0 = self.steel.E0
         FY = self.steel.FY
-        if w/t < 0.5*(E0/FY)**0.5:  s_min = 1.03*t*(E0/FY)**0.5
+        if w/t < 0.5*(E0/FY)**0.5: s_min = 1.03*t*(E0/FY)**0.5
         else:    s_min = 1.24*t*(E0/FY)**0.5
         if s_max_2 < s_min: s_max_2 = s_min
 
