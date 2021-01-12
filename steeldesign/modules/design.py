@@ -424,7 +424,7 @@ class ASCE_8_02:
                         print('El elemento:',key , element['name'],'del perfil:',profile.name, 'excede los limites de clausula 2.2.2-1')
                         raise Exception('>> Analisis abortado <<')
                 # condition 2 - webs with transverse stiffeners
-                raise NotImplementedError('>>Analisis Abortado<<')
+                raise NotImplementedError('>> Analisis Abortado <<')
     
 
     ## 3.2 Tension Members
@@ -1388,7 +1388,7 @@ class ASCE_8_02:
         for element in elements.values():
             if element['type'] == 'stiffned':
                 element[origin]= {}
-                b, midC = sec2_2_2(w= element['w'], t= t, f1= f1, f2= f2 E= E0)
+                b, midC = sec2_2_2(w= element['w'], t= t, f1= f1, f2= f2, E= E0)
                 element[origin].update({'b':b,'rho': midC['rho'],'esbeltez': midC['esbeltez']})
                 element[origin]['A_'] = (element['w'] - b)*t
             elif element['type'] == 'unstiffned' and element['name'] != 'lip':
@@ -1674,26 +1674,29 @@ class ASCE_8_02:
         
 
     ## 4.1.1 I-Sections Composed of Two Channels
-    def s4_1_1(self, member_type, member_C, q, Ts, Pu = 0, g = 0):
+    def s4_1_1(self, member_type, member_C, q = 0, Ts = 0, Pu = 0, g = 0):
         '''Built-Up Sections. I-Sections Composed of Two Channels.
         Parameters
         ----------
             member_type: string,
                 especifica si el miembro esta sometido a comepresion o flexion.
-                | igual a: 'compression member' o 'flexural member' |
+                | igual a: 'comp': compression member o 'flex': flexural member |
             member_C: class member,
-                Perfil-C que forma el built-up de perfil-I configurado con profile.
-            Pu: float,
-                carga concentrada o reaccion. Solo definir si member_type es 'flexural member'
-            g: float,
-                distancia vertical entre las lineas de conexiones mas cercanas a los topes superior e inferior.
-                | por default g = altura del perfil |
+                Perfil-C que forma el built-up del perfil-I.
             q: float,
                 carga de diseño sobre la viga para determinar s_max:
                     1. Para carga concentrada o reaccion q es la carga sobre la longitud del soporte (N).
                     2. Para carga distribuida q es 3 veces la misma.
+                (Solo definir si member_type es 'flex')
             Ts: float,
                 resistencia disponible de la conexion a traccion.
+                (Solo definir si member_type es 'flex')
+            Pu: float,
+                carga concentrada o reaccion.
+                (Solo definir si member_type es 'flex')
+            g: float,
+                distancia vertical entre las lineas de conexiones mas cercanas a los topes superior e inferior.
+                | por default: g = altura del perfil |
         Returns
         -------
             s_max: float,
@@ -1706,46 +1709,50 @@ class ASCE_8_02:
             none
         '''
         L = self.member.L
-        if g == 0: g = self.profile.H
+        profile = self.member.profile
+        if g == 0: g = profile.H
 
-        if member_type == 'compression member':
-            r_cy = member_C.profile.ry
-            r_I = self.profile.ry
+        if member_type == 'comp':
+            r_cy = member_C.ry
+            r_I = profile.ry
             s_max = E_4_1_1_e1(L=L, r_cy=r_cy, r_I=r_I)
 
-        elif member_type == 'flexural member':
+        elif member_type == 'flex':
             s_max = E_4_1_1_e2(L=L)
 
-            profile = self.profile
-            B = profile.B
-            t = profile.t
-            Ix = member_C.profile.Ix
-            d = profile.H
-            try: D = self.profile.D
-            except: D = 0
-            m = E_4_1_1_e4(B=B, t=t, Ix=Ix, d=d, D=D)
+            print('\n---Falta implementar limite para s_max en flexion - incluye calculo de conexiones (Seccion 5)---\n')
+            # B = profile.B
+            # t = profile.t
+            # Ix = member_C.Ix
+            # d = profile.H
+            # try: D = profile.D
+            # except: D = 0
+            # m = E_4_1_1_e4(B=B, t=t, Ix=Ix, d=d, D=D)
             
-            if self.member.dP.N < s_max: q = E_4_1_1_e5(Pu=Pu, m=m, g=g)
+            # if self.member.dP.N < s_max: q = E_4_1_1_e5(Pu=Pu, m=m, g=g)
 
-            limit = E_4_1_1_e3(g=g, Ts=Ts, m=m, q=q)
-            if s_max > limit: s_max = limit
+            # limit = E_4_1_1_e3(g=g, Ts=Ts, m=m, q=q)
+            # if s_max > limit: s_max = limit
         
         else:
             print('No se especifica si el member es |compression member| o |flexural member|')
             raise Exception('>> Analisis abortado <<')
-
+        
         return s_max
 
 
     ## 4.1.2 Spacing of Connections in Compression
-    def s4_1_2(self, t_N, f_s):
-        '''Built-Up Sections. Spacing of Connections in Compression.
+    def s4_1_2(self, t_N, f_s, w):
+        '''Built-Up Sections. Spacing of Connections in Compression. 
+        Connection between a compression cover plate or sheet to a nonintegral stiffener or other element.
         Parameters
         ----------
             t_N: float,
                 espesor del cover plate or sheet.
             f_s: float,
                 tension de servicio sobre el cover plate or sheet.
+            w: float,
+                ancho plano del elemento no rigidizado en compresion mas angosto tributario a la conexion.
         Returns
         -------
             s_max: float,

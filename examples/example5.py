@@ -22,6 +22,8 @@ p1.J = 2*p2.J
 # creo el analisis
 analysis = sd.ASCE_8_02(m)
 # calculo admisibles #
+
+print('3.4 Concentrically Loaded Compression Members')
 fiPn, midC = analysis.s3_4()
 
 print('fiPn =', round(fiPn,2),'| Pn =', round(midC['Fn']*midC['Ae'],2))
@@ -33,3 +35,16 @@ print('Esbeltez de', m.profile.elements[3]['name'],'=', round(m.profile.elements
 # Valores de steeldesign:   fiPn = 62.5 | Pn = 73.53
 
 # NOTA: Error tiene origen en el uso de eta_iter en lugar de los valores de tabla que usa la referencia. f_ref=23.52 f_eta_iter= 23.40
+
+
+print('4.1.1 Built-up Section - I-Sections Composed of Two Channels')
+s_max = analysis.s4_1_1(member_type='comp', member_C=p2)
+print('Espaciado maximo entre soldaduras: s_max = ', round(s_max*25.4,0), ' mm')
+
+# Valor de steeldesign:     s_max = 683.0 (mm)
+
+print('4.1.1 Built-up Section - I-Sections Composed ofTwo Channels')
+s_max = analysis.s4_1_1(member_type='flex', member_C=p2)
+print('Espaciado maximo entre soldaduras: s_max = ', round(s_max*25.4,0), ' mm')
+
+# Valor de steeldesign:     s_max = 305.0 (mm) [s_max=L/6]
