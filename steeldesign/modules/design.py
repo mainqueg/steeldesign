@@ -1274,7 +1274,7 @@ class ASCE_8_02:
 
     
     ## Area efectiva para miembros a compresion calculado para una tension f
-    def s2_Ae_compMemb(self, f, origin):
+    def s2_Ae_compMemb(self, f, origin, deflect = False):
         '''Area efectiva para miembros a compresion, segun 2.2.1 (stiffned), 2.3.1 (unstiffned) y 2.4.2 (stiffned_w_slps).
         Parameters
         ----------
@@ -1282,6 +1282,8 @@ class ASCE_8_02:
                 Valor de la tension a compresion uniforme del elemento
             origin : string
                 Label para almacenar los midC
+            deflect: bool,
+                determina si el calculo es para determinar capacidad de carga o deflexion (servicio)
         Returns
         -------
             Ae : float
@@ -1311,7 +1313,11 @@ class ASCE_8_02:
         for element in elements.values():
             if element['type'] == 'stiffned':
                 element[origin]= {}
-                b, midC = sec2_2_1(w= element['w'], t= t, f= f, E= E0)
+                if not deflect:
+                    b, midC = sec2_2_1(w= element['w'], t= t, f= f, E= E0)
+                # Deflection determination
+                else:
+                    b, midC = sec_2_2_1(w= element['w'], t= t, f= f, E= self.member.steel.Es(s=f))
                 element[origin].update({'b':b,'rho': midC['rho'],'esbeltez': midC['esbeltez']})
                 element[origin]['A_'] = (element['w'] - b)*t
             elif element['type'] == 'unstiffned' and element['name'] != 'lip':
