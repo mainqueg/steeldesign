@@ -1322,7 +1322,11 @@ class ASCE_8_02:
                 element[origin]['A_'] = (element['w'] - b)*t
             elif element['type'] == 'unstiffned' and element['name'] != 'lip':
                 element[origin]= {}
-                b, midC = sec2_3_1(w= element['w'], t= t, f= f, E= E0)
+                if not deflect:
+                    b, midC = sec2_3_1(w= element['w'], t= t, f= f, E= E0)
+                # Deflection determination
+                else:
+                    b, midC = sec2_3_1(w= element['w'], t= t, f= f, E= self.member.steel.Es(s=f))
                 element[origin].update({'b':b,'rho': midC['rho'],'esbeltez': midC['esbeltez']})
                 element[origin]['A_'] = (element['w'] - b)*t*nEf
             elif element['type'] == 'stiffned_w_slps':
@@ -1340,7 +1344,11 @@ class ASCE_8_02:
                 element[origin]['A_'] = (element['w'] - b)*t*nEf
 
                 #lip
-                b, midC = sec2_3_1(w= lip['w'], t= t, f= f, E= E0)
+                if not deflect:
+                    b, midC = sec2_3_1(w= lip['w'], t= t, f= f, E= E0)
+                # Deflection determination
+                else:
+                    b, midC = sec2_3_1(w= lip['w'], t= t, f= f, E= self.member.steel.Es(s=f))
                 lip[origin].update(midC)
                 lip[origin]['b']= b
                 if element[origin]['ds'] < b: # ancho efectivo del lip (ver definicion ds en 2.4)
